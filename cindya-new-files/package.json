@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "AI-powered design generator with category-based templates",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build needed - static site'",
-    "deploy": "vercel --prod"
+    "dev": "netlify dev",
+    "build": "netlify build",
+    "deploy": "netlify deploy --prod"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
