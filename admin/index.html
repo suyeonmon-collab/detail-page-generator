@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINDYA 관리자 로그인</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #5b6ef5;
+            box-shadow: 0 0 0 3px rgba(91, 110, 245, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #5b6ef5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #4a5de8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(91, 110, 245, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .back-link {
+            margin-top: 24px;
+            font-size: 14px;
+        }
+
+        .back-link a {
+            color: #5b6ef5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">🔒</div>
+        <h1>CINDYA 관리자</h1>
+        <p class="subtitle">관리자 전용 페이지입니다</p>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="password">비밀번호</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="관리자 비밀번호를 입력하세요"
+                    required
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button type="submit" id="loginBtn" class="btn-login">
+                로그인
+            </button>
+        </form>
+
+        <div class="back-link">
+            <a href="/">← 메인으로 돌아가기</a>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = 'dla1019';
+        const form = document.getElementById('loginForm');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // 이미 로그인된 경우 대시보드로 이동
+        if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+            window.location.href = '/admin/dashboard.html';
+        }
+
+        let attemptDelay = 0;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const password = passwordInput.value.trim();
+            
+            if (!password) {
+                showError('비밀번호를 입력하세요.');
+                return;
+            }
+
+            // 브루트포스 방지 딜레이
+            if (attemptDelay > 0) {
+                showError(`너무 많은 시도입니다. ${attemptDelay}초 후 다시 시도하세요.`);
+                return;
+            }
+
+            // 로딩 상태
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="loading"></span>';
+
+            // 3초 딜레이 (브루트포스 방지)
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            if (password === ADMIN_PASSWORD) {
+                // 로그인 성공
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                sessionStorage.setItem('adminLoginTime', Date.now().toString());
+                
+                loginBtn.innerHTML = '✓ 로그인 성공!';
+                loginBtn.style.background = '#10b981';
+                
+                setTimeout(() => {
+                    window.location.href = '/admin/dashboard.html';
+                }, 500);
+            } else {
+                // 로그인 실패
+                showError('비밀번호가 올바르지 않습니다.');
+                passwordInput.value = '';
+                passwordInput.focus();
+                
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '로그인';
+                
+                // 실패 시 3초 딜레이 추가
+                attemptDelay = 3;
+                const interval = setInterval(() => {
+                    attemptDelay--;
+                    if (attemptDelay <= 0) {
+                        clearInterval(interval);
+                    }
+                }, 1000);
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+            
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 3000);
+        }
+
+        // 엔터키로 제출
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                form.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
+
