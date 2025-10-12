@@ -1,0 +1,20 @@
+{
+	"geolocation": {
+		"data": {
+			"city": "Asan",
+			"country": {
+				"code": "KR",
+				"name": "South Korea"
+			},
+			"subdivision": {
+				"code": "44",
+				"name": "Chungcheongnam-do"
+			},
+			"timezone": "Asia/Seoul",
+			"latitude": 36.9307,
+			"longitude": 127.057,
+			"postalCode": "314"
+		},
+		"timestamp": 1760244532814
+	}
+}
