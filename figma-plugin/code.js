@@ -1,0 +1,530 @@
+// Enhanced Figma Plugin for Template-based Design Generation
+
+// 피그마 플러그인 환경 설정
+if (typeof figma === 'undefined') {
+  // 개발 환경에서 테스트용 mock 객체
+  global.figma = {
+    currentPage: { findAll: () => [] },
+    showUI: () => {},
+    ui: { postMessage: () => {}, onmessage: null },
+    notify: () => {},
+    closePlugin: () => {},
+    loadFontAsync: () => Promise.resolve(),
+    base64Decode: (str) => new Uint8Array(),
+    createImage: () => ({ hash: 'mock' })
+  };
+}
+
+figma.on("run", ({ command }) => {
+  figma.showUI(__html__, { width: 480, height: 600 });
+  
+  // Initialize plugin with current page analysis
+  analyzeCurrentPage();
+});
+
+// Analyze current page to detect nodes
+function analyzeCurrentPage() {
+  try {
+    const page = figma.currentPage;
+    const frames = page.findAll(function(n) { return n.type === "FRAME"; });
+    
+    // 최상위 텍스트 노드만 수집 (부모가 FRAME, GROUP, PAGE, COMPONENT인 TEXT 노드)
+    const textNodes = page.findAll(function(n) {
+      if (n.type !== "TEXT") return false;
+      // 부모가 FRAME이거나 GROUP인 TEXT 노드만 선택 (최상위 텍스트 레이어)
+      const parentType = n.parent && n.parent.type;
+      return parentType === "FRAME" || parentType === "GROUP" || parentType === "PAGE" || parentType === "COMPONENT";
+    });
+    
+    // 이미지 노드 수집 (더 깊이 검색하고 이름/크기로 필터링)
+    const imageNodes = page.findAll(function(n) {
+      // RECTANGLE 또는 ELLIPSE이면서
+      if (n.type !== "RECTANGLE" && n.type !== "ELLIPSE") return false;
+      
+      // 너무 작은 요소는 제외 (10px 이하)
+      if (n.width <= 10 || n.height <= 10) return false;
+      
+      // 이미지 fill이 있거나, 이름에 이미지 관련 키워드가 있는 것
+      const hasImageFill = n.fills && n.fills.some(function(fill) { return fill.type === "IMAGE"; });
+      const hasImageName = n.name && (
+        n.name.toLowerCase().indexOf('image') !== -1 || 
+        n.name.toLowerCase().indexOf('img') !== -1 ||
+        n.name.indexOf('이미지') !== -1 ||
+        n.name.indexOf('사진') !== -1 ||
+        n.name.indexOf('photo') !== -1 ||
+        n.name.indexOf('picture') !== -1 ||
+        n.name.indexOf('배경') !== -1 ||
+        n.name.indexOf('background') !== -1 ||
+        n.name.indexOf('hero') !== -1 ||
+        n.name.indexOf('product') !== -1
+      );
+      
+      // 이미지가 아니더라도 충분히 큰 사각형/원형은 포함 (사용자가 선택할 수 있도록)
+      const isLargeEnough = n.width >= 50 && n.height >= 50;
+      
+      return hasImageFill || hasImageName || isLargeEnough;
+    });
+    
+    // 디버깅을 위한 로그
+    console.log('Found text nodes:', textNodes.length, textNodes.map(function(n) { return n.name; }));
+    console.log('Found image nodes:', imageNodes.length, imageNodes.map(function(n) { return n.name; }));
+    
+    // 텍스트 노드 상세 정보 수집
+    const textNodeDetails = textNodes.map(function(node) {
+      return {
+        id: node.id,
+        name: node.name || 'unnamed',
+        type: node.type,
+        currentValue: node.characters || '',
+        preview: node.characters ? node.characters.substring(0, 30) + (node.characters.length > 30 ? '...' : '') : '',
+        fontSize: node.fontSize || 16,
+        fontFamily: node.fontName ? node.fontName.family + ' ' + node.fontName.style : 'Unknown'
+      };
+    });
+    
+    // 이미지 노드 상세 정보 수집
+    const imageNodeDetails = imageNodes.map(function(node) {
+      return {
+        id: node.id,
+        name: node.name || 'unnamed',
+        type: node.type,
+        width: node.width,
+        height: node.height,
+        hasImage: node.fills && node.fills.some(function(fill) { return fill.type === "IMAGE"; })
+      };
+    });
+    
+    const analysisResult = {
+      frames: frames.length,
+      textNodes: textNodes.length,
+      imageNodes: imageNodes.length,
+      textNodeDetails: textNodeDetails,
+      imageNodeDetails: imageNodeDetails,
+      totalNodes: textNodes.length + imageNodes.length
+    };
+    
+    figma.ui.postMessage({ 
+      type: "page-analysis", 
+      payload: analysisResult 
+    });
+  } catch (error) {
+    console.error('Page analysis error:', error);
+    figma.notify('페이지 분석 중 오류가 발생했습니다.');
+  }
+}
+
+
+// Listen to messages from UI
+figma.ui.onmessage = async (msg) => {
+  try {
+    if (!msg || !msg.type) {
+      console.error('Invalid message received:', msg);
+      return;
+    }
+
+    switch (msg.type) {
+      case "update-nodes":
+        await handleNodeUpdates(msg.payload);
+        break;
+      case "export-png":
+        await handlePNGExport();
+        break;
+      case "analyze-page":
+        analyzeCurrentPage();
+        break;
+      case "process-web-designs":
+        await processWebDesigns();
+        break;
+      case "close":
+        figma.closePlugin();
+        break;
+      default:
+        console.warn('Unknown message type:', msg.type);
+    }
+  } catch (error) {
+    console.error('Message handling error:', error);
+    figma.notify(`오류: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
+    figma.ui.postMessage({ 
+      type: "error", 
+      payload: { message: String(error.message || error) } 
+    });
+  }
+};
+
+// Handle node updates with exact ID matching
+async function handleNodeUpdates(payload) {
+  try {
+    const { textNodes, imageNodes } = payload || {};
+
+    if (!textNodes && !imageNodes) {
+      figma.notify("업데이트할 노드가 없습니다.");
+      return;
+    }
+
+    let updatedCount = 0;
+    let errorCount = 0;
+
+    // 텍스트 노드 업데이트
+    if (textNodes && typeof textNodes === 'object') {
+      for (const [nodeId, newValue] of Object.entries(textNodes)) {
+        try {
+          const node = figma.getNodeById(nodeId);
+          if (node && node.type === "TEXT") {
+            await ensureEditableText(node);
+            node.characters = newValue || '';
+            updatedCount++;
+          } else {
+            console.warn(`Node not found or not a text node: ${nodeId}`);
+            errorCount++;
+          }
+        } catch (error) {
+          console.error(`Error updating text node ${nodeId}:`, error);
+          errorCount++;
+        }
+      }
+    }
+
+    // 이미지 노드 업데이트
+    if (imageNodes && typeof imageNodes === 'object') {
+      for (const [nodeId, imageData] of Object.entries(imageNodes)) {
+        try {
+          const node = figma.getNodeById(nodeId);
+          if (node && (node.type === "RECTANGLE" || node.type === "ELLIPSE") && imageData) {
+            const imageBytes = figma.base64Decode(imageData);
+            const imageFill = figma.createImage(imageBytes);
+            
+            node.fills = [{
+              type: "IMAGE",
+              imageHash: imageFill.hash,
+              scaleMode: "FILL"
+            }];
+            updatedCount++;
+          } else if (node && !imageData) {
+            // 이미지 데이터가 없으면 기본 색상으로 설정
+            node.fills = [{
+              type: "SOLID",
+              color: { r: 0.9, g: 0.9, b: 0.9 }
+            }];
+            updatedCount++;
+          } else {
+            console.warn(`Node not found or not an image node: ${nodeId}`);
+            errorCount++;
+          }
+        } catch (error) {
+          console.error(`Error updating image node ${nodeId}:`, error);
+          errorCount++;
+        }
+      }
+    }
+
+    // 결과 알림
+    if (updatedCount > 0) {
+      figma.notify(`${updatedCount}개 노드가 업데이트되었습니다.${errorCount > 0 ? ` (${errorCount}개 오류)` : ''}`);
+    } else {
+      figma.notify("업데이트된 노드가 없습니다.");
+    }
+
+    figma.ui.postMessage({ 
+      type: "update-complete", 
+      payload: { 
+        updatedCount, 
+        errorCount 
+      } 
+    });
+
+  } catch (error) {
+    console.error('Node updates error:', error);
+    figma.notify(`노드 업데이트 중 오류: ${error.message}`);
+  }
+}
+
+// Handle image update
+async function handleImageUpdate(payload) {
+  try {
+    const { imageData, template } = payload || {};
+    
+    if (!imageData) return;
+
+    // Find image placeholder nodes
+    const imageNodes = figma.currentPage.findAll(function(n) { 
+      return n.type === "RECTANGLE" || n.type === "ELLIPSE";
+    });
+
+    const imageMapping = getImageMapping(template || 'modern');
+    const targetNode = findNodeByName(imageNodes, imageMapping.mainImage);
+
+    if (targetNode && targetNode.type === "RECTANGLE") {
+      try {
+        // Convert base64 to Uint8Array
+        const imageBytes = figma.base64Decode(imageData);
+        
+        // Create image fill
+        const imageFill = figma.createImage(imageBytes);
+        
+        // Apply image fill to the node
+        targetNode.fills = [{
+          type: "IMAGE",
+          imageHash: imageFill.hash,
+          scaleMode: "FILL"
+        }];
+
+        figma.notify("이미지가 업데이트되었습니다.");
+      } catch (imageError) {
+        console.error('Image processing error:', imageError);
+        figma.notify("이미지 처리 중 오류가 발생했습니다.");
+      }
+    }
+  } catch (error) {
+    console.error('Image update error:', error);
+    figma.notify(`이미지 업데이트 실패: ${error.message}`);
+  }
+}
+
+
+// Handle PNG export with improved quality
+async function handlePNGExport() {
+  try {
+    const selection = figma.currentPage.selection;
+    let target = selection[0];
+
+    if (!target) {
+      // Find the main frame
+      const frames = figma.currentPage.findAll(function(n) { return n.type === "FRAME"; });
+      target = frames.find(function(f) { return f.name.indexOf("main") !== -1 || f.name.indexOf("template") !== -1; }) || frames[0];
+    }
+
+    if (!target || target.type === "PAGE") {
+      figma.notify("내보낼 프레임을 선택하거나 페이지에 프레임이 있어야 합니다.");
+      return;
+    }
+
+    // Export with high quality
+    const bytes = await target.exportAsync({ 
+      format: "PNG", 
+      constraint: { type: "SCALE", value: 3 } // Higher resolution
+    });
+    const base64 = figma.base64Encode(bytes);
+    
+    figma.ui.postMessage({ 
+      type: "export-done", 
+      payload: { 
+        base64,
+        filename: `${target.name || 'export'}.png`
+      } 
+    });
+    
+    figma.notify("고품질 PNG 내보내기 완료");
+  } catch (error) {
+    console.error('PNG export error:', error);
+    figma.notify(`내보내기 실패: ${error.message}`);
+  }
+}
+
+
+// Ensure text node is editable
+async function ensureEditableText(node) {
+  if (!node || node.type !== "TEXT") return;
+  
+  try {
+    const fontNames = node.getRangeAllFontNames(0, node.characters.length);
+    for (const font of fontNames) {
+      try {
+        await figma.loadFontAsync(font);
+      } catch (e) {
+        // ignore missing fonts
+        console.warn('Font not available:', font);
+      }
+    }
+  } catch (error) {
+    console.warn('Font loading error:', error);
+  }
+}
+
+// ============================================
+// 웹앱 서버 연동 기능
+// ============================================
+
+/**
+ * 웹앱 서버에서 대기 중인 디자인 요청 가져오기
+ */
+async function fetchPendingDesigns() {
+  try {
+    const webAppUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
+    
+    const response = await fetch(webAppUrl + '?action=getPendingDesigns');
+    const pendingDesigns = await response.json();
+    
+    console.log('대기 중인 디자인 요청:', pendingDesigns.length, '개');
+    
+    return pendingDesigns;
+    
+  } catch (error) {
+    console.error('대기 중인 디자인 가져오기 실패:', error);
+    figma.notify('웹앱 서버 연결 실패');
+    return [];
+  }
+}
+
+/**
+ * 웹앱 서버에 완료 상태 전송
+ */
+async function notifyDesignComplete(rowNumber, figmaLink, pngLink) {
+  try {
+    const webAppUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
+    
+    const response = await fetch(webAppUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'designComplete',
+        rowNumber: rowNumber,
+        figmaLink: figmaLink,
+        pngLink: pngLink
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('완료 상태 전송 성공');
+      figma.notify('디자인 완료 상태가 업데이트되었습니다');
+    } else {
+      console.error('완료 상태 전송 실패:', result.error);
+    }
+    
+  } catch (error) {
+    console.error('완료 상태 전송 오류:', error);
+  }
+}
+
+/**
+ * 자동 디자인 처리 (웹앱 연동)
+ */
+async function processWebDesigns() {
+  try {
+    figma.notify('웹앱에서 대기 중인 디자인을 확인하고 있습니다...');
+    
+    const pendingDesigns = await fetchPendingDesigns();
+    
+    if (pendingDesigns.length === 0) {
+      figma.notify('처리할 디자인이 없습니다');
+      return;
+    }
+    
+    figma.notify(`${pendingDesigns.length}개의 디자인을 처리합니다`);
+    
+    for (const design of pendingDesigns) {
+      try {
+        await processSingleDesign(design);
+        
+        // 완료 상태 전송
+        const figmaLink = `https://www.figma.com/file/${figma.fileKey}`;
+        const pngLink = 'PNG 링크는 별도 생성 필요'; // 실제로는 PNG 생성 후 링크
+        
+        await notifyDesignComplete(design.row, figmaLink, pngLink);
+        
+        figma.notify(`${design.productName} 디자인 완료`);
+        
+      } catch (error) {
+        console.error(`디자인 처리 실패 (${design.productName}):`, error);
+        figma.notify(`${design.productName} 처리 실패: ${error.message}`);
+      }
+    }
+    
+    figma.notify('모든 디자인 처리 완료');
+    
+  } catch (error) {
+    console.error('웹 디자인 처리 오류:', error);
+    figma.notify('웹 디자인 처리 중 오류 발생');
+  }
+}
+
+/**
+ * 단일 디자인 처리
+ */
+async function processSingleDesign(design) {
+  try {
+    // 현재 페이지의 텍스트 노드들 찾기
+    const textNodes = figma.currentPage.findAll(function(n) {
+      if (n.type !== "TEXT") return false;
+      const parentType = n.parent && n.parent.type;
+      return parentType === "FRAME" || parentType === "GROUP" || parentType === "PAGE" || parentType === "COMPONENT";
+    });
+    
+    if (textNodes.length === 0) {
+      throw new Error('텍스트 노드를 찾을 수 없습니다');
+    }
+    
+    // 첫 번째 텍스트 노드에 상품명 설정
+    if (textNodes.length > 0) {
+      await ensureEditableText(textNodes[0]);
+      textNodes[0].characters = design.productName;
+    }
+    
+    // 두 번째 텍스트 노드에 상품 설명 설정
+    if (textNodes.length > 1) {
+      await ensureEditableText(textNodes[1]);
+      textNodes[1].characters = design.content;
+    }
+    
+    // 이미지가 있는 경우 처리
+    if (design.imageData) {
+      await updateImageNode(design.imageData);
+    }
+    
+    console.log(`${design.productName} 디자인 업데이트 완료`);
+    
+  } catch (error) {
+    console.error('단일 디자인 처리 오류:', error);
+    throw error;
+  }
+}
+
+/**
+ * 이미지 노드 업데이트
+ */
+async function updateImageNode(imageData) {
+  try {
+    // 이미지 노드 찾기
+    const imageNodes = figma.currentPage.findAll(function(n) {
+      if (n.type !== "RECTANGLE" && n.type !== "ELLIPSE") return false;
+      if (n.width <= 10 || n.height <= 10) return false;
+      const hasImageFill = n.fills && n.fills.some(function(fill) { return fill.type === "IMAGE"; });
+      const hasImageName = n.name && (
+        n.name.toLowerCase().indexOf('image') !== -1 || 
+        n.name.toLowerCase().indexOf('img') !== -1 ||
+        n.name.indexOf('이미지') !== -1 ||
+        n.name.indexOf('사진') !== -1
+      );
+      const isLargeEnough = n.width >= 50 && n.height >= 50;
+      return hasImageFill || hasImageName || isLargeEnough;
+    });
+    
+    if (imageNodes.length === 0) {
+      console.log('이미지 노드를 찾을 수 없습니다');
+      return;
+    }
+    
+    // 첫 번째 이미지 노드에 새 이미지 설정
+    const imageNode = imageNodes[0];
+    
+    // base64 이미지 데이터를 Figma 이미지로 변환
+    const imageBytes = figma.base64Decode(imageData);
+    const image = figma.createImage(imageBytes);
+    
+    // 이미지 fill 설정
+    imageNode.fills = [{
+      type: "IMAGE",
+      imageHash: image.hash,
+      scaleMode: "FILL"
+    }];
+    
+    console.log('이미지 업데이트 완료');
+    
+  } catch (error) {
+    console.error('이미지 업데이트 오류:', error);
+    throw error;
+  }
+}

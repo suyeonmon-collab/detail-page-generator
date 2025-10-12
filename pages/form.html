@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내용 입력 - 신디야</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            color: #2d3748;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .back-button:hover {
+            transform: translateX(-5px);
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .form-header {
+            margin-bottom: 40px;
+        }
+
+        .form-header h1 {
+            font-size: 32px;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .form-header .template-name {
+            color: var(--template-color);
+            font-weight: 600;
+        }
+
+        .form-header p {
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .form-group label .required {
+            color: #e53e3e;
+        }
+
+        .form-group .char-count {
+            float: right;
+            font-size: 13px;
+            color: #a0aec0;
+            font-weight: normal;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--template-color);
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-group .help-text {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 6px;
+        }
+
+        /* 이미지 업로드 */
+        .image-upload-area {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-upload-area:hover {
+            border-color: var(--template-color);
+            background: #f0f2ff;
+        }
+
+        .image-upload-area.dragover {
+            border-color: var(--template-color);
+            background: #e8f0fe;
+            transform: scale(1.02);
+        }
+
+        .image-upload-area .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .image-upload-area .upload-text {
+            font-size: 16px;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .image-upload-area .upload-subtext {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        .image-preview {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .image-preview img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .image-preview .remove-btn {
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .image-preview .remove-btn:hover {
+            background: #c53030;
+        }
+
+        .submit-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--template-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+            color: #c53030;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid var(--template-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 24px;
+            }
+
+            .form-header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:history.back()" class="back-button">
+            <span>←</span>
+            <span>뒤로</span>
+        </a>
+
+        <div class="form-container">
+            <div class="form-header">
+                <h1>디자인 내용 입력</h1>
+                <p><span class="template-name" id="templateName"></span> 템플릿이 선택되었습니다</p>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <form id="contentForm">
+                <div id="dynamicFields">
+                    <!-- 동적 필드들이 여기에 생성됩니다 -->
+                </div>
+
+                <!-- 공통 필드 -->
+                <div class="form-group">
+                    <label for="targetAudience">
+                        타겟 고객 <span class="required">*</span>
+                    </label>
+                    <select id="targetAudience" name="targetAudience" required>
+                        <option value="20-30대 여성">20-30대 여성</option>
+                        <option value="30-40대 여성">30-40대 여성</option>
+                        <option value="20-30대 남성">20-30대 남성</option>
+                        <option value="30-40대 남성">30-40대 남성</option>
+                        <option value="전체 연령">전체 연령</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="customerEmail">
+                        이메일 주소 <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        id="customerEmail" 
+                        name="customerEmail" 
+                        placeholder="example@email.com"
+                        required
+                    >
+                    <div class="help-text">최종 파일을 받을 이메일 주소를 입력하세요</div>
+                </div>
+
+                <div class="submit-section">
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        🎨 AI 콘텐츠 생성하기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3 style="margin-bottom: 8px;">AI가 콘텐츠를 생성하고 있습니다...</h3>
+            <p style="color: #718096;">잠시만 기다려주세요 (약 10-20초 소요)</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://detail-page-generator.netlify.app/api';
+        
+        // 세션에서 템플릿 정보 가져오기
+        const templateInfo = JSON.parse(sessionStorage.getItem('selectedTemplate') || '{}');
+        const categoryInfo = JSON.parse(sessionStorage.getItem('selectedCategory') || '{}');
+
+        // 이미지 데이터 저장
+        const imageData = {};
+
+        // 페이지 초기화
+        function init() {
+            if (!templateInfo.templateId) {
+                alert('템플릿 정보가 없습니다.');
+                history.back();
+                return;
+            }
+
+            // 색상 설정
+            document.documentElement.style.setProperty('--template-color', categoryInfo.color || '#667eea');
+            
+            // 템플릿 이름 표시
+            document.getElementById('templateName').textContent = templateInfo.name;
+
+            // 동적 필드 생성
+            generateDynamicFields();
+
+            // 폼 제출 이벤트
+            document.getElementById('contentForm').addEventListener('submit', handleSubmit);
+        }
+
+        // 동적 필드 생성
+        function generateDynamicFields() {
+            const container = document.getElementById('dynamicFields');
+            
+            templateInfo.nodes.forEach((node, index) => {
+                const fieldGroup = document.createElement('div');
+                fieldGroup.className = 'form-group';
+
+                if (node.type === 'text') {
+                    fieldGroup.innerHTML = `
+                        <label for="${node.id}">
+                            ${node.placeholder} <span class="required">*</span>
+                            ${node.maxLength ? `<span class="char-count"><span id="${node.id}-count">0</span>/${node.maxLength}</span>` : ''}
+                        </label>
+                        <input 
+                            type="text" 
+                            id="${node.id}" 
+                            name="${node.id}"
+                            placeholder="${node.placeholder}을(를) 입력하세요"
+                            ${node.maxLength ? `maxlength="${node.maxLength}"` : ''}
+                            required
+                        >
+                    `;
+
+                    if (node.maxLength) {
+                        setTimeout(() => {
+                            const input = document.getElementById(node.id);
+                            const counter = document.getElementById(`${node.id}-count`);
+                            input.addEventListener('input', () => {
+                                counter.textContent = input.value.length;
+                            });
+                        }, 0);
+                    }
+                } 
+                else if (node.type === 'textarea') {
+                    fieldGroup.innerHTML = `
+                        <label for="${node.id}">
+                            ${node.placeholder} <span class="required">*</span>
+                            ${node.maxLength ? `<span class="char-count"><span id="${node.id}-count">0</span>/${node.maxLength}</span>` : ''}
+                        </label>
+                        <textarea 
+                            id="${node.id}" 
+                            name="${node.id}"
+                            placeholder="${node.placeholder}을(를) 입력하세요"
+                            ${node.maxLength ? `maxlength="${node.maxLength}"` : ''}
+                            required
+                        ></textarea>
+                    `;
+
+                    if (node.maxLength) {
+                        setTimeout(() => {
+                            const textarea = document.getElementById(node.id);
+                            const counter = document.getElementById(`${node.id}-count`);
+                            textarea.addEventListener('input', () => {
+                                counter.textContent = textarea.value.length;
+                            });
+                        }, 0);
+                    }
+                } 
+                else if (node.type === 'image') {
+                    fieldGroup.innerHTML = `
+                        <label>${node.placeholder}</label>
+                        <div class="image-upload-area" id="upload-${node.id}">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">이미지를 드래그하거나 클릭하여 업로드</div>
+                            <div class="upload-subtext">JPG, PNG 파일 / 최대 10MB</div>
+                            <input type="file" id="file-${node.id}" accept="image/*" style="display: none;">
+                        </div>
+                        <div class="image-preview" id="preview-${node.id}">
+                            <img id="img-${node.id}">
+                            <br>
+                            <button type="button" class="remove-btn" onclick="removeImage('${node.id}')">이미지 제거</button>
+                        </div>
+                    `;
+
+                    setTimeout(() => {
+                        setupImageUpload(node.id);
+                    }, 0);
+                }
+
+                container.appendChild(fieldGroup);
+            });
+        }
+
+        // 이미지 업로드 설정
+        function setupImageUpload(nodeId) {
+            const uploadArea = document.getElementById(`upload-${nodeId}`);
+            const fileInput = document.getElementById(`file-${nodeId}`);
+            const preview = document.getElementById(`preview-${nodeId}`);
+            const previewImg = document.getElementById(`img-${nodeId}`);
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    handleImageFile(nodeId, e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleImageFile(nodeId, e.target.files[0]);
+                }
+            });
+        }
+
+        // 이미지 파일 처리
+        function handleImageFile(nodeId, file) {
+            if (!file.type.startsWith('image/')) {
+                showError('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showError('파일 크기는 10MB 이하여야 합니다.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById(`img-${nodeId}`).src = e.target.result;
+                document.getElementById(`preview-${nodeId}`).style.display = 'block';
+                imageData[nodeId] = e.target.result.split(',')[1]; // base64
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 이미지 제거
+        function removeImage(nodeId) {
+            document.getElementById(`file-${nodeId}`).value = '';
+            document.getElementById(`preview-${nodeId}`).style.display = 'none';
+            delete imageData[nodeId];
+        }
+
+        // 폼 제출
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = {
+                templateId: templateInfo.templateId,
+                categoryId: templateInfo.categoryId,
+                templateName: templateInfo.name,
+                targetAudience: formData.get('targetAudience'),
+                customerEmail: formData.get('customerEmail'),
+                content: {},
+                images: imageData
+            };
+
+            // 모든 필드 데이터 수집
+            templateInfo.nodes.forEach(node => {
+                if (node.type !== 'image') {
+                    data.content[node.id] = formData.get(node.id);
+                }
+            });
+
+            console.log('Submitting data:', data);
+
+            // 로딩 표시
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('submitBtn').disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE}/generate-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '서버 오류가 발생했습니다.');
+                }
+
+                const result = await response.json();
+                console.log('AI generation result:', result);
+
+                if (result.success) {
+                    // 세션에 결과 저장
+                    sessionStorage.setItem('aiResult', JSON.stringify(result));
+                    
+                    // 편집 화면으로 이동
+                    window.location.href = `./edit.html?requestId=${result.requestId}`;
+                } else {
+                    throw new Error(result.error || '콘텐츠 생성에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError(error.message);
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+
+        // 에러 표시
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
+

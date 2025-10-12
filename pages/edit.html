@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디자인 편집 - 신디야</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .top-nav {
+            background: white;
+            padding: 16px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0f0f0;
+            color: #2d3748;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background: #e0e0e0;
+        }
+
+        .nav-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            padding: 24px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .edit-panel, .preview-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        .panel-header {
+            margin-bottom: 24px;
+        }
+
+        .panel-header h2 {
+            font-size: 24px;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .panel-header p {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .edit-section {
+            margin-bottom: 24px;
+        }
+
+        .edit-section label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .edit-section .char-count {
+            float: right;
+            font-weight: normal;
+            color: #a0aec0;
+        }
+
+        .edit-section textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.2s ease;
+        }
+
+        .edit-section textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .image-reupload {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .image-upload-small {
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .image-upload-small:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .image-status {
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .image-status.has-image {
+            color: #059669;
+        }
+
+        .image-status.no-image {
+            color: #f59e0b;
+        }
+
+        .preview-canvas {
+            position: relative;
+            background: #f0f0f0;
+            border-radius: 12px;
+            padding: 40px;
+            min-height: 600px;
+            overflow: hidden;
+        }
+
+        .watermark-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            opacity: 0.1;
+            background-image: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 200px,
+                rgba(102, 126, 234, 0.3) 200px,
+                rgba(102, 126, 234, 0.3) 202px
+            );
+        }
+
+        .watermark-text {
+            position: absolute;
+            font-size: 48px;
+            font-weight: 900;
+            color: #667eea;
+            opacity: 0.15;
+            transform: rotate(-45deg);
+            white-space: nowrap;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .preview-content {
+            position: relative;
+            z-index: 1;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .preview-section {
+            margin-bottom: 20px;
+        }
+
+        .preview-section h3 {
+            font-size: 20px;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .preview-section p {
+            color: #4a5568;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 복사 방지 */
+        .no-copy {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="javascript:history.back()" class="back-button">
+            <span>←</span>
+            <span>뒤로</span>
+        </a>
+        <div class="nav-title">디자인 편집</div>
+        <div></div>
+    </nav>
+
+    <div class="main-container">
+        <!-- 편집 패널 -->
+        <div class="edit-panel">
+            <div class="panel-header">
+                <h2>📝 콘텐츠 수정</h2>
+                <p>AI가 생성한 텍스트를 자유롭게 수정하세요</p>
+            </div>
+
+            <div id="editSections">
+                <!-- 동적으로 생성됨 -->
+            </div>
+
+            <div class="image-reupload">
+                <h3 style="margin-bottom: 16px;">🖼️ 이미지 변경</h3>
+                <div class="image-status" id="imageStatus">
+                    ⚠️ 이미지가 없습니다
+                </div>
+                <div class="image-upload-small" id="reuploadArea">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📷</div>
+                    <div style="font-size: 14px; color: #333;">이미지 업로드하기</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">클릭하여 선택</div>
+                    <input type="file" id="reuploadInput" accept="image/*" style="display: none;">
+                </div>
+                <div id="reuploadPreview" style="display: none; margin-top: 16px; text-align: center;">
+                    <img id="reuploadImg" style="max-width: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <br>
+                    <button onclick="removeReuploadedImage()" style="margin-top: 8px; padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">이미지 제거</button>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" id="submitBtn" onclick="submitDesign()">
+                    🎨 이 내용으로 디자인 생성하기
+                </button>
+                <button class="btn btn-secondary" onclick="resetForm()">
+                    ↺ 다시 시작
+                </button>
+            </div>
+        </div>
+
+        <!-- 미리보기 패널 -->
+        <div class="preview-panel">
+            <div class="panel-header">
+                <h2>👀 실시간 미리보기</h2>
+                <p>수정한 내용이 실시간으로 반영됩니다</p>
+            </div>
+
+            <div class="preview-canvas no-copy" oncontextmenu="return false;" ondragstart="return false;">
+                <!-- 워터마크 -->
+                <div class="watermark-overlay"></div>
+                <div class="watermark-text" style="top: 20%; left: 10%;">CINDYA</div>
+                <div class="watermark-text" style="top: 50%; right: 5%;">CINDYA</div>
+                <div class="watermark-text" style="bottom: 15%; left: 15%;">CINDYA</div>
+
+                <div class="preview-content" id="previewContent">
+                    <!-- 동적으로 생성됨 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h3 style="margin-bottom: 8px;">디자인을 생성하고 있습니다...</h3>
+            <p style="color: #718096;">잠시만 기다려주세요</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://detail-page-generator.netlify.app/api';
+        
+        // 세션 데이터
+        const aiResult = JSON.parse(sessionStorage.getItem('aiResult') || '{}');
+        const templateInfo = JSON.parse(sessionStorage.getItem('selectedTemplate') || '{}');
+        
+        let editedContent = {};
+        let newImageData = null;
+
+        // 페이지 초기화
+        function init() {
+            if (!aiResult.requestId) {
+                alert('세션 정보가 없습니다.');
+                history.back();
+                return;
+            }
+
+            console.log('AI Result:', aiResult);
+            
+            // 초기 콘텐츠 설정
+            editedContent = aiResult.aiContent || {};
+            
+            // 편집 섹션 생성
+            generateEditSections();
+            
+            // 미리보기 업데이트
+            updatePreview();
+            
+            // 이미지 업로드 설정
+            setupImageReupload();
+            
+            // 복사 방지
+            preventCopy();
+        }
+
+        // 편집 섹션 생성
+        function generateEditSections() {
+            const container = document.getElementById('editSections');
+            
+            Object.entries(editedContent).forEach(([key, value]) => {
+                const section = document.createElement('div');
+                section.className = 'edit-section';
+                
+                const maxLength = 500;
+                section.innerHTML = `
+                    <label for="edit-${key}">
+                        ${formatLabel(key)}
+                        <span class="char-count"><span id="count-${key}">${value.length}</span>/${maxLength}</span>
+                    </label>
+                    <textarea 
+                        id="edit-${key}" 
+                        rows="4" 
+                        maxlength="${maxLength}"
+                    >${value}</textarea>
+                `;
+                
+                container.appendChild(section);
+                
+                // 실시간 업데이트 이벤트
+                const textarea = section.querySelector('textarea');
+                const counter = section.querySelector(`#count-${key}`);
+                
+                textarea.addEventListener('input', (e) => {
+                    editedContent[key] = e.target.value;
+                    counter.textContent = e.target.value.length;
+                    updatePreview();
+                });
+            });
+        }
+
+        // 레이블 포맷팅
+        function formatLabel(key) {
+            const labels = {
+                'main-title': '메인 제목',
+                'sub-title': '서브 제목',
+                'body-text': '본문 내용',
+                'tagline': '태그라인',
+                'description': '설명',
+                'headline': '헤드라인',
+                'subheadline': '서브헤드라인',
+                'content': '내용',
+                'product-name': '상품명',
+                'product-description': '상품 설명',
+                'price': '가격',
+                'special-offer': '특별 혜택'
+            };
+            
+            return labels[key] || key;
+        }
+
+        // 미리보기 업데이트
+        function updatePreview() {
+            const preview = document.getElementById('previewContent');
+            let html = '';
+            
+            Object.entries(editedContent).forEach(([key, value]) => {
+                html += `
+                    <div class="preview-section">
+                        <h3>${formatLabel(key)}</h3>
+                        <p>${value || '(비어있음)'}</p>
+                    </div>
+                `;
+            });
+            
+            preview.innerHTML = html;
+        }
+
+        // 이미지 재업로드 설정
+        function setupImageReupload() {
+            const area = document.getElementById('reuploadArea');
+            const input = document.getElementById('reuploadInput');
+            
+            area.addEventListener('click', () => input.click());
+            
+            input.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleImageReupload(e.target.files[0]);
+                }
+            });
+        }
+
+        // 이미지 처리
+        function handleImageReupload(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+            
+            if (file.size > 10 * 1024 * 1024) {
+                alert('파일 크기는 10MB 이하여야 합니다.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('reuploadImg').src = e.target.result;
+                document.getElementById('reuploadPreview').style.display = 'block';
+                document.getElementById('imageStatus').innerHTML = '✅ 새 이미지가 준비되었습니다';
+                document.getElementById('imageStatus').className = 'image-status has-image';
+                newImageData = e.target.result.split(',')[1];
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 이미지 제거
+        function removeReuploadedImage() {
+            document.getElementById('reuploadInput').value = '';
+            document.getElementById('reuploadPreview').style.display = 'none';
+            document.getElementById('imageStatus').innerHTML = '⚠️ 이미지가 제거되었습니다';
+            document.getElementById('imageStatus').className = 'image-status no-image';
+            newImageData = null;
+        }
+
+        // 디자인 제출
+        async function submitDesign() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            
+            try {
+                const response = await fetch(`${API_BASE}/request-design`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        requestId: aiResult.requestId,
+                        finalContent: editedContent,
+                        hasNewImage: !!newImageData,
+                        newImageData: newImageData
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('디자인 생성 요청 실패');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 결제 페이지로 이동
+                    window.location.href = `./payment.html?requestId=${aiResult.requestId}`;
+                } else {
+                    throw new Error(result.error || '디자인 생성 실패');
+                }
+            } catch (error) {
+                alert('오류: ' + error.message);
+                btn.disabled = false;
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        // 폼 리셋
+        function resetForm() {
+            if (confirm('처음부터 다시 시작하시겠습니까?')) {
+                sessionStorage.clear();
+                window.location.href = '../index.html';
+            }
+        }
+
+        // 복사 방지
+        function preventCopy() {
+            document.addEventListener('copy', (e) => {
+                if (e.target.closest('.no-copy')) {
+                    e.preventDefault();
+                    alert('미리보기는 복사할 수 없습니다.');
+                }
+            });
+            
+            document.addEventListener('contextmenu', (e) => {
+                if (e.target.closest('.no-copy')) {
+                    e.preventDefault();
+                }
+            });
+            
+            // PrintScreen 키 감지
+            document.addEventListener('keyup', (e) => {
+                if (e.key === 'PrintScreen') {
+                    alert('화면 캡처는 금지되어 있습니다. 결제 후 워터마크 없는 파일을 받으실 수 있습니다.');
+                }
+            });
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
+

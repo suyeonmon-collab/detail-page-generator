@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신디야 디자인 자동 생성기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 60px;
+            padding: 40px 20px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 20px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: var(--card-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .category-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .category-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .category-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .category-description {
+            font-size: 15px;
+            color: #718096;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .category-arrow {
+            font-size: 24px;
+            color: var(--card-color);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover .category-arrow {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 18px;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 36px;
+            }
+
+            .header p {
+                font-size: 16px;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .category-card {
+                padding: 30px 20px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .categories-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 신디야 디자인 자동 생성기</h1>
+            <p>원하는 디자인 카테고리를 선택하세요</p>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>카테고리를 불러오는 중...</p>
+        </div>
+
+        <div id="categoriesGrid" class="categories-grid">
+            <!-- 카테고리 카드들이 동적으로 생성됩니다 -->
+        </div>
+    </div>
+
+    <script>
+        // 카테고리 데이터 로드
+        async function loadCategories() {
+            const loading = document.getElementById('loading');
+            const grid = document.getElementById('categoriesGrid');
+
+            loading.style.display = 'block';
+
+            try {
+                const response = await fetch('./data/categories.json');
+                const data = await response.json();
+                
+                loading.style.display = 'none';
+                
+                // 카테고리 카드 생성
+                data.categories.forEach(category => {
+                    const card = createCategoryCard(category);
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                loading.innerHTML = '<p>카테고리를 불러오는데 실패했습니다.</p>';
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // 카테고리 카드 생성
+        function createCategoryCard(category) {
+            const card = document.createElement('div');
+            card.className = 'category-card';
+            card.style.setProperty('--card-color', category.color);
+            
+            card.innerHTML = `
+                <span class="category-icon">${category.icon}</span>
+                <h3 class="category-name">${category.name}</h3>
+                <p class="category-description">${category.description}</p>
+                <span class="category-arrow">→</span>
+            `;
+            
+            // 클릭 이벤트
+            card.addEventListener('click', () => {
+                selectCategory(category);
+            });
+            
+            return card;
+        }
+
+        // 카테고리 선택
+        function selectCategory(category) {
+            console.log('Selected category:', category);
+            
+            // 세션에 카테고리 정보 저장
+            sessionStorage.setItem('selectedCategory', JSON.stringify(category));
+            
+            // 템플릿 선택 페이지로 이동
+            window.location.href = `./pages/templates.html?category=${category.id}`;
+        }
+
+        // 페이지 로드 시 카테고리 로드
+        document.addEventListener('DOMContentLoaded', loadCategories);
+    </script>
+</body>
+</html>

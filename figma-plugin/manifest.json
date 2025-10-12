@@ -1,0 +1,13 @@
+{
+  "name": "Detail Page Automator",
+  "id": "detail-page-automator",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "relaunchButtons": [
+    { "command": "open", "name": "Open Panel" }
+  ]
+}
+
+

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dynamic Detail Page Automator</title>
+  <style>
+    body { 
+      font-family: Inter, Arial, sans-serif; 
+      margin: 16px; 
+      background: #f8f9fa;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #5b6ef5 0%, #3f51b5 100%);
+      color: white;
+      padding: 16px;
+      margin: -16px -16px 20px -16px;
+      border-radius: 0 0 12px 12px;
+    }
+    
+    .header h2 { 
+      margin: 0 0 8px; 
+      font-size: 18px; 
+      font-weight: 600;
+    }
+    
+    .header p {
+      margin: 0;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .analysis-summary {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .analysis-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+    
+    .analysis-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .detected-template {
+      background: #dcfce7;
+      color: #166534;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    
+    .node-group {
+      margin-bottom: 20px;
+    }
+    
+    .node-group-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .node-item {
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 8px;
+    }
+    
+    .node-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .node-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+    }
+    
+    .node-info {
+      font-size: 10px;
+      color: #6b7280;
+    }
+    
+    .node-preview {
+      font-size: 11px;
+      color: #6b7280;
+      font-style: italic;
+      margin-bottom: 8px;
+      background: #f3f4f6;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    label { 
+      display: block; 
+      font-size: 11px; 
+      color: #555; 
+      margin-bottom: 4px; 
+      font-weight: 500;
+    }
+    
+    input, textarea { 
+      width: 100%; 
+      box-sizing: border-box; 
+      padding: 8px; 
+      border: 1px solid #d1d5db; 
+      border-radius: 4px; 
+      font-size: 12px;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #5b6ef5;
+    }
+    
+    textarea { 
+      height: 60px; 
+      resize: vertical; 
+    }
+    
+    .image-upload-area {
+      border: 2px dashed #d1d5db;
+      border-radius: 6px;
+      padding: 20px;
+      text-align: center;
+      background: #f9fafb;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .image-upload-area:hover {
+      border-color: #5b6ef5;
+      background: #f0f2ff;
+    }
+    
+    .image-upload-area.has-image {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+    
+    .upload-icon {
+      font-size: 24px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+    
+    .upload-text {
+      font-size: 12px;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+    
+    .upload-subtext {
+      font-size: 10px;
+      color: #6b7280;
+    }
+    
+    .image-preview {
+      margin-top: 8px;
+    }
+    
+    .image-preview img {
+      max-width: 100%;
+      max-height: 80px;
+      border-radius: 4px;
+    }
+    
+    
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    
+    button { 
+      flex: 1;
+      padding: 12px; 
+      border: 0; 
+      border-radius: 6px; 
+      background: #5b6ef5; 
+      color: #fff; 
+      cursor: pointer; 
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    
+    button:hover {
+      background: #4c5ce8;
+      transform: translateY(-1px);
+    }
+    
+    button.secondary { 
+      background: #e6e8ff; 
+      color: #3f51b5; 
+    }
+    
+    button.secondary:hover {
+      background: #d1d5ff;
+    }
+    
+    button.danger {
+      background: #ef4444;
+    }
+    
+    button.danger:hover {
+      background: #dc2626;
+    }
+
+    button.web-integration {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+    }
+
+    button.web-integration:hover {
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+      transform: translateY(-1px);
+    }
+    
+    button:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .status {
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-top: 12px;
+      display: none;
+    }
+    
+    .status.success {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    
+    .status.error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+    
+    .status.info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+    
+    .download-link {
+      display: none;
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: #059669;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 12px;
+      text-align: center;
+    }
+    
+    .download-link:hover {
+      background: #047857;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #6b7280;
+    }
+    
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .empty-state-text {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .empty-state-subtext {
+      font-size: 12px;
+    }
+  </style>
+  <script>
+    // 전역 변수
+    let pageAnalysis = null;
+    let nodeValues = {}; // {nodeId: value} 형태로 저장
+
+    // 피그마 플러그인 환경 확인
+    if (typeof parent === 'undefined') {
+      window.parent = {
+        postMessage: function(data, origin) {
+          console.log('Mock postMessage:', data);
+        }
+      };
+    }
+
+    function post(type, payload) { 
+      try {
+        parent.postMessage({ pluginMessage: { type, payload } }, '*');
+      } catch (error) {
+        console.error('Post message error:', error);
+      }
+    }
+
+    function onmessage(event) {
+      try {
+        const msg = event.data && event.data.pluginMessage;
+        if (!msg) return;
+
+        switch (msg.type) {
+          case 'page-analysis':
+            pageAnalysis = msg.payload;
+            updatePageAnalysis();
+            generateDynamicUI();
+            break;
+          case 'update-complete':
+            const payload = msg.payload || {};
+            setStatus(`${payload.updatedCount || 0}개 노드가 업데이트되었습니다.${payload.errorCount > 0 ? ` (${payload.errorCount}개 오류)` : ''}`, 'success');
+            break;
+          case 'export-done':
+            const exportPayload = msg.payload || {};
+            const base64 = exportPayload.base64;
+            const filename = exportPayload.filename || 'export.png';
+            
+            if (base64) {
+              const link = document.getElementById('download');
+              if (link) {
+                link.href = 'data:image/png;base64,' + base64;
+                link.download = filename;
+                link.textContent = 'PNG 다운로드';
+                link.style.display = 'block';
+              }
+              setStatus('고품질 PNG 내보내기가 완료되었습니다.', 'success');
+            }
+            break;
+          case 'error':
+            const errorMsg = msg.payload && msg.payload.message;
+            setStatus('오류: ' + (errorMsg || '알 수 없는 오류'), 'error');
+            break;
+          default:
+            console.warn('Unknown message type:', msg.type);
+        }
+      } catch (error) {
+        console.error('Message handling error:', error);
+        setStatus('메시지 처리 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    function updatePageAnalysis() {
+      if (!pageAnalysis) return;
+      
+      const analysisDiv = document.getElementById('pageAnalysis');
+      if (!analysisDiv) return;
+      
+      analysisDiv.innerHTML = `
+        <div class="analysis-item">
+          <span>프레임 수:</span>
+          <span>${pageAnalysis.frames || 0}</span>
+        </div>
+        <div class="analysis-item">
+          <span>텍스트 노드:</span>
+          <span>${pageAnalysis.textNodes || 0}</span>
+        </div>
+        <div class="analysis-item">
+          <span>이미지 노드:</span>
+          <span>${pageAnalysis.imageNodes || 0}</span>
+        </div>
+      `;
+    }
+
+    function generateDynamicUI() {
+      if (!pageAnalysis) return;
+
+      const textNodesContainer = document.getElementById('textNodesContainer');
+      const imageNodesContainer = document.getElementById('imageNodesContainer');
+      
+      if (!textNodesContainer || !imageNodesContainer) return;
+
+      // 텍스트 노드 UI 생성
+      if (pageAnalysis.textNodeDetails && pageAnalysis.textNodeDetails.length > 0) {
+        textNodesContainer.innerHTML = `
+          <div class="node-group-title">📝 텍스트 노드 (${pageAnalysis.textNodeDetails.length}개)</div>
+          ${pageAnalysis.textNodeDetails.map(node => `
+            <div class="node-item">
+              <div class="node-header">
+                <span class="node-name">${node.name}</span>
+                <span class="node-info">${node.fontSize}px • ${node.fontFamily}</span>
+              </div>
+              ${node.preview ? `<div class="node-preview">현재: "${node.preview}"</div>` : ''}
+              <label for="text-${node.id}">새 텍스트 내용:</label>
+              <textarea 
+                id="text-${node.id}" 
+                data-node-id="${node.id}"
+                placeholder="새로운 텍스트를 입력하세요..."
+                onchange="updateNodeValue('${node.id}', this.value)"
+              >${node.currentValue || ''}</textarea>
+            </div>
+          `).join('')}
+        `;
+      } else {
+        textNodesContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📝</div>
+            <div class="empty-state-text">텍스트 노드가 없습니다</div>
+            <div class="empty-state-subtext">페이지에 텍스트 요소를 추가해주세요</div>
+          </div>
+        `;
+      }
+
+      // 이미지 노드 UI 생성
+      if (pageAnalysis.imageNodeDetails && pageAnalysis.imageNodeDetails.length > 0) {
+        imageNodesContainer.innerHTML = `
+          <div class="node-group-title">🖼️ 이미지 노드 (${pageAnalysis.imageNodeDetails.length}개)</div>
+          ${pageAnalysis.imageNodeDetails.map(node => `
+            <div class="node-item">
+              <div class="node-header">
+                <span class="node-name">${node.name}</span>
+                <span class="node-info">${Math.round(node.width)}×${Math.round(node.height)}px</span>
+              </div>
+              <div class="image-upload-area ${node.hasImage ? 'has-image' : ''}" onclick="document.getElementById('image-${node.id}').click()">
+                <div class="upload-icon">${node.hasImage ? '🖼️' : '📷'}</div>
+                <div class="upload-text">${node.hasImage ? '이미지 변경' : '이미지 업로드'}</div>
+                <div class="upload-subtext">클릭하여 이미지 선택</div>
+                <input 
+                  type="file" 
+                  id="image-${node.id}" 
+                  data-node-id="${node.id}"
+                  accept="image/*" 
+                  style="display: none;"
+                  onchange="handleImageUpload('${node.id}', this)"
+                />
+                <div class="image-preview" id="preview-${node.id}"></div>
+              </div>
+            </div>
+          `).join('')}
+        `;
+      } else {
+        imageNodesContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🖼️</div>
+            <div class="empty-state-text">이미지 노드가 없습니다</div>
+            <div class="empty-state-subtext">페이지에 사각형이나 원형 요소를 추가해주세요</div>
+          </div>
+        `;
+      }
+    }
+
+    function updateNodeValue(nodeId, value) {
+      nodeValues[nodeId] = value;
+    }
+
+    function handleImageUpload(nodeId, input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        setStatus('이미지 파일만 업로드 가능합니다.', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          // base64 데이터에서 data:image/...;base64, 부분 제거
+          const base64 = e.target.result.split(',')[1];
+          nodeValues[nodeId] = base64;
+          
+          // 미리보기 표시
+          const preview = document.getElementById(`preview-${nodeId}`);
+          if (preview) {
+            preview.innerHTML = `<img src="${e.target.result}" alt="미리보기">`;
+          }
+          
+          // 업로드 영역 스타일 변경
+          const uploadArea = input.parentElement;
+          uploadArea.classList.add('has-image');
+          
+          setStatus('이미지가 준비되었습니다.', 'success');
+        } catch (error) {
+          console.error('Image processing error:', error);
+          setStatus('이미지 처리 중 오류가 발생했습니다.', 'error');
+        }
+      };
+      reader.onerror = function() {
+        setStatus('이미지 읽기 중 오류가 발생했습니다.', 'error');
+      };
+      reader.readAsDataURL(file);
+    }
+
+
+    function setStatus(text, type) {
+      const statusDiv = document.getElementById('status');
+      if (!statusDiv) return;
+      
+      statusDiv.textContent = text || '';
+      statusDiv.className = `status ${type || 'info'}`;
+      statusDiv.style.display = 'block';
+      
+      // 3초 후 자동 숨김
+      setTimeout(() => {
+        statusDiv.style.display = 'none';
+      }, 3000);
+    }
+
+    function applyChanges() {
+      try {
+        if (!pageAnalysis) {
+          setStatus('페이지 분석을 먼저 실행해주세요.', 'error');
+          return;
+        }
+
+        // 텍스트 노드와 이미지 노드 데이터 분리
+        const textNodes = {};
+        const imageNodes = {};
+
+        // 모든 입력 필드에서 값 수집
+        Object.keys(nodeValues).forEach(nodeId => {
+          const value = nodeValues[nodeId];
+          
+          // 텍스트 노드인지 이미지 노드인지 확인
+          const isTextNode = pageAnalysis.textNodeDetails && 
+            pageAnalysis.textNodeDetails.some(node => node.id === nodeId);
+          
+          if (isTextNode) {
+            textNodes[nodeId] = value;
+          } else {
+            imageNodes[nodeId] = value;
+          }
+        });
+
+        if (Object.keys(textNodes).length === 0 && Object.keys(imageNodes).length === 0) {
+          setStatus('변경할 내용이 없습니다.', 'error');
+          return;
+        }
+
+        setStatus('노드 업데이트 중...', 'info');
+        
+        post('update-nodes', {
+          textNodes: textNodes,
+          imageNodes: imageNodes
+        });
+      } catch (error) {
+        console.error('Apply changes error:', error);
+        setStatus('변경사항 적용 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+
+    function exportPNG() {
+      try {
+        setStatus('고품질 PNG 내보내기 중...', 'info');
+        post('export-png');
+      } catch (error) {
+        console.error('Export PNG error:', error);
+        setStatus('PNG 내보내기 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    function analyzePage() {
+      try {
+        setStatus('페이지 분석 중...', 'info');
+        post('analyze-page');
+      } catch (error) {
+        console.error('Analyze page error:', error);
+        setStatus('페이지 분석 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    function closePlugin() { 
+      try {
+        post('close');
+      } catch (error) {
+        console.error('Close plugin error:', error);
+      }
+    }
+
+    // 웹앱 연동 함수
+    function processWebDesigns() {
+      try {
+        setStatus('웹앱에서 대기 중인 디자인을 처리하고 있습니다...', 'info');
+        post('process-web-designs');
+      } catch (error) {
+        console.error('웹앱 디자인 처리 오류:', error);
+        setStatus('웹앱 디자인 처리 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
+    // DOM 로드 완료 후 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        // 페이지 분석 실행
+        analyzePage();
+      } catch (error) {
+        console.error('Initialization error:', error);
+        setStatus('초기화 중 오류가 발생했습니다.', 'error');
+      }
+    });
+
+    // 전역 이벤트 리스너 등록
+    window.addEventListener('message', onmessage);
+  </script>
+</head>
+<body>
+  <div class="header">
+    <h2>🎨 Dynamic Detail Page Automator</h2>
+    <p>노드 기반 동적 상세페이지 자동 생성</p>
+  </div>
+
+  <div class="analysis-summary" id="pageAnalysis">
+    <div class="analysis-item">
+      <span>페이지 분석 중...</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">
+      📝 텍스트 노드 편집
+    </div>
+    <div id="textNodesContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">⏳</div>
+        <div class="empty-state-text">페이지 분석 중...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">
+      🖼️ 이미지 노드 편집
+    </div>
+    <div id="imageNodesContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">⏳</div>
+        <div class="empty-state-text">페이지 분석 중...</div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="button-group">
+    <button onclick="applyChanges()">✅ 변경사항 적용</button>
+  </div>
+
+  <div class="button-group">
+    <button class="secondary" onclick="analyzePage()">🔍 페이지 재분석</button>
+    <button class="secondary" onclick="exportPNG()">📥 PNG 내보내기</button>
+  </div>
+
+  <div class="button-group">
+    <button class="web-integration" onclick="processWebDesigns()">🌐 웹앱 디자인 처리</button>
+  </div>
+
+  <button class="danger" onclick="closePlugin()">❌ 닫기</button>
+
+  <div id="status" class="status"></div>
+  <a id="download" class="download-link" href="#" download>PNG 다운로드</a>
+</body>
+</html>

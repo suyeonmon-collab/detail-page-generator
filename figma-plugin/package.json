@@ -1,0 +1,23 @@
+{
+  "name": "figma-plugin-detail-page-automator",
+  "version": "1.0.0",
+  "description": "Enhanced Detail Page Automator for Figma",
+  "main": "code.js",
+  "scripts": {
+    "build": "echo 'No build step required for Figma plugins'",
+    "lint": "echo 'Linting disabled for Figma plugin'"
+  },
+  "keywords": [
+    "figma",
+    "plugin",
+    "automation",
+    "design"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "figma": {
+    "id": "detail-page-automator",
+    "name": "Detail Page Automator"
+  }
+}
+
