@@ -2,6 +2,7 @@
   "name": "cindya-design-generator",
   "version": "1.0.0",
   "description": "AI-powered design generator with category-based templates",
+  "type": "commonjs",
   "scripts": {
     "dev": "vercel dev",
     "build": "echo 'No build needed - static site'",
