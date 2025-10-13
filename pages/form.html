@@ -492,8 +492,55 @@
             });
         }
 
+        // 이미지 압축 함수
+        function compressImage(file, maxWidth = 1200, quality = 0.8) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // 이미지 크기 조정
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // 압축된 base64 반환
+                        canvas.toBlob(
+                            (blob) => {
+                                const compressedReader = new FileReader();
+                                compressedReader.onload = (event) => {
+                                    resolve({
+                                        dataUrl: event.target.result,
+                                        base64: event.target.result.split(',')[1],
+                                        size: blob.size
+                                    });
+                                };
+                                compressedReader.readAsDataURL(blob);
+                            },
+                            'image/jpeg',
+                            quality
+                        );
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         // 이미지 파일 처리
-        function handleImageFile(nodeId, file) {
+        async function handleImageFile(nodeId, file) {
             if (!file.type.startsWith('image/')) {
                 showError('이미지 파일만 업로드 가능합니다.');
                 return;
@@ -504,13 +551,19 @@
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById(`img-${nodeId}`).src = e.target.result;
+            try {
+                // 이미지 압축
+                console.log('원본 이미지 크기:', (file.size / 1024).toFixed(2), 'KB');
+                const compressed = await compressImage(file);
+                console.log('압축된 이미지 크기:', (compressed.size / 1024).toFixed(2), 'KB');
+
+                document.getElementById(`img-${nodeId}`).src = compressed.dataUrl;
                 document.getElementById(`preview-${nodeId}`).style.display = 'block';
-                imageData[nodeId] = e.target.result.split(',')[1]; // base64
-            };
-            reader.readAsDataURL(file);
+                imageData[nodeId] = compressed.base64;
+            } catch (error) {
+                console.error('이미지 압축 실패:', error);
+                showError('이미지 처리 중 오류가 발생했습니다.');
+            }
         }
 
         // 이미지 제거
