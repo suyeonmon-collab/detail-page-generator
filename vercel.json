@@ -13,8 +13,7 @@
   "functions": {
     "api/**/*.js": {
       "memory": 1024,
-      "maxDuration": 30,
-      "maxRequestBodySize": "10mb"
+      "maxDuration": 30
     }
   }
 }
