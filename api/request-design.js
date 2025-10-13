@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
     
     // 수정된 내용 저장
     const { error: updateError } = await supabase
-      .from('designs')
+      .from('detail_requests')
       .update({
         edited_content: data.finalContent,
         image_data: data.newImageData || null,

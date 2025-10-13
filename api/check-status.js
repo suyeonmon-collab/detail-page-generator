@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     }
     
     const { data, error } = await supabase
-      .from('designs')
+      .from('detail_requests')
       .select('status, figma_link, png_link')
       .eq('id', requestId)
       .single();

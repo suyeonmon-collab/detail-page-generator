@@ -43,20 +43,17 @@ module.exports = async (req, res) => {
 
     // 3. DB에 저장
     const { data: design, error: insertError } = await supabase
-      .from('designs')
+      .from('detail_requests')
       .insert([{
         customer_email: data.customerEmail,
-        category_id: data.categoryId,
-        template_id: data.templateId,
-        template_name: data.templateName,
+        product_name: data.templateName || 'Unknown',
+        product_description: JSON.stringify(data.content || {}),
         target_audience: data.targetAudience,
-        input_data: data.content,
-        ai_generated_content: aiContent,
-        images: data.images || {},
-        payment_status: 'pending',
-        preview_with_watermark: figmaPreview.previewUrl,
-        status: 'ai_completed',
-        created_at: new Date().toISOString()
+        product_category: data.categoryId,
+        template: data.templateId,
+        image_data: JSON.stringify(data.images || {}),
+        ai_content: aiContent,
+        status: 'ai_completed'
       }])
       .select()
       .single();
