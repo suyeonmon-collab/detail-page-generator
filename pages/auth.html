@@ -21,7 +21,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f8fafc;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -31,91 +31,64 @@
 
         .auth-container {
             background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            max-width: 500px;
+            border-radius: 12px;
+            padding: 48px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+            max-width: 400px;
             width: 100%;
             text-align: center;
         }
 
         .logo {
-            font-size: 32px;
-            font-weight: 800;
-            color: #667eea;
-            margin-bottom: 10px;
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
         }
 
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
+            color: #718096;
+            margin-bottom: 32px;
             font-size: 16px;
+            font-weight: 400;
         }
 
         .auth-buttons {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 12px;
+            margin-bottom: 24px;
         }
 
         .auth-btn {
-            padding: 15px 20px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             text-decoration: none;
             display: inline-block;
+            background: white;
+            color: #374151;
+        }
+
+        .auth-btn:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
         }
 
         .signin-btn {
-            background: #667eea;
+            background: #1a202c;
             color: white;
+            border-color: #1a202c;
         }
 
         .signin-btn:hover {
-            background: #5a6fd8;
-            transform: translateY(-2px);
-        }
-
-        .signup-btn {
-            background: #f8f9fa;
-            color: #333;
-            border: 2px solid #e9ecef;
-        }
-
-        .signup-btn:hover {
-            background: #e9ecef;
-            transform: translateY(-2px);
-        }
-
-        .social-login {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e9ecef;
-        }
-
-        .social-btn {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .social-btn:hover {
-            background: #f8f9fa;
-            transform: translateY(-1px);
+            background: #2d3748;
+            border-color: #2d3748;
         }
 
         .back-link {
@@ -166,17 +139,7 @@
         <div id="auth-content">
             <div class="auth-buttons">
                 <button class="auth-btn signin-btn" onclick="showSignIn()">로그인</button>
-                <button class="auth-btn signup-btn" onclick="showSignUp()">회원가입</button>
-            </div>
-
-            <div class="social-login">
-                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">소셜 로그인</p>
-                <button class="social-btn" onclick="signInWithGoogle()">
-                    <span>🔍</span> Google로 계속하기
-                </button>
-                <button class="social-btn" onclick="signInWithKakao()">
-                    <span>💬</span> 카카오로 계속하기
-                </button>
+                <button class="auth-btn" onclick="showSignUp()">회원가입</button>
             </div>
         </div>
 
@@ -250,33 +213,6 @@
             });
         }
 
-        // Google 로그인
-        function signInWithGoogle() {
-            if (!clerk) {
-                alert('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
-                return;
-            }
-
-            clerk.authenticateWithRedirect({
-                strategy: 'oauth_google',
-                redirectUrl: '/dashboard',
-                redirectUrlComplete: '/dashboard'
-            });
-        }
-
-        // 카카오 로그인
-        function signInWithKakao() {
-            if (!clerk) {
-                alert('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
-                return;
-            }
-
-            clerk.authenticateWithRedirect({
-                strategy: 'oauth_kakao',
-                redirectUrl: '/dashboard',
-                redirectUrlComplete: '/dashboard'
-            });
-        }
 
         // Clerk 이벤트 리스너
         if (window.Clerk) {
