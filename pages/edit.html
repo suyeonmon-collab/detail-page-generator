@@ -644,21 +644,62 @@
             document.getElementById('save-button').style.display = 'inline-block';
         }
 
-        // 미리보기 보기
+        // 미리보기 보기 (디자인편집하기로 변경)
         function previewDesign() {
-            const editedContent = document.getElementById('ai-content').textContent.trim();
+            console.log('🔵 [previewDesign] 시작');
             
-            if (!editedContent) {
+            // 편집된 내용 수집
+            const editSections = document.getElementById('editSections');
+            if (!editSections) {
+                console.error('🔴 [previewDesign] editSections를 찾을 수 없습니다');
+                alert('편집 섹션을 찾을 수 없습니다.');
+                return;
+            }
+
+            // 모든 편집 가능한 요소에서 내용 수집
+            const editedContent = {};
+            const textElements = editSections.querySelectorAll('[contenteditable="true"]');
+            const inputElements = editSections.querySelectorAll('input, textarea');
+            
+            console.log('🟢 [previewDesign] 텍스트 요소:', textElements.length);
+            console.log('🟢 [previewDesign] 입력 요소:', inputElements.length);
+
+            // contenteditable 요소들 처리
+            textElements.forEach((element, index) => {
+                const key = element.dataset.key || `text_${index}`;
+                editedContent[key] = element.textContent.trim();
+            });
+
+            // input/textarea 요소들 처리
+            inputElements.forEach((element, index) => {
+                const key = element.dataset.key || element.name || `input_${index}`;
+                editedContent[key] = element.value.trim();
+            });
+
+            console.log('🟢 [previewDesign] 수집된 내용:', editedContent);
+
+            if (Object.keys(editedContent).length === 0) {
                 alert('편집할 내용이 없습니다.');
                 return;
             }
 
             // 미리보기 패널에 내용 표시
             const previewContent = document.getElementById('previewContent');
+            if (!previewContent) {
+                console.error('🔴 [previewDesign] previewContent를 찾을 수 없습니다');
+                alert('미리보기 패널을 찾을 수 없습니다.');
+                return;
+            }
+
             previewContent.innerHTML = `
                 <div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <h3 style="margin-bottom: 16px; color: #2d3748;">📝 편집된 내용</h3>
-                    <div style="line-height: 1.6; color: #4a5568; white-space: pre-wrap;">${editedContent}</div>
+                    ${Object.entries(editedContent).map(([key, value]) => `
+                        <div style="margin-bottom: 12px; padding: 12px; background: #f7fafc; border-radius: 6px;">
+                            <strong style="color: #4a5568; font-size: 12px; text-transform: uppercase;">${key}:</strong>
+                            <div style="margin-top: 4px; color: #2d3748;">${value || '(비어있음)'}</div>
+                        </div>
+                    `).join('')}
                 </div>
             `;
 
@@ -668,6 +709,8 @@
 
             // 미리보기 패널로 스크롤
             document.querySelector('.preview-panel').scrollIntoView({ behavior: 'smooth' });
+            
+            console.log('🟢 [previewDesign] 완료');
         }
 
         // 초기화
