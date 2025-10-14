@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - 신디야 디자인 자동 생성기</title>
+    <!-- Clerk Authentication -->
+    <script
+        async
+        crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_bWludC1nZWNrby02Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+        src="https://mint-gecko-62.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+        type="text/javascript">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .auth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .auth-btn {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .signin-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .signin-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .signup-btn {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e9ecef;
+        }
+
+        .signup-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .social-login {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .social-btn {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .social-btn:hover {
+            background: #f8f9fa;
+            transform: translateY(-1px);
+        }
+
+        .back-link {
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            display: none;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Clerk 컴포넌트 스타일링 */
+        .cl-signIn, .cl-signUp {
+            width: 100%;
+        }
+
+        .cl-card {
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+        .cl-headerTitle {
+            color: #667eea !important;
+            font-weight: 800 !important;
+        }
+
+        .cl-footerActionLink {
+            color: #667eea !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="logo">🎨 신디야</div>
+        <p class="subtitle">AI 디자인 자동 생성기</p>
+        
+        <div id="auth-content">
+            <div class="auth-buttons">
+                <button class="auth-btn signin-btn" onclick="showSignIn()">로그인</button>
+                <button class="auth-btn signup-btn" onclick="showSignUp()">회원가입</button>
+            </div>
+
+            <div class="social-login">
+                <p style="color: #666; font-size: 14px; margin-bottom: 15px;">소셜 로그인</p>
+                <button class="social-btn" onclick="signInWithGoogle()">
+                    <span>🔍</span> Google로 계속하기
+                </button>
+                <button class="social-btn" onclick="signInWithKakao()">
+                    <span>💬</span> 카카오로 계속하기
+                </button>
+            </div>
+        </div>
+
+        <div id="clerk-components" style="display: none;">
+            <!-- Clerk 컴포넌트가 여기에 렌더링됩니다 -->
+        </div>
+
+        <div class="loading" id="loading">
+            로딩 중...
+        </div>
+
+        <div class="back-link">
+            <a href="/">← 홈으로 돌아가기</a>
+        </div>
+    </div>
+
+    <script>
+        let clerk = null;
+
+        // Clerk 초기화
+        window.addEventListener('load', async () => {
+            try {
+                clerk = window.Clerk;
+                if (!clerk) {
+                    throw new Error('Clerk not loaded');
+                }
+                
+                await clerk.load();
+                console.log('✅ Clerk loaded successfully');
+                
+                // 이미 로그인된 사용자 확인
+                if (clerk.user) {
+                    window.location.href = '/dashboard';
+                }
+            } catch (error) {
+                console.error('❌ Clerk loading failed:', error);
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').textContent = '인증 서비스 로딩 중...';
+            }
+        });
+
+        // 로그인 폼 표시
+        function showSignIn() {
+            if (!clerk) {
+                alert('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+                return;
+            }
+
+            document.getElementById('auth-content').style.display = 'none';
+            document.getElementById('clerk-components').style.display = 'block';
+            
+            clerk.openSignIn({
+                afterSignInUrl: '/dashboard',
+                afterSignUpUrl: '/dashboard'
+            });
+        }
+
+        // 회원가입 폼 표시
+        function showSignUp() {
+            if (!clerk) {
+                alert('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+                return;
+            }
+
+            document.getElementById('auth-content').style.display = 'none';
+            document.getElementById('clerk-components').style.display = 'block';
+            
+            clerk.openSignUp({
+                afterSignInUrl: '/dashboard',
+                afterSignUpUrl: '/dashboard'
+            });
+        }
+
+        // Google 로그인
+        function signInWithGoogle() {
+            if (!clerk) {
+                alert('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+                return;
+            }
+
+            clerk.authenticateWithRedirect({
+                strategy: 'oauth_google',
+                redirectUrl: '/dashboard',
+                redirectUrlComplete: '/dashboard'
+            });
+        }
+
+        // 카카오 로그인
+        function signInWithKakao() {
+            if (!clerk) {
+                alert('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+                return;
+            }
+
+            clerk.authenticateWithRedirect({
+                strategy: 'oauth_kakao',
+                redirectUrl: '/dashboard',
+                redirectUrlComplete: '/dashboard'
+            });
+        }
+
+        // Clerk 이벤트 리스너
+        if (window.Clerk) {
+            window.Clerk.addListener(({ user }) => {
+                if (user) {
+                    console.log('✅ User signed in:', user.emailAddresses[0]?.emailAddress);
+                    window.location.href = '/dashboard';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

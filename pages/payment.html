@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>결제 - 신디야</title>
+    <title>결제 - 신디야 디자인 자동 생성기</title>
+    <!-- Clerk Authentication -->
+    <script
+        async
+        crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_bWludC1nZWNrby02Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+        src="https://mint-gecko-62.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+        type="text/javascript">
+    </script>
     <style>
         * {
             margin: 0;
@@ -50,47 +58,42 @@
             margin-bottom: 30px;
         }
 
-        .preview-label {
-            font-size: 16px;
+        .preview-title {
+            font-size: 18px;
             font-weight: 600;
             color: #2d3748;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
-        .preview-image {
-            width: 100%;
+        .preview-content {
+            background: #f8f9fa;
             border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
+            padding: 20px;
+            border-left: 4px solid #667eea;
         }
 
-        .preview-image img {
-            width: 100%;
-            display: block;
+        .preview-text {
+            color: #4a5568;
+            line-height: 1.6;
+            font-size: 14px;
         }
 
-        .watermark-badge {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: rgba(255,255,255,0.9);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #667eea;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .design-info {
+        .pricing-section {
             background: #f7fafc;
-            border-radius: 12px;
-            padding: 24px;
+            border-radius: 15px;
+            padding: 25px;
             margin-bottom: 30px;
         }
 
-        .info-row {
+        .pricing-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .price-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -98,75 +101,114 @@
             border-bottom: 1px solid #e2e8f0;
         }
 
-        .info-row:last-child {
+        .price-item:last-child {
             border-bottom: none;
+            font-weight: 700;
+            font-size: 18px;
+            color: #2d3748;
+            margin-top: 10px;
             padding-top: 20px;
-            margin-top: 12px;
-            border-top: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
         }
 
-        .info-label {
-            font-size: 15px;
-            color: #718096;
+        .price-label {
+            color: #4a5568;
         }
 
-        .info-value {
-            font-size: 16px;
+        .price-value {
             color: #2d3748;
             font-weight: 600;
         }
 
-        .info-value.price {
-            font-size: 24px;
-            color: #667eea;
-            font-weight: 700;
+        .payment-methods {
+            margin-bottom: 30px;
         }
 
-        .notice-box {
-            background: #fef5e7;
-            border: 1px solid #f8e5a1;
+        .payment-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .payment-option {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .payment-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .payment-option.selected {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .payment-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .payment-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .payment-desc {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        .user-info {
+            background: #f0f4ff;
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 30px;
         }
 
-        .notice-box h3 {
+        .user-title {
             font-size: 16px;
-            color: #d97706;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
         }
 
-        .notice-box ul {
-            margin-left: 24px;
-        }
-
-        .notice-box li {
-            color: #92400e;
+        .user-details {
+            color: #4a5568;
             font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 8px;
         }
 
         .payment-button {
             width: 100%;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             border: none;
+            padding: 18px;
             border-radius: 12px;
-            font-size: 20px;
-            font-weight: 700;
+            font-size: 18px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         .payment-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+            background: #5a6fd8;
+            transform: translateY(-2px);
         }
 
         .payment-button:disabled {
@@ -175,196 +217,306 @@
             transform: none;
         }
 
-        .cancel-button {
-            width: 100%;
-            padding: 16px;
-            background: #f7fafc;
-            color: #718096;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .back-link {
+            text-align: center;
         }
 
-        .cancel-button:hover {
-            background: #edf2f7;
-            border-color: #cbd5e0;
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
         }
 
         .loading {
+            display: none;
             text-align: center;
-            padding: 60px 20px;
+            color: #4a5568;
+            margin: 20px 0;
         }
 
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
+        .success-message {
+            display: none;
+            background: #d4edda;
+            color: #155724;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .error-message {
+            display: none;
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
         }
 
-        @media (max-width: 768px) {
-            .payment-card {
-                padding: 24px;
-            }
-
-            .header h1 {
-                font-size: 24px;
-            }
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="payment-card">
-            <div id="loading" class="loading">
-                <div class="spinner"></div>
-                <p style="color: #718096; font-size: 16px;">결제 정보를 불러오는 중...</p>
+            <div class="header">
+                <h1>🎨 결제하기</h1>
+                <p>디자인 생성 서비스 결제</p>
             </div>
 
-            <div id="paymentContent" style="display: none;">
-                <div class="header">
-                    <h1>💳 결제하기</h1>
-                    <p>디자인이 완성되었습니다. 결제 후 워터마크 없는 최종 파일을 받으실 수 있습니다.</p>
+            <div class="user-info">
+                <div class="user-title">👤 결제자 정보</div>
+                <div class="user-details" id="user-details">
+                    로딩 중...
                 </div>
+            </div>
 
-                <div class="preview-section">
-                    <div class="preview-label">📋 최종 미리보기</div>
-                    <div class="preview-image">
-                        <img id="previewImage" src="" alt="디자인 미리보기">
-                        <div class="watermark-badge">워터마크 포함</div>
-                    </div>
-                </div>
-
-                <div class="design-info">
-                    <div class="info-row">
-                        <span class="info-label">디자인 ID</span>
-                        <span class="info-value" id="designId">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">카테고리</span>
-                        <span class="info-value" id="category">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">템플릿</span>
-                        <span class="info-value" id="template">-</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">가격</span>
-                        <span class="info-value price" id="price">-</span>
+            <div class="preview-section">
+                <div class="preview-title">📋 주문 내용</div>
+                <div class="preview-content">
+                    <div class="preview-text" id="preview-text">
+                        로딩 중...
                     </div>
                 </div>
+            </div>
 
-                <div class="notice-box">
-                    <h3>⚠️ 결제 전 확인사항</h3>
-                    <ul>
-                        <li>결제 완료 후 30분 이내에 최종 파일이 이메일로 발송됩니다</li>
-                        <li>최종 파일은 워터마크가 제거된 고해상도 파일입니다</li>
-                        <li>Figma 편집 가능 파일과 PNG/JPG 이미지 파일이 제공됩니다</li>
-                        <li>파일 다운로드 링크는 30일간 유효합니다</li>
-                    </ul>
+            <div class="pricing-section">
+                <div class="pricing-title">💰 결제 금액</div>
+                <div class="price-item">
+                    <span class="price-label">디자인 생성 서비스</span>
+                    <span class="price-value" id="service-price">29,000원</span>
                 </div>
+                <div class="price-item">
+                    <span class="price-label">부가세 (10%)</span>
+                    <span class="price-value" id="tax-price">2,900원</span>
+                </div>
+                <div class="price-item">
+                    <span class="price-label">총 결제 금액</span>
+                    <span class="price-value" id="total-price">31,900원</span>
+                </div>
+            </div>
 
-                <button class="payment-button" id="paymentBtn" onclick="proceedToPayment()">
-                    💳 결제하고 다운로드하기
-                </button>
+            <div class="payment-methods">
+                <div class="payment-title">💳 결제 방법</div>
+                <div class="payment-options">
+                    <div class="payment-option" data-method="card" onclick="selectPaymentMethod('card')">
+                        <div class="payment-icon">💳</div>
+                        <div class="payment-name">신용카드</div>
+                        <div class="payment-desc">안전한 카드 결제</div>
+                    </div>
+                    <div class="payment-option" data-method="kakao" onclick="selectPaymentMethod('kakao')">
+                        <div class="payment-icon">💬</div>
+                        <div class="payment-name">카카오페이</div>
+                        <div class="payment-desc">간편 결제</div>
+                    </div>
+                    <div class="payment-option" data-method="bank" onclick="selectPaymentMethod('bank')">
+                        <div class="payment-icon">🏦</div>
+                        <div class="payment-name">계좌이체</div>
+                        <div class="payment-desc">무통장 입금</div>
+                    </div>
+                </div>
+            </div>
 
-                <button class="cancel-button" onclick="goBack()">
-                    ← 이전으로 돌아가기
-                </button>
+            <div class="success-message" id="success-message">
+                ✅ 결제가 완료되었습니다! 디자인 생성이 시작됩니다.
+            </div>
+
+            <div class="error-message" id="error-message">
+                ❌ 결제 처리 중 오류가 발생했습니다.
+            </div>
+
+            <div class="loading" id="loading">
+                💳 결제 처리 중...
+            </div>
+
+            <button class="payment-button" id="payment-button" onclick="processPayment()" disabled>
+                결제하기
+            </button>
+
+            <div class="back-link">
+                <a href="/pages/dashboard.html">← 대시보드로 돌아가기</a>
             </div>
         </div>
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const requestId = urlParams.get('requestId');
-        
-        const templateInfo = JSON.parse(sessionStorage.getItem('selectedTemplate') || '{}');
-        const categoryInfo = JSON.parse(sessionStorage.getItem('selectedCategory') || '{}');
-        const aiResult = JSON.parse(sessionStorage.getItem('aiResult') || '{}');
+        let clerk = null;
+        let user = null;
+        let selectedPaymentMethod = null;
+        let projectData = null;
 
-        // 페이지 초기화
-        async function init() {
-            if (!requestId) {
-                alert('결제 정보가 없습니다.');
-                history.back();
+        // URL 파라미터에서 프로젝트 정보 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('projectId');
+
+        // Clerk 초기화
+        window.addEventListener('load', async () => {
+            try {
+                clerk = window.Clerk;
+                if (!clerk) {
+                    throw new Error('Clerk not loaded');
+                }
+                
+                await clerk.load();
+                console.log('✅ Clerk loaded successfully');
+                
+                // 사용자 정보 확인
+                if (clerk.user) {
+                    user = clerk.user;
+                    setupUserInfo();
+                    loadProjectData();
+                } else {
+                    // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
+                    window.location.href = '/pages/auth.html';
+                }
+            } catch (error) {
+                console.error('❌ Clerk loading failed:', error);
+                window.location.href = '/pages/auth.html';
+            }
+        });
+
+        // 사용자 정보 설정
+        function setupUserInfo() {
+            if (!user) return;
+
+            const userName = user.firstName || user.emailAddresses[0]?.emailAddress || '사용자';
+            const userEmail = user.emailAddresses[0]?.emailAddress || '이메일 없음';
+            
+            document.getElementById('user-details').innerHTML = `
+                <strong>이름:</strong> ${userName}<br>
+                <strong>이메일:</strong> ${userEmail}
+            `;
+        }
+
+        // 프로젝트 데이터 로드
+        async function loadProjectData() {
+            if (!projectId) {
+                showError('프로젝트 ID가 없습니다.');
                 return;
             }
 
-            // 결제 정보 표시
-            displayPaymentInfo();
-            
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('paymentContent').style.display = 'block';
+            try {
+                // 실제로는 API에서 프로젝트 데이터를 가져와야 함
+                // 지금은 예시 데이터 사용
+                projectData = {
+                    id: projectId,
+                    title: '쇼핑몰 상세페이지',
+                    category: '쇼핑몰',
+                    template: 'shopping-minimal',
+                    aiContent: '프리미엄 캣타워의 매력적인 상세페이지 설명...'
+                };
+
+                document.getElementById('preview-text').textContent = 
+                    projectData.aiContent || 'AI 콘텐츠가 생성되었습니다.';
+
+            } catch (error) {
+                console.error('❌ 프로젝트 데이터 로드 실패:', error);
+                showError('프로젝트 정보를 불러올 수 없습니다.');
+            }
         }
 
-        // 결제 정보 표시
-        function displayPaymentInfo() {
-            document.getElementById('designId').textContent = requestId.substring(0, 8) + '...';
-            document.getElementById('category').textContent = categoryInfo.name || '-';
-            document.getElementById('template').textContent = templateInfo.name || '-';
-            document.getElementById('price').textContent = (templateInfo.price || 9900).toLocaleString() + '원';
+        // 결제 방법 선택
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
             
-            // 미리보기 이미지
-            const previewUrl = aiResult.previewUrl || 'https://via.placeholder.com/800x1000/667eea/ffffff?text=Preview';
-            document.getElementById('previewImage').src = previewUrl;
-        }
-
-        // 결제 진행
-        function proceedToPayment() {
-            const paymentBtn = document.getElementById('paymentBtn');
-            paymentBtn.disabled = true;
-            paymentBtn.textContent = '결제 페이지로 이동 중...';
-            
-            // Cafe24 결제 링크로 이동
-            const paymentUrl = buildPaymentUrl();
-            
-            // 미결제 알림을 위한 타이머 시작 (30분 후)
-            scheduleUnpaidReminder();
-            
-            // 결제 페이지로 이동
-            window.location.href = paymentUrl;
-        }
-
-        // 결제 URL 생성
-        function buildPaymentUrl() {
-            const baseUrl = templateInfo.cafe24PaymentLink || 'https://cafe24.com/product/default';
-            const params = new URLSearchParams({
-                design_id: requestId,
-                customer_email: sessionStorage.getItem('customerEmail') || '',
-                template_id: templateInfo.templateId,
-                price: templateInfo.price || 9900
+            // 모든 옵션에서 선택 해제
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.classList.remove('selected');
             });
             
-            return `${baseUrl}?${params.toString()}`;
+            // 선택된 옵션에 스타일 적용
+            document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+            
+            // 결제 버튼 활성화
+            document.getElementById('payment-button').disabled = false;
         }
 
-        // 미결제 알림 스케줄링
-        function scheduleUnpaidReminder() {
-            // 실제로는 서버 측에서 처리
-            console.log('미결제 알림이 30분 후에 전송됩니다:', requestId);
+        // 결제 처리
+        async function processPayment() {
+            if (!selectedPaymentMethod) {
+                showError('결제 방법을 선택해주세요.');
+                return;
+            }
+
+            if (!projectId) {
+                showError('프로젝트 정보가 없습니다.');
+                return;
+            }
+
+            try {
+                // 로딩 표시
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('payment-button').disabled = true;
+                hideMessages();
+
+                // 결제 API 호출
+                const response = await fetch('/api/process-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${await clerk.session.getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        projectId: projectId,
+                        paymentMethod: selectedPaymentMethod,
+                        amount: 31900
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('결제가 완료되었습니다! 디자인 생성이 시작됩니다.');
+                    
+                    // 3초 후 대시보드로 이동
+                    setTimeout(() => {
+                        window.location.href = '/pages/dashboard.html';
+                    }, 3000);
+                } else {
+                    showError(result.error || '결제 처리에 실패했습니다.');
+                }
+
+            } catch (error) {
+                console.error('❌ 결제 처리 오류:', error);
+                showError('결제 처리 중 오류가 발생했습니다.');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('payment-button').disabled = false;
+            }
         }
 
-        // 뒤로가기
-        function goBack() {
-            history.back();
+        // 성공 메시지 표시
+        function showSuccess(message) {
+            const successEl = document.getElementById('success-message');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+            hideMessages('success');
         }
 
-        // 초기화
-        document.addEventListener('DOMContentLoaded', init);
+        // 에러 메시지 표시
+        function showError(message) {
+            const errorEl = document.getElementById('error-message');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            hideMessages('error');
+        }
+
+        // 메시지 숨기기
+        function hideMessages(except = null) {
+            if (except !== 'success') {
+                document.getElementById('success-message').style.display = 'none';
+            }
+            if (except !== 'error') {
+                document.getElementById('error-message').style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
-
-

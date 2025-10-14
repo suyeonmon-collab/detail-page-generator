@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>신디야 디자인 자동 생성기</title>
+    <!-- Clerk Authentication -->
+    <script
+        async
+        crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_bWludC1nZWNrby02Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+        src="https://mint-gecko-62.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+        type="text/javascript">
+    </script>
     <style>
         * {
             margin: 0;
@@ -28,6 +36,70 @@
             color: white;
             margin-bottom: 60px;
             padding: 40px 20px;
+            position: relative;
+        }
+
+        .auth-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .auth-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: white;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .logout-btn {
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: rgba(220, 53, 69, 1);
         }
 
         .header h1 {
@@ -168,6 +240,19 @@
 <body>
     <div class="container">
         <div class="header">
+            <!-- 인증 버튼들 (로그인 전) -->
+            <div id="auth-buttons" class="auth-buttons">
+                <a href="/pages/auth.html" class="auth-btn">로그인</a>
+                <a href="/pages/dashboard.html" class="auth-btn">내 프로젝트</a>
+            </div>
+
+            <!-- 사용자 정보 (로그인 후) -->
+            <div id="user-info" class="user-info" style="display: none;">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <span id="user-name">사용자</span>
+                <button class="logout-btn" onclick="signOut()">로그아웃</button>
+            </div>
+
             <h1>🎨 신디야 디자인 자동 생성기</h1>
             <p>원하는 디자인 카테고리를 선택하세요</p>
         </div>
@@ -239,8 +324,71 @@
             window.location.href = `./pages/templates.html?category=${category.id}`;
         }
 
-        // 페이지 로드 시 카테고리 로드
-        document.addEventListener('DOMContentLoaded', loadCategories);
+        // Clerk 인증 관련 변수
+        let clerk = null;
+        let user = null;
+
+        // Clerk 초기화
+        window.addEventListener('load', async () => {
+            try {
+                clerk = window.Clerk;
+                if (!clerk) {
+                    throw new Error('Clerk not loaded');
+                }
+                
+                await clerk.load();
+                console.log('✅ Clerk loaded successfully');
+                
+                // 사용자 정보 확인
+                if (clerk.user) {
+                    user = clerk.user;
+                    setupUserInfo();
+                } else {
+                    showAuthButtons();
+                }
+            } catch (error) {
+                console.error('❌ Clerk loading failed:', error);
+                showAuthButtons();
+            }
+            
+            // 카테고리 로드
+            loadCategories();
+        });
+
+        // 사용자 정보 설정
+        function setupUserInfo() {
+            if (!user) return;
+
+            const userName = user.firstName || user.emailAddresses[0]?.emailAddress || '사용자';
+            const userInitial = userName.charAt(0).toUpperCase();
+            
+            document.getElementById('user-name').textContent = userName;
+            document.getElementById('user-avatar').textContent = userInitial;
+            
+            // 인증 버튼 숨기고 사용자 정보 표시
+            document.getElementById('auth-buttons').style.display = 'none';
+            document.getElementById('user-info').style.display = 'flex';
+        }
+
+        // 인증 버튼 표시
+        function showAuthButtons() {
+            document.getElementById('auth-buttons').style.display = 'flex';
+            document.getElementById('user-info').style.display = 'none';
+        }
+
+        // 로그아웃
+        async function signOut() {
+            if (!clerk) return;
+
+            try {
+                await clerk.signOut();
+                window.location.reload();
+            } catch (error) {
+                console.error('❌ 로그아웃 실패:', error);
+            }
+        }
+
+        // 페이지 로드 시 카테고리 로드 (Clerk 초기화 후)
     </script>
 
     <footer style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.6);">
