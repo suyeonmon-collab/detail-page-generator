@@ -403,22 +403,47 @@
             }
 
             try {
-                // 실제로는 API에서 프로젝트 데이터를 가져와야 함
-                // 지금은 예시 데이터 사용
-                projectData = {
-                    id: projectId,
-                    title: '쇼핑몰 상세페이지',
-                    category: '쇼핑몰',
-                    template: 'shopping-minimal',
-                    aiContent: '프리미엄 캣타워의 매력적인 상세페이지 설명...'
-                };
+                // 실제 API에서 프로젝트 데이터 가져오기
+                const response = await fetch(`/api/get-project?id=${projectId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${await clerk.session.getToken()}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-                document.getElementById('preview-text').textContent = 
-                    projectData.aiContent || 'AI 콘텐츠가 생성되었습니다.';
+                if (!response.ok) {
+                    throw new Error('프로젝트 데이터를 불러올 수 없습니다.');
+                }
+
+                const result = await response.json();
+                projectData = result.project;
+
+                // 주문 내용 표시
+                const previewText = projectData.ai_content || 
+                                  projectData.product_description || 
+                                  'AI 콘텐츠가 생성되었습니다.';
+                
+                document.getElementById('preview-text').textContent = previewText;
+
+                // 프로젝트 제목 업데이트 (선택사항)
+                if (projectData.product_name) {
+                    document.querySelector('.header h1').textContent = 
+                        `🎨 ${projectData.product_name} - 결제하기`;
+                }
 
             } catch (error) {
                 console.error('❌ 프로젝트 데이터 로드 실패:', error);
-                showError('프로젝트 정보를 불러올 수 없습니다.');
+                
+                // API 실패 시 세션 스토리지에서 데이터 가져오기
+                const sessionData = sessionStorage.getItem('currentProject');
+                if (sessionData) {
+                    projectData = JSON.parse(sessionData);
+                    document.getElementById('preview-text').textContent = 
+                        projectData.aiContent || projectData.description || 'AI 콘텐츠가 생성되었습니다.';
+                } else {
+                    showError('프로젝트 정보를 불러올 수 없습니다.');
+                }
             }
         }
 

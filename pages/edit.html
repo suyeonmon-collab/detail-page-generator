@@ -328,6 +328,14 @@
             <div class="panel-header">
                 <h2>📝 콘텐츠 수정</h2>
                 <p>AI가 생성한 텍스트를 자유롭게 수정하세요</p>
+                <div style="margin-top: 16px;">
+                    <button id="edit-button" onclick="enableTextEdit()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                        ✏️ 텍스트 편집
+                    </button>
+                    <button id="save-button" onclick="saveText()" style="background: #48bb78; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; display: none;">
+                        💾 저장
+                    </button>
+                </div>
             </div>
 
             <div id="editSections">
@@ -613,6 +621,67 @@
                     alert('화면 캡처는 금지되어 있습니다. 결제 후 워터마크 없는 파일을 받으실 수 있습니다.');
                 }
             });
+        }
+
+        // 텍스트 편집 기능
+        function enableTextEdit() {
+            const contentElement = document.getElementById('ai-content');
+            if (!contentElement) return;
+
+            // 편집 모드 활성화
+            contentElement.contentEditable = true;
+            contentElement.style.border = '2px solid #667eea';
+            contentElement.style.borderRadius = '8px';
+            contentElement.style.padding = '16px';
+            contentElement.style.backgroundColor = '#f8f9ff';
+            contentElement.focus();
+
+            // 편집 버튼 숨기고 저장 버튼 표시
+            document.getElementById('edit-button').style.display = 'none';
+            document.getElementById('save-button').style.display = 'inline-block';
+        }
+
+        // 텍스트 저장
+        async function saveText() {
+            const contentElement = document.getElementById('ai-content');
+            if (!contentElement) return;
+
+            const newContent = contentElement.textContent.trim();
+            
+            try {
+                // API로 수정된 내용 저장
+                const response = await fetch('/api/update-content', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${await clerk.session.getToken()}`
+                    },
+                    body: JSON.stringify({
+                        projectId: projectId,
+                        editedContent: newContent
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('저장에 실패했습니다.');
+                }
+
+                // 편집 모드 비활성화
+                contentElement.contentEditable = false;
+                contentElement.style.border = 'none';
+                contentElement.style.backgroundColor = 'transparent';
+                
+                // 버튼 상태 복원
+                document.getElementById('edit-button').style.display = 'inline-block';
+                document.getElementById('save-button').style.display = 'none';
+
+                // 성공 메시지
+                alert('내용이 저장되었습니다!');
+
+            } catch (error) {
+                console.error('❌ 저장 실패:', error);
+                alert('저장 중 오류가 발생했습니다.');
+            }
         }
 
         // 초기화
