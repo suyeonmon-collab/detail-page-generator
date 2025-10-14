@@ -276,5 +276,5 @@
         {"id": "accent-text", "type": "text", "placeholder": "강조 텍스트", "maxLength": 20}
       ]
     }
-
-
+  ]
+}
