@@ -361,8 +361,11 @@
             </div>
 
             <div class="action-buttons">
-                <button class="btn btn-primary" id="submitBtn" onclick="submitDesign()">
-                    🎨 이 내용으로 디자인 생성하기
+                <button class="btn btn-primary" id="previewBtn" onclick="previewDesign()">
+                    👀 미리보기 보기
+                </button>
+                <button class="btn btn-primary" id="submitBtn" onclick="submitDesign()" style="display: none;">
+                    🎨 디자인 생성하기
                 </button>
                 <button class="btn btn-secondary" onclick="resetForm()">
                     ↺ 다시 시작
@@ -641,47 +644,30 @@
             document.getElementById('save-button').style.display = 'inline-block';
         }
 
-        // 텍스트 저장
-        async function saveText() {
-            const contentElement = document.getElementById('ai-content');
-            if (!contentElement) return;
-
-            const newContent = contentElement.textContent.trim();
+        // 미리보기 보기
+        function previewDesign() {
+            const editedContent = document.getElementById('ai-content').textContent.trim();
             
-            try {
-                // API로 수정된 내용 저장
-                const response = await fetch('/api/update-content', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${await clerk.session.getToken()}`
-                    },
-                    body: JSON.stringify({
-                        projectId: projectId,
-                        editedContent: newContent
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('저장에 실패했습니다.');
-                }
-
-                // 편집 모드 비활성화
-                contentElement.contentEditable = false;
-                contentElement.style.border = 'none';
-                contentElement.style.backgroundColor = 'transparent';
-                
-                // 버튼 상태 복원
-                document.getElementById('edit-button').style.display = 'inline-block';
-                document.getElementById('save-button').style.display = 'none';
-
-                // 성공 메시지
-                alert('내용이 저장되었습니다!');
-
-            } catch (error) {
-                console.error('❌ 저장 실패:', error);
-                alert('저장 중 오류가 발생했습니다.');
+            if (!editedContent) {
+                alert('편집할 내용이 없습니다.');
+                return;
             }
+
+            // 미리보기 패널에 내용 표시
+            const previewContent = document.getElementById('previewContent');
+            previewContent.innerHTML = `
+                <div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 16px; color: #2d3748;">📝 편집된 내용</h3>
+                    <div style="line-height: 1.6; color: #4a5568; white-space: pre-wrap;">${editedContent}</div>
+                </div>
+            `;
+
+            // 버튼 상태 변경
+            document.getElementById('previewBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'inline-block';
+
+            // 미리보기 패널로 스크롤
+            document.querySelector('.preview-panel').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 초기화

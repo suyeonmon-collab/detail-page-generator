@@ -37,6 +37,30 @@
             gap: 12px;
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-main {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.2s ease;
+        }
+
+        .btn-main:hover {
+            background: #5a6fd8;
+        }
+
         .header-logo {
             font-size: 24px;
         }
@@ -514,7 +538,10 @@
             <span class="header-logo">🎨</span>
             <h1 class="header-title">CINDYA 관리자</h1>
         </div>
-        <button class="btn-logout" onclick="logout()">🚪 로그아웃</button>
+        <div class="header-right">
+            <a href="/" class="btn-main">🏠 메인으로</a>
+            <button class="btn-logout" onclick="logout()">🚪 로그아웃</button>
+        </div>
     </header>
 
     <!-- Main Container -->
