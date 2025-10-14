@@ -365,7 +365,7 @@
                     👀 미리보기 보기
                 </button>
                 <button class="btn btn-primary" id="submitBtn" onclick="submitDesign()" style="display: none;">
-                    🎨 디자인 생성하기
+                    🎨 디자인 생성하기 (결제 전)
                 </button>
                 <button class="btn btn-secondary" onclick="resetForm()">
                     ↺ 다시 시작
@@ -558,11 +558,30 @@
 
         // 디자인 제출
         async function submitDesign() {
+            console.log('🔵 [submitDesign] 시작');
+            
+            // 먼저 미리보기 확인
+            const confirmPreview = confirm(
+                '🎨 디자인을 생성하시겠습니까?\n\n' +
+                '✅ 생성된 디자인은 워터마크가 포함된 미리보기로 제공됩니다\n' +
+                '✅ 결제 후 워터마크 없는 고품질 이미지를 다운로드할 수 있습니다\n' +
+                '✅ 만족하지 않으시면 언제든 다시 편집할 수 있습니다\n\n' +
+                '계속하시겠습니까?'
+            );
+            
+            if (!confirmPreview) {
+                console.log('🔴 [submitDesign] 사용자가 취소함');
+                return;
+            }
+            
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
+            btn.textContent = '🎨 디자인 생성 중...';
             document.getElementById('loadingOverlay').style.display = 'flex';
             
             try {
+                console.log('🟢 [submitDesign] 디자인 생성 요청 시작');
+                
                 const response = await fetch(`${API_BASE}/request-design`, {
                     method: 'POST',
                     headers: {
@@ -581,16 +600,28 @@
                 }
                 
                 const result = await response.json();
+                console.log('🟢 [submitDesign] 디자인 생성 응답:', result);
                 
                 if (result.success) {
+                    // 성공 메시지 표시
+                    alert(
+                        '🎉 디자인이 성공적으로 생성되었습니다!\n\n' +
+                        '✅ 워터마크가 포함된 미리보기가 준비되었습니다\n' +
+                        '✅ 결제 후 고품질 이미지를 다운로드할 수 있습니다\n\n' +
+                        '결제 페이지로 이동합니다.'
+                    );
+                    
                     // 결제 페이지로 이동
+                    console.log('🟢 [submitDesign] 결제 페이지로 이동:', `./payment.html?requestId=${aiResult.requestId}`);
                     window.location.href = `./payment.html?requestId=${aiResult.requestId}`;
                 } else {
                     throw new Error(result.error || '디자인 생성 실패');
                 }
             } catch (error) {
-                alert('오류: ' + error.message);
+                console.error('🔴 [submitDesign] 오류:', error);
+                alert('❌ 오류가 발생했습니다: ' + error.message + '\n\n다시 시도해주세요.');
                 btn.disabled = false;
+                btn.textContent = '🎨 디자인 생성하기';
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
         }
