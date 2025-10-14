@@ -8,7 +8,7 @@
     <script
         async
         crossorigin="anonymous"
-        data-clerk-publishable-key="pk_live_bWludC1nZWNrby02Mi5jbGVyay5hY2NvdW50cy5kZXYk"
+        data-clerk-publishable-key="pk_test_bWludC1nZWNrby02Mi5jbGVyay5hY2NvdW50cy5kZXYk"
         src="https://mint-gecko-62.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
         type="text/javascript">
     </script>
@@ -172,19 +172,34 @@
                 
                 // 이미 로그인된 사용자 확인
                 if (clerk.user) {
-                    window.location.href = '/dashboard';
+                    console.log('✅ User already signed in:', clerk.user.emailAddresses[0]?.emailAddress);
+                    window.location.href = '/pages/dashboard.html';
+                    return;
                 }
+
+                // 로그인/회원가입 UI 자동 표시
+                showSignIn();
+                
             } catch (error) {
                 console.error('❌ Clerk loading failed:', error);
-                document.getElementById('loading').style.display = 'block';
-                document.getElementById('loading').textContent = '인증 서비스 로딩 중...';
+                showError('인증 서비스 로딩에 실패했습니다. 페이지를 새로고침해주세요.');
             }
         });
+
+        // 에러 메시지 표시
+        function showError(message) {
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            loading.style.background = '#fed7d7';
+            loading.style.color = '#c53030';
+            loading.style.border = '1px solid #feb2b2';
+            loading.textContent = message;
+        }
 
         // 로그인 폼 표시
         function showSignIn() {
             if (!clerk) {
-                alert('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+                showError('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
                 return;
             }
 
@@ -192,15 +207,51 @@
             document.getElementById('clerk-components').style.display = 'block';
             
             clerk.openSignIn({
-                afterSignInUrl: '/dashboard',
-                afterSignUpUrl: '/dashboard'
+                appearance: {
+                    elements: {
+                        card: {
+                            boxShadow: 'none',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '12px',
+                        },
+                        headerTitle: {
+                            fontSize: '1.5rem',
+                            fontWeight: '700',
+                            color: '#1a202c',
+                        },
+                        headerSubtitle: {
+                            fontSize: '1rem',
+                            color: '#718096',
+                        },
+                        formButtonPrimary: {
+                            backgroundColor: '#667eea',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            '&:hover': {
+                                backgroundColor: '#5a6fd8',
+                            },
+                        },
+                        formFieldInput: {
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '14px',
+                        },
+                        footerActionLink: {
+                            color: '#667eea',
+                            fontWeight: '500',
+                        },
+                    },
+                },
+                afterSignInUrl: '/pages/dashboard.html',
+                afterSignUpUrl: '/pages/dashboard.html'
             });
         }
 
         // 회원가입 폼 표시
         function showSignUp() {
             if (!clerk) {
-                alert('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+                showError('인증 서비스가 아직 로딩 중입니다. 잠시 후 다시 시도해주세요.');
                 return;
             }
 
@@ -208,8 +259,44 @@
             document.getElementById('clerk-components').style.display = 'block';
             
             clerk.openSignUp({
-                afterSignInUrl: '/dashboard',
-                afterSignUpUrl: '/dashboard'
+                appearance: {
+                    elements: {
+                        card: {
+                            boxShadow: 'none',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '12px',
+                        },
+                        headerTitle: {
+                            fontSize: '1.5rem',
+                            fontWeight: '700',
+                            color: '#1a202c',
+                        },
+                        headerSubtitle: {
+                            fontSize: '1rem',
+                            color: '#718096',
+                        },
+                        formButtonPrimary: {
+                            backgroundColor: '#667eea',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            '&:hover': {
+                                backgroundColor: '#5a6fd8',
+                            },
+                        },
+                        formFieldInput: {
+                            borderRadius: '8px',
+                            border: '1px solid #e2e8f0',
+                            fontSize: '14px',
+                        },
+                        footerActionLink: {
+                            color: '#667eea',
+                            fontWeight: '500',
+                        },
+                    },
+                },
+                afterSignInUrl: '/pages/dashboard.html',
+                afterSignUpUrl: '/pages/dashboard.html'
             });
         }
 
