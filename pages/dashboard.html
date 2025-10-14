@@ -615,6 +615,28 @@
             }, 3000);
         }
 
+        // 프로젝트 열기
+        function openProject(projectId) {
+            console.log('🔵 [openProject] 시작:', projectId);
+            
+            if (!projectId) {
+                console.error('🔴 [openProject] 프로젝트 ID가 없습니다');
+                showToast('프로젝트 ID가 없습니다.', 'error');
+                return;
+            }
+
+            try {
+                // 프로젝트 편집 페이지로 이동
+                const editUrl = `/pages/edit.html?requestId=${projectId}`;
+                console.log('🟢 [openProject] 이동할 URL:', editUrl);
+                
+                window.location.href = editUrl;
+            } catch (error) {
+                console.error('🔴 [openProject] 실패:', error);
+                showToast('프로젝트를 열 수 없습니다.', 'error');
+            }
+        }
+
         // 로그아웃
         async function signOut() {
             if (!clerk) return;

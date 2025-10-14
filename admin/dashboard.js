@@ -236,6 +236,8 @@ function openTemplateModal(index = null) {
         document.getElementById('templateName').value = template.name;
         document.getElementById('templateDescription').value = template.description || '';
         document.getElementById('templatePreviewImage').value = template.previewImage || '';
+        document.getElementById('templateFigmaUrl').value = template.figmaUrl || '';
+        document.getElementById('templateFigmaNodeId').value = template.figmaNodeId || '';
         document.getElementById('templateFigmaFileKey').value = template.figmaFileKey || template.figmaTemplateId || '';
         document.getElementById('templatePrice').value = template.price || 0;
         document.getElementById('templateCafe24Link').value = template.cafe24PaymentLink || '';
@@ -279,6 +281,8 @@ async function saveTemplate() {
     const name = document.getElementById('templateName').value.trim();
     const description = document.getElementById('templateDescription').value.trim();
     const previewImage = document.getElementById('templatePreviewImage').value.trim();
+    const figmaUrl = document.getElementById('templateFigmaUrl').value.trim();
+    const figmaNodeId = document.getElementById('templateFigmaNodeId').value.trim();
     const figmaFileKey = document.getElementById('templateFigmaFileKey').value.trim();
     const price = parseInt(document.getElementById('templatePrice').value) || 0;
     const cafe24Link = document.getElementById('templateCafe24Link').value.trim();
@@ -295,6 +299,8 @@ async function saveTemplate() {
         name,
         description,
         previewImage: previewImage || `https://via.placeholder.com/400x500/667eea/ffffff?text=${encodeURIComponent(name)}`,
+        figmaUrl,
+        figmaNodeId,
         figmaFileKey: figmaFileKey || 'TEST',
         price,
         cafe24PaymentLink: cafe24Link,

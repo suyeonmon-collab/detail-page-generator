@@ -39,8 +39,14 @@
       "icon": "✉️",
       "color": "#6C5CE7",
       "templates": ["email-newsletter", "email-promo", "email-welcome"]
+    },
+    {
+      "id": "youtube-template",
+      "name": "유튜브 템플릿",
+      "description": "유튜브 썸네일 및 채널 아트 디자인",
+      "icon": "📺",
+      "color": "#FF0000",
+      "templates": ["youtube-thumbnail-test"]
     }
-  ]
-}
 
 
