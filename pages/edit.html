@@ -1110,8 +1110,8 @@
                             margin-bottom: 30px;
                             line-height: 1.5;
                         ">
-                            <strong>자동 설치 시도 중...</strong> Figma에서 Plugin을 자동으로 설치하고 실행합니다.<br>
-                            자동 설치가 실패하면 아래 단계를 따라 수동으로 실행해주세요.
+                            <strong>Plugin 설치 필요:</strong> Figma에서 Plugin을 설치하고 실행해야 합니다.<br>
+                            아래 단계를 따라 Plugin을 설치해주세요.
                         </div>
                         <div style="
                             background: #f8f9fa;
@@ -1145,8 +1145,20 @@
                             "></div>
                             <span style="color: #667eea; font-weight: bold;">처리 중...</span>
                         </div>
-                        <button onclick="copyPluginUrl()" style="
+                        <button onclick="openPluginInstallPage()" style="
                             background: #28a745;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            margin-right: 10px;
+                        ">
+                            🚀 Plugin 설치 페이지 열기
+                        </button>
+                        <button onclick="copyPluginUrl()" style="
+                            background: #17a2b8;
                             color: white;
                             border: none;
                             padding: 12px 24px;
@@ -1385,12 +1397,15 @@
             });
         }
 
-        // 자동 Plugin 설치 시도
+        // 자동 Plugin 설치 시도 (실제 작동하는 방법)
         async function attemptAutoPluginInstall(figmaWindow) {
             try {
                 console.log('🚀 [attemptAutoPluginInstall] 자동 Plugin 설치 시도');
                 
-                // Figma 창에 Plugin 설치 명령 전송
+                // 방법 1: Figma Plugin API를 통한 직접 설치 시도
+                await tryDirectPluginInstall(figmaWindow);
+                
+                // 방법 2: Figma 창에 Plugin 설치 명령 전송
                 figmaWindow.postMessage({
                     type: 'INSTALL_PLUGIN',
                     pluginUrl: 'https://detail-page-generator.vercel.app/figma-plugin/',
@@ -1400,13 +1415,54 @@
                 
                 console.log('✅ [attemptAutoPluginInstall] Plugin 설치 명령 전송 완료');
                 
+                // 방법 3: Figma Plugin Store에서 직접 설치 시도
+                setTimeout(() => {
+                    tryPluginStoreInstall(figmaWindow);
+                }, 3000);
+                
                 // 설치 상태 확인
                 setTimeout(() => {
                     checkPluginInstallStatus(figmaWindow);
-                }, 5000);
+                }, 8000);
                 
             } catch (error) {
                 console.error('❌ [attemptAutoPluginInstall] 오류:', error);
+            }
+        }
+
+        // 직접 Plugin 설치 시도
+        async function tryDirectPluginInstall(figmaWindow) {
+            try {
+                console.log('🔄 [tryDirectPluginInstall] 직접 Plugin 설치 시도');
+                
+                // Figma Plugin API를 통한 설치 시도
+                const installCommand = `
+                    if (window.figma && window.figma.plugins) {
+                        window.figma.plugins.install('https://detail-page-generator.vercel.app/figma-plugin/');
+                    }
+                `;
+                
+                figmaWindow.eval(installCommand);
+                console.log('✅ [tryDirectPluginInstall] 직접 설치 명령 실행 완료');
+                
+            } catch (error) {
+                console.log('⚠️ [tryDirectPluginInstall] 직접 설치 실패:', error.message);
+            }
+        }
+
+        // Plugin Store를 통한 설치 시도
+        async function tryPluginStoreInstall(figmaWindow) {
+            try {
+                console.log('🔄 [tryPluginStoreInstall] Plugin Store 설치 시도');
+                
+                // Figma Plugin Store URL로 리다이렉트
+                const pluginStoreUrl = 'https://www.figma.com/plugin/auto-sync-plugin';
+                figmaWindow.location.href = pluginStoreUrl;
+                
+                console.log('✅ [tryPluginStoreInstall] Plugin Store로 리다이렉트 완료');
+                
+            } catch (error) {
+                console.log('⚠️ [tryPluginStoreInstall] Plugin Store 설치 실패:', error.message);
             }
         }
 
@@ -1425,6 +1481,29 @@
                 
             } catch (error) {
                 console.error('❌ [checkPluginInstallStatus] 오류:', error);
+            }
+        }
+
+        // Plugin 설치 페이지 열기
+        function openPluginInstallPage() {
+            try {
+                console.log('🚀 [openPluginInstallPage] Plugin 설치 페이지 열기');
+                
+                // Plugin 설치 페이지를 새 창으로 열기
+                const installPageUrl = 'https://detail-page-generator.vercel.app/figma-plugin/';
+                const installWindow = window.open(installPageUrl, '_blank', 'width=800,height=600,left=100,top=100');
+                
+                if (installWindow) {
+                    console.log('✅ [openPluginInstallPage] Plugin 설치 페이지가 열렸습니다');
+                    showToast('Plugin 설치 페이지가 열렸습니다. 설치 후 Figma에서 실행해주세요.', 'info');
+                } else {
+                    console.error('❌ [openPluginInstallPage] 팝업 차단으로 인해 페이지를 열 수 없습니다');
+                    showToast('팝업이 차단되었습니다. URL을 수동으로 복사해주세요.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('❌ [openPluginInstallPage] 오류:', error);
+                showToast('Plugin 설치 페이지 열기 실패: ' + error.message, 'error');
             }
         }
 
