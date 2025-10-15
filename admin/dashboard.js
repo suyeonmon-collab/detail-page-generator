@@ -235,17 +235,17 @@ function openTemplateModal(index = null) {
         document.getElementById('templateCategoryId').value = template.categoryId;
         document.getElementById('templateName').value = template.name;
         document.getElementById('templateDescription').value = template.description || '';
-        document.getElementById('templatePreviewImage').value = template.previewImage || '';
         document.getElementById('templateFigmaUrl').value = template.figmaUrl || '';
-        document.getElementById('templateFigmaNodeId').value = template.figmaNodeId || '';
-        document.getElementById('templateFigmaFileKey').value = template.figmaFileKey || template.figmaTemplateId || '';
         document.getElementById('templatePrice').value = template.price || 0;
-        document.getElementById('templateCafe24Link').value = template.cafe24PaymentLink || '';
         document.getElementById('templateEnabled').checked = template.enabled !== false;
+        
+        // Figma 정보가 있으면 추출 표시
+        if (template.figmaUrl) {
+            extractFigmaInfo();
+        }
     } else {
         title.textContent = '템플릿 추가';
         document.getElementById('templatePrice').value = 0;
-        document.getElementById('templateFigmaFileKey').value = 'TEST';
     }
     
     modal.classList.add('show');
@@ -280,12 +280,8 @@ async function saveTemplate() {
     const categoryId = document.getElementById('templateCategoryId').value;
     const name = document.getElementById('templateName').value.trim();
     const description = document.getElementById('templateDescription').value.trim();
-    const previewImage = document.getElementById('templatePreviewImage').value.trim();
     const figmaUrl = document.getElementById('templateFigmaUrl').value.trim();
-    const figmaNodeId = document.getElementById('templateFigmaNodeId').value.trim();
-    const figmaFileKey = document.getElementById('templateFigmaFileKey').value.trim();
     const price = parseInt(document.getElementById('templatePrice').value) || 0;
-    const cafe24Link = document.getElementById('templateCafe24Link').value.trim();
     const enabled = document.getElementById('templateEnabled').checked;
     
     if (!templateId || !categoryId || !name) {
@@ -293,17 +289,38 @@ async function saveTemplate() {
         return;
     }
     
+    // Figma URL에서 파일 ID와 Node ID 추출
+    let figmaFileKey = null;
+    let figmaNodeId = null;
+    
+    if (figmaUrl) {
+        try {
+            const fileIdMatch = figmaUrl.match(/design\/([a-zA-Z0-9]+)/);
+            const nodeIdMatch = figmaUrl.match(/node-id=([^&]+)/);
+            
+            if (fileIdMatch && nodeIdMatch) {
+                figmaFileKey = fileIdMatch[1];
+                figmaNodeId = nodeIdMatch[1];
+            } else {
+                alert('Figma URL 형식이 올바르지 않습니다. (design/파일ID?node-id=노드ID)');
+                return;
+            }
+        } catch (error) {
+            alert('Figma URL을 확인해주세요.');
+            return;
+        }
+    }
+    
     const templateData = {
         templateId,
         categoryId,
         name,
         description,
-        previewImage: previewImage || `https://via.placeholder.com/400x500/667eea/ffffff?text=${encodeURIComponent(name)}`,
+        previewImage: `https://placehold.co/1280x720/cccccc/ffffff?text=${encodeURIComponent(name)}`,
         figmaUrl,
         figmaNodeId,
-        figmaFileKey: figmaFileKey || 'TEST',
+        figmaFileKey,
         price,
-        cafe24PaymentLink: cafe24Link,
         enabled,
         nodes: [
             { id: 'title', type: 'text', placeholder: '제목', maxLength: 50 },
@@ -464,4 +481,83 @@ window.addEventListener('load', () => {
         showSection('templates');
     }
 });
+
+// Figma URL에서 파일 ID와 Node ID 추출
+function extractFigmaInfo() {
+    const figmaUrl = document.getElementById('templateFigmaUrl').value.trim();
+    const figmaInfo = document.getElementById('figmaInfo');
+    const extractedFileId = document.getElementById('extractedFileId');
+    const extractedNodeId = document.getElementById('extractedNodeId');
+    
+    if (!figmaUrl) {
+        figmaInfo.style.display = 'none';
+        return;
+    }
+    
+    try {
+        // 파일 ID 추출 (design/ 뒤의 문자열)
+        const fileIdMatch = figmaUrl.match(/design\/([a-zA-Z0-9]+)/);
+        const fileId = fileIdMatch ? fileIdMatch[1] : null;
+        
+        // Node ID 추출 (node-id= 파라미터)
+        const nodeIdMatch = figmaUrl.match(/node-id=([^&]+)/);
+        const nodeId = nodeIdMatch ? nodeIdMatch[1] : null;
+        
+        if (fileId && nodeId) {
+            extractedFileId.textContent = fileId;
+            extractedNodeId.textContent = nodeId;
+            figmaInfo.style.display = 'block';
+            
+            // 성공 메시지
+            showToast('✅ Figma 정보가 성공적으로 추출되었습니다!', 'success');
+        } else {
+            extractedFileId.textContent = '추출 실패';
+            extractedNodeId.textContent = '추출 실패';
+            figmaInfo.style.display = 'block';
+            
+            // 경고 메시지
+            showToast('⚠️ Figma URL 형식을 확인해주세요. (design/파일ID?node-id=노드ID)', 'error');
+        }
+    } catch (error) {
+        console.error('Figma 정보 추출 오류:', error);
+        showToast('❌ Figma URL을 확인해주세요.', 'error');
+    }
+}
+
+// Toast 메시지 표시 (간단한 버전)
+function showToast(message, type = 'info') {
+    // 기존 toast 제거
+    const existingToast = document.querySelector('.admin-toast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `admin-toast admin-toast-${type}`;
+    toast.textContent = message;
+    
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
+        color: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10000;
+        font-size: 14px;
+        font-weight: 500;
+        max-width: 400px;
+    `;
+
+    document.body.appendChild(toast);
+
+    // 3초 후 자동 제거
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.remove();
+        }
+    }, 3000);
+}
 

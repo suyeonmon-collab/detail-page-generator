@@ -263,11 +263,10 @@
       "name": "유튜브 썸네일 테스트",
       "description": "유튜브 썸네일 디자인 템플릿 (테스트용)",
       "previewImage": "https://placehold.co/1280x720/ff0000/ffffff?text=YouTube+Thumbnail+Test",
-      "figmaUrl": "https://www.figma.com/design/abc123def456/Test-Design",
+      "figmaUrl": "https://www.figma.com/design/abc123def456/Test-Design?node-id=1-1",
       "figmaNodeId": "1-1",
-      "figmaFileKey": "cwM0xdmxJNRijZ9iUPdKpf",
+      "figmaFileKey": "abc123def456",
       "price": 0,
-      "cafe24PaymentLink": "",
       "enabled": true,
       "nodes": [
         {"id": "title", "type": "text", "placeholder": "썸네일 제목", "maxLength": 50},

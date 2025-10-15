@@ -423,6 +423,37 @@
             cursor: pointer;
         }
 
+        .figma-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-item strong {
+            color: #495057;
+            font-size: 13px;
+        }
+
+        .info-item span {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: monospace;
+        }
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -703,35 +734,22 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">미리보기 이미지 URL</label>
-                        <input type="text" id="templatePreviewImage" class="form-input" placeholder="https://...">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Figma URL</label>
-                        <input type="url" id="templateFigmaUrl" class="form-input" placeholder="https://www.figma.com/design/...">
-                        <p class="form-help">전체 Figma 파일 URL을 입력하세요</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Figma Node ID</label>
-                        <input type="text" id="templateFigmaNodeId" class="form-input" placeholder="예: 2-2">
-                        <p class="form-help">URL의 node-id 파라미터 값 (예: node-id=2-2)</p>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Figma File Key</label>
-                        <input type="text" id="templateFigmaFileKey" class="form-input" placeholder="TEST">
+                        <label class="form-label">Figma 디자인 URL</label>
+                        <input type="url" id="templateFigmaUrl" class="form-input" placeholder="https://www.figma.com/design/abc123/Design-Name?node-id=2-2" onchange="extractFigmaInfo()">
+                        <p class="form-help">Figma 파일 URL을 입력하세요. 파일 ID와 Node ID가 자동으로 추출됩니다.</p>
+                        <div id="figmaInfo" class="figma-info" style="display: none;">
+                            <div class="info-item">
+                                <strong>파일 ID:</strong> <span id="extractedFileId">-</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Node ID:</strong> <span id="extractedNodeId">-</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">가격 (원)</label>
                         <input type="number" id="templatePrice" class="form-input" value="0">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Cafe24 결제 링크</label>
-                        <input type="text" id="templateCafe24Link" class="form-input" placeholder="https://cafe24.com/...">
                     </div>
 
                     <div class="form-group">
