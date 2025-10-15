@@ -112,46 +112,41 @@ async function saveData(req, res) {
         console.log('🔵 [Supabase] 데이터 저장 시작');
         console.log(`📊 저장할 데이터: 카테고리 ${categories.length}개, 템플릿 ${templates.length}개`);
 
-        // 트랜잭션 시작
-        const { data: result, error } = await supabase.rpc('save_admin_data', {
-            categories_data: categories,
-            templates_data: templates
-        });
+        // 카테고리 저장 (upsert) - 개별 처리
+        console.log('🔵 [Supabase] 카테고리 저장 시작');
+        for (const category of categories) {
+            console.log(`  - 카테고리 저장: ${category.id}`);
+            const { error: categoryError } = await supabase
+                .from('categories')
+                .upsert(category, { 
+                    onConflict: 'id',
+                    ignoreDuplicates: false 
+                });
 
-        if (error) {
-            // RPC 함수가 없으면 개별 저장
-            console.log('⚠️ [Supabase] RPC 함수 없음, 개별 저장 시도');
-
-            // 카테고리 저장 (upsert)
-            for (const category of categories) {
-                const { error: categoryError } = await supabase
-                    .from('categories')
-                    .upsert(category, { 
-                        onConflict: 'id',
-                        ignoreDuplicates: false 
-                    });
-
-                if (categoryError) {
-                    console.error('❌ [Supabase] 카테고리 저장 오류:', categoryError);
-                    throw new Error(`카테고리 저장 실패: ${categoryError.message}`);
-                }
-            }
-
-            // 템플릿 저장 (upsert)
-            for (const template of templates) {
-                const { error: templateError } = await supabase
-                    .from('templates')
-                    .upsert(template, { 
-                        onConflict: 'template_id',
-                        ignoreDuplicates: false 
-                    });
-
-                if (templateError) {
-                    console.error('❌ [Supabase] 템플릿 저장 오류:', templateError);
-                    throw new Error(`템플릿 저장 실패: ${templateError.message}`);
-                }
+            if (categoryError) {
+                console.error('❌ [Supabase] 카테고리 저장 오류:', categoryError);
+                throw new Error(`카테고리 저장 실패: ${categoryError.message}`);
             }
         }
+        console.log('✅ [Supabase] 카테고리 저장 완료');
+
+        // 템플릿 저장 (upsert) - 개별 처리
+        console.log('🔵 [Supabase] 템플릿 저장 시작');
+        for (const template of templates) {
+            console.log(`  - 템플릿 저장: ${template.template_id}`);
+            const { error: templateError } = await supabase
+                .from('templates')
+                .upsert(template, { 
+                    onConflict: 'template_id',
+                    ignoreDuplicates: false 
+                });
+
+            if (templateError) {
+                console.error('❌ [Supabase] 템플릿 저장 오류:', templateError);
+                throw new Error(`템플릿 저장 실패: ${templateError.message}`);
+            }
+        }
+        console.log('✅ [Supabase] 템플릿 저장 완료');
 
         console.log('✅ [Supabase] 데이터 저장 성공');
 
