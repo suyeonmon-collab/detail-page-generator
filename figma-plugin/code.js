@@ -670,44 +670,11 @@ async function processWebDesigns() {
 }
 
 /**
- * 단일 디자인 처리
+ * 단일 디자인 처리 (더 이상 사용하지 않음 - Supabase 연동으로 대체)
  */
 async function processSingleDesign(design) {
-  try {
-    // 현재 페이지의 텍스트 노드들 찾기
-    const textNodes = figma.currentPage.findAll(function(n) {
-      if (n.type !== "TEXT") return false;
-      const parentType = n.parent && n.parent.type;
-      return parentType === "FRAME" || parentType === "GROUP" || parentType === "PAGE" || parentType === "COMPONENT";
-    });
-    
-    if (textNodes.length === 0) {
-      throw new Error('텍스트 노드를 찾을 수 없습니다');
-    }
-    
-    // 첫 번째 텍스트 노드에 상품명 설정
-    if (textNodes.length > 0) {
-      await ensureEditableText(textNodes[0]);
-      textNodes[0].characters = design.productName;
-    }
-    
-    // 두 번째 텍스트 노드에 상품 설명 설정
-    if (textNodes.length > 1) {
-      await ensureEditableText(textNodes[1]);
-      textNodes[1].characters = design.content;
-    }
-    
-    // 이미지가 있는 경우 처리
-    if (design.imageData) {
-      await updateImageNode(design.imageData);
-    }
-    
-    console.log(`${design.productName} 디자인 업데이트 완료`);
-    
-  } catch (error) {
-    console.error('단일 디자인 처리 오류:', error);
-    throw error;
-  }
+  console.log('⚠️ [processSingleDesign] 이 함수는 더 이상 사용되지 않습니다. Supabase 연동을 사용하세요.');
+  throw new Error('이 함수는 더 이상 사용되지 않습니다. Supabase 연동을 사용하세요.');
 }
 
 /**
