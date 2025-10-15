@@ -36,7 +36,7 @@ figma.on("run", ({ command }) => {
   console.log('🚀 [Plugin] 백그라운드 모드로 실행됨');
 });
 
-// URL 파라미터 감지 및 자동 실행
+// URL 파라미터 감지 및 자동 실행 (강화된 버전)
 function checkForAutoExecution() {
   try {
     console.log('🔍 [checkForAutoExecution] URL 파라미터 확인 중...');
@@ -51,15 +51,38 @@ function checkForAutoExecution() {
     if (shouldAutoExecute) {
       console.log('🚀 [checkForAutoExecution] 자동 실행 시작');
       
-      // 즉시 대기 중인 업데이트 요청 처리
+      // 즉시 대기 중인 업데이트 요청 처리 (여러 번 시도)
       setTimeout(async () => {
         try {
+          console.log('🔄 [checkForAutoExecution] 첫 번째 시도');
           await checkAndProcessUpdateRequests();
-          console.log('✅ [checkForAutoExecution] 자동 실행 완료');
+          console.log('✅ [checkForAutoExecution] 첫 번째 시도 완료');
         } catch (error) {
-          console.error('❌ [checkForAutoExecution] 자동 실행 오류:', error);
+          console.error('❌ [checkForAutoExecution] 첫 번째 시도 오류:', error);
         }
-      }, 1000); // 1초 후 실행 (플러그인 로드 완료 대기)
+      }, 1000); // 1초 후 첫 번째 시도
+      
+      // 3초 후 두 번째 시도
+      setTimeout(async () => {
+        try {
+          console.log('🔄 [checkForAutoExecution] 두 번째 시도');
+          await checkAndProcessUpdateRequests();
+          console.log('✅ [checkForAutoExecution] 두 번째 시도 완료');
+        } catch (error) {
+          console.error('❌ [checkForAutoExecution] 두 번째 시도 오류:', error);
+        }
+      }, 3000);
+      
+      // 5초 후 세 번째 시도
+      setTimeout(async () => {
+        try {
+          console.log('🔄 [checkForAutoExecution] 세 번째 시도');
+          await checkAndProcessUpdateRequests();
+          console.log('✅ [checkForAutoExecution] 세 번째 시도 완료');
+        } catch (error) {
+          console.error('❌ [checkForAutoExecution] 세 번째 시도 오류:', error);
+        }
+      }, 5000);
     }
     
   } catch (error) {
@@ -67,9 +90,20 @@ function checkForAutoExecution() {
   }
 }
 
-// 플러그인이 로드되자마자 자동 폴링 시작
+// 플러그인이 로드되자마자 자동 폴링 시작 (강화된 버전)
 console.log('🚀 [Plugin] 플러그인 로드됨 - 자동 폴링 시작');
 startAutoPolling();
+
+// 추가적인 자동 실행 시도 (플러그인 로드 직후)
+setTimeout(() => {
+  console.log('🚀 [Plugin] 추가 자동 실행 시도');
+  checkForAutoExecution();
+}, 2000);
+
+setTimeout(() => {
+  console.log('🚀 [Plugin] 두 번째 추가 자동 실행 시도');
+  checkForAutoExecution();
+}, 5000);
 
 // 자동 폴링 시작
 function startAutoPolling() {
