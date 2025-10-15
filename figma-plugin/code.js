@@ -553,57 +553,68 @@ async function notifyCloneComplete(clonedData) {
 // ============================================
 
 /**
- * 웹앱 서버에서 대기 중인 디자인 요청 가져오기
+ * Supabase에서 대기 중인 디자인 요청 가져오기
  */
 async function fetchPendingDesigns() {
   try {
-    const webAppUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
+    console.log('🔄 [fetchPendingDesigns] 시작');
     
-    const response = await fetch(webAppUrl + '?action=getPendingDesigns');
+    // Supabase 설정
+    const SUPABASE_URL = 'https://geuboakvnddaaheahild.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds';
+    
+    // 대기 중인 업데이트 요청 가져오기
+    const url = `${SUPABASE_URL}/rest/v1/figma_update_requests?status=eq.pending&order=created_at.desc`;
+    console.log('🔄 [fetchPendingDesigns] 요청 URL:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      }
+    });
+
+    console.log('🔄 [fetchPendingDesigns] 응답 상태:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ [fetchPendingDesigns] Supabase API 오류:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText
+      });
+      throw new Error(`Supabase API 오류: ${response.status} - ${errorText}`);
+    }
+
     const pendingDesigns = await response.json();
-    
-    console.log('대기 중인 디자인 요청:', pendingDesigns.length, '개');
+    console.log('✅ [fetchPendingDesigns] 성공:', pendingDesigns.length, '개');
     
     return pendingDesigns;
     
   } catch (error) {
-    console.error('대기 중인 디자인 가져오기 실패:', error);
-    figma.notify('웹앱 서버 연결 실패');
+    console.error('❌ [fetchPendingDesigns] 전체 오류:', error);
+    console.error('❌ [fetchPendingDesigns] 오류 스택:', error.stack);
+    figma.notify('Supabase 서버 연결 실패');
     return [];
   }
 }
 
 /**
- * 웹앱 서버에 완료 상태 전송
+ * Supabase에 완료 상태 전송 (현재는 사용하지 않음)
  */
 async function notifyDesignComplete(rowNumber, figmaLink, pngLink) {
   try {
-    const webAppUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
+    console.log('🔄 [notifyDesignComplete] 시작:', { rowNumber, figmaLink, pngLink });
     
-    const response = await fetch(webAppUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        action: 'designComplete',
-        rowNumber: rowNumber,
-        figmaLink: figmaLink,
-        pngLink: pngLink
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (result.success) {
-      console.log('완료 상태 전송 성공');
-      figma.notify('디자인 완료 상태가 업데이트되었습니다');
-    } else {
-      console.error('완료 상태 전송 실패:', result.error);
-    }
+    // 현재는 Supabase를 통해 상태 업데이트를 처리하므로
+    // 이 함수는 더 이상 필요하지 않습니다.
+    console.log('✅ [notifyDesignComplete] 완료 상태는 Supabase를 통해 처리됩니다');
     
   } catch (error) {
-    console.error('완료 상태 전송 오류:', error);
+    console.error('❌ [notifyDesignComplete] 오류:', error);
   }
 }
 
