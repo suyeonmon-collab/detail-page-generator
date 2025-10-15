@@ -77,8 +77,8 @@ module.exports = async (req, res) => {
       });
     }
 
-    // Node ID 형식 정규화 (콜론을 하이픈으로 변환)
-    const normalizedNodeId = nodeId.replace(':', '-');
+    // Node ID 형식 정규화 (하이픈을 콜론으로 변환)
+    const normalizedNodeId = nodeId.replace('-', ':');
     console.log('🟢 [API] 정규화된 Node ID:', normalizedNodeId);
 
     // 1. Figma API로 이미지 생성 요청
