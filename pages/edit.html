@@ -668,11 +668,11 @@
                 // 2. Figma Plugin을 실행하여 변경사항 적용
                 await executeFigmaPluginAutomatically();
                 
-                // 3. 충분한 시간 대기 후 미리보기 새로고침
+                // 3. 충분한 시간 대기 후 미리보기 새로고침 (사용자가 직접 제어)
                 setTimeout(async () => {
                     await loadFigmaPreview();
                     showToast('미리보기가 새로고침되었습니다!', 'success');
-                }, 10000); // 10초 대기 (Figma 처리 시간 확보)
+                }, 30000); // 30초 대기 (사용자가 직접 제어하는 시간 고려)
                 
             } catch (error) {
                 console.error('❌ [refreshFigmaPreview] 오류:', error);
@@ -889,7 +889,7 @@
                 // 3. 플러그인 실행 대기 및 명령 전송
                 await executePluginCommand(figmaWindow);
                 
-                // 4. 처리 완료 후 창 닫기 (충분한 처리 시간 확보)
+                // 4. 처리 완료 후 창 닫기 (3분 대기 - 사용자가 직접 제어)
                 setTimeout(() => {
                     try {
                         figmaWindow.close();
@@ -897,7 +897,7 @@
                     } catch (error) {
                         console.log('⚠️ [executeFigmaPluginAutomatically] 창 닫기 실패');
                     }
-                }, 15000); // 15초 대기 (충분한 처리 시간 확보)
+                }, 180000); // 3분 대기 (180초) - 사용자가 직접 제어
                 
             } catch (error) {
                 console.error('❌ [executeFigmaPluginAutomatically] 오류:', error);
@@ -926,7 +926,7 @@
                 
                 document.body.appendChild(iframe);
                 
-                // 10초 후 iframe 제거 (충분한 처리 시간 확보)
+                // 3분 후 iframe 제거 (충분한 처리 시간 확보)
                 setTimeout(() => {
                     try {
                         document.body.removeChild(iframe);
@@ -934,7 +934,7 @@
                     } catch (error) {
                         console.log('⚠️ [executeFigmaPluginAlternative] iframe 제거 실패');
                     }
-                }, 10000);
+                }, 180000); // 3분 대기 (180초)
                 
             } catch (error) {
                 console.error('❌ [executeFigmaPluginAlternative] 오류:', error);
@@ -979,35 +979,192 @@
             }
         }
 
-        // Figma 파일을 백그라운드에서 열기
+        // Figma 파일을 보이는 창으로 열기 (사용자가 직접 제어)
         async function openFigmaInBackground() {
             try {
                 console.log('🔄 [openFigmaInBackground] Figma 파일 열기 시도');
+                
+                // 디자인 생성 중 팝업 표시
+                showDesignProcessingPopup();
                 
                 // Figma 파일 URL 생성 (플러그인 자동 실행을 위한 특별한 URL)
                 const figmaUrl = templateInfo.figmaUrl;
                 if (!figmaUrl) {
                     console.error('❌ [openFigmaInBackground] Figma URL이 없습니다');
+                    hideDesignProcessingPopup();
                     return null;
                 }
                 
                 // 플러그인 자동 실행을 위한 URL 파라미터 추가
                 const pluginUrl = `${figmaUrl}&plugin=auto-sync&auto-start=true`;
                 
-                // 백그라운드에서 Figma 파일 열기
-                const figmaWindow = window.open(pluginUrl, '_blank', 'width=1,height=1,left=-1000,top=-1000');
+                // 보이는 창으로 Figma 파일 열기 (사용자가 직접 제어 가능)
+                const figmaWindow = window.open(pluginUrl, '_blank', 'width=1200,height=800,left=100,top=100');
                 
                 if (figmaWindow) {
-                    console.log('✅ [openFigmaInBackground] Figma 파일이 백그라운드에서 열렸습니다');
+                    console.log('✅ [openFigmaInBackground] Figma 파일이 열렸습니다');
+                    
+                    // 창이 닫혔는지 주기적으로 확인
+                    checkWindowClosed(figmaWindow);
+                    
                     return figmaWindow;
                 } else {
                     console.error('❌ [openFigmaInBackground] 팝업 차단으로 인해 Figma를 열 수 없습니다');
+                    hideDesignProcessingPopup();
                     return null;
                 }
                 
             } catch (error) {
                 console.error('❌ [openFigmaInBackground] 오류:', error);
+                hideDesignProcessingPopup();
                 return null;
+            }
+        }
+
+        // 디자인 처리 중 팝업 표시
+        function showDesignProcessingPopup() {
+            // 기존 팝업이 있다면 제거
+            const existingPopup = document.getElementById('designProcessingPopup');
+            if (existingPopup) {
+                existingPopup.remove();
+            }
+            
+            // 팝업 HTML 생성
+            const popup = document.createElement('div');
+            popup.id = 'designProcessingPopup';
+            popup.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    z-index: 10000;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                ">
+                    <div style="
+                        background: white;
+                        padding: 40px;
+                        border-radius: 12px;
+                        text-align: center;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                        max-width: 500px;
+                        width: 90%;
+                    ">
+                        <div style="
+                            font-size: 24px;
+                            font-weight: bold;
+                            color: #333;
+                            margin-bottom: 20px;
+                        ">
+                            🎨 디자인 생성 중...
+                        </div>
+                        <div style="
+                            font-size: 16px;
+                            color: #666;
+                            margin-bottom: 30px;
+                            line-height: 1.5;
+                        ">
+                            Figma에서 디자인을 자동으로 생성하고 있습니다.<br>
+                            완료되면 창을 닫아주세요.
+                        </div>
+                        <div style="
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            margin-bottom: 20px;
+                        ">
+                            <div style="
+                                width: 40px;
+                                height: 40px;
+                                border: 4px solid #f3f3f3;
+                                border-top: 4px solid #667eea;
+                                border-radius: 50%;
+                                animation: spin 1s linear infinite;
+                                margin-right: 15px;
+                            "></div>
+                            <span style="color: #667eea; font-weight: bold;">처리 중...</span>
+                        </div>
+                        <button onclick="hideDesignProcessingPopup()" style="
+                            background: #667eea;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            cursor: pointer;
+                            margin-right: 10px;
+                        ">
+                            완료됨 (닫기)
+                        </button>
+                        <button onclick="forceCloseFigmaWindow()" style="
+                            background: #e74c3c;
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 6px;
+                            font-size: 16px;
+                            cursor: pointer;
+                        ">
+                            강제 종료
+                        </button>
+                    </div>
+                </div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+            `;
+            
+            document.body.appendChild(popup);
+            console.log('✅ [showDesignProcessingPopup] 팝업 표시됨');
+        }
+
+        // 디자인 처리 중 팝업 숨기기
+        function hideDesignProcessingPopup() {
+            const popup = document.getElementById('designProcessingPopup');
+            if (popup) {
+                popup.remove();
+                console.log('✅ [hideDesignProcessingPopup] 팝업 제거됨');
+            }
+        }
+
+        // Figma 창이 닫혔는지 확인
+        function checkWindowClosed(figmaWindow) {
+            const checkInterval = setInterval(() => {
+                try {
+                    if (figmaWindow.closed) {
+                        clearInterval(checkInterval);
+                        hideDesignProcessingPopup();
+                        console.log('✅ [checkWindowClosed] Figma 창이 닫혔습니다');
+                    }
+                } catch (error) {
+                    // 창이 닫혔거나 접근할 수 없는 경우
+                    clearInterval(checkInterval);
+                    hideDesignProcessingPopup();
+                    console.log('✅ [checkWindowClosed] Figma 창 상태 확인 완료');
+                }
+            }, 1000); // 1초마다 확인
+        }
+
+        // Figma 창 강제 종료
+        function forceCloseFigmaWindow() {
+            try {
+                // 현재 열린 모든 창을 확인하고 Figma 창 찾기
+                const windows = window.open('', '_blank');
+                if (windows) {
+                    windows.close();
+                }
+                hideDesignProcessingPopup();
+                console.log('✅ [forceCloseFigmaWindow] Figma 창 강제 종료됨');
+            } catch (error) {
+                console.log('⚠️ [forceCloseFigmaWindow] 창 종료 실패:', error);
+                hideDesignProcessingPopup();
             }
         }
 
