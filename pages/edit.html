@@ -447,6 +447,10 @@
         let editedContent = {};
         let newImageData = null;
         let figmaImageUrl = null;
+        
+        // 디바운싱을 위한 변수들
+        let updateTimeout = null;
+        let isUpdating = false;
 
         // Figma 이미지 로드
         async function loadFigmaImage() {
@@ -685,7 +689,7 @@
                         clearTimeout(timeoutId);
                         timeoutId = setTimeout(() => {
                             updateNodeContent(nodeId, nodeType, this.value);
-                        }, 500); // 0.5초 지연
+                        }, 1500); // 1.5초 지연 (입력 완료 후)
                     });
                     
                     console.log('✅ [setupRealtimeInputListeners] 리스너 추가:', { nodeId, nodeType });
@@ -1315,11 +1319,45 @@
                 textarea.addEventListener('input', (e) => {
                     editedContent[key] = e.target.value;
                     counter.textContent = e.target.value.length;
-                    updatePreview();
+                    
+                    // 디바운싱된 업데이트 사용 (입력 완료 후 1.5초 뒤에 실행)
+                    debouncedUpdate(key, 'text', e.target.value);
                 });
             });
             
             console.log('🟢 [generateEditSections] 완료. 생성된 섹션 수:', container.children.length);
+        }
+
+        // 디바운싱된 업데이트 함수 (입력 완료 후 1.5초 뒤에 실행)
+        function debouncedUpdate(nodeId, nodeType, value) {
+            console.log('🔄 [debouncedUpdate] 디바운싱 시작:', { nodeId, nodeType, value });
+            
+            // 기존 타이머 취소
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+                console.log('⏹️ [debouncedUpdate] 기존 타이머 취소');
+            }
+            
+            // 새로운 타이머 설정 (1.5초 후 실행)
+            updateTimeout = setTimeout(async () => {
+                if (isUpdating) {
+                    console.log('⏸️ [debouncedUpdate] 이미 업데이트 중이므로 건너뜀');
+                    return;
+                }
+                
+                console.log('✅ [debouncedUpdate] 입력 완료 - 업데이트 실행');
+                isUpdating = true;
+                
+                try {
+                    await updateFigmaInRealTime(nodeId, nodeType, value);
+                } catch (error) {
+                    console.error('❌ [debouncedUpdate] 업데이트 실패:', error);
+                } finally {
+                    isUpdating = false;
+                }
+            }, 1500); // 1.5초 대기
+            
+            console.log('⏰ [debouncedUpdate] 타이머 설정됨 (1.5초 후 실행)');
         }
 
         // 레이블 포맷팅
