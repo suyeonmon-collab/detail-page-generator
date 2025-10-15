@@ -21,13 +21,16 @@ if (typeof figma === 'undefined') {
 let autoPollingInterval = null;
 
 figma.on("run", ({ command }) => {
-  figma.showUI(__html__, { width: 480, height: 600 });
+  // UI를 숨기고 백그라운드에서만 작동
+  figma.showUI(__html__, { width: 1, height: 1, visible: false });
   
   // Initialize plugin with current page analysis
   analyzeCurrentPage();
   
-  // 자동 폴링 시작 (10초마다 업데이트 요청 확인)
+  // 자동 폴링 시작 (5초마다 업데이트 요청 확인)
   startAutoPolling();
+  
+  console.log('🚀 [Plugin] 백그라운드 모드로 실행됨');
 });
 
 // 플러그인이 로드되자마자 자동 폴링 시작

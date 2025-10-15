@@ -774,6 +774,9 @@
                 if (result.success) {
                     console.log('✅ [updateFigmaInRealTime] 성공:', result);
                     
+                    // Figma 파일을 백그라운드에서 자동으로 열기 (플러그인 실행을 위해)
+                    openFigmaInBackground();
+                    
                     // 미리보기 새로고침 (더 빠른 반응을 위해 간격 단축)
                     setTimeout(() => {
                         refreshFigmaPreview();
@@ -797,6 +800,42 @@
             } catch (error) {
                 console.error('❌ [updateFigmaInRealTime] 오류:', error);
                 showToast(`업데이트 실패: ${error.message}`, 'error');
+            }
+        }
+
+        // Figma 파일을 백그라운드에서 자동으로 열기
+        function openFigmaInBackground() {
+            try {
+                console.log('🔄 [openFigmaInBackground] Figma 파일 열기 시도');
+                
+                // Figma 파일 URL 생성
+                const figmaUrl = templateInfo.figmaUrl;
+                if (!figmaUrl) {
+                    console.error('❌ [openFigmaInBackground] Figma URL이 없습니다');
+                    return;
+                }
+                
+                // 백그라운드에서 Figma 파일 열기 (사용자에게 보이지 않게)
+                const figmaWindow = window.open(figmaUrl, '_blank', 'width=1,height=1,left=-1000,top=-1000');
+                
+                if (figmaWindow) {
+                    console.log('✅ [openFigmaInBackground] Figma 파일이 백그라운드에서 열렸습니다');
+                    
+                    // 3초 후 창을 닫기 (플러그인이 실행될 시간을 줌)
+                    setTimeout(() => {
+                        try {
+                            figmaWindow.close();
+                            console.log('✅ [openFigmaInBackground] 백그라운드 창이 닫혔습니다');
+                        } catch (error) {
+                            console.log('⚠️ [openFigmaInBackground] 창 닫기 실패 (정상적일 수 있음)');
+                        }
+                    }, 3000);
+                } else {
+                    console.error('❌ [openFigmaInBackground] 팝업 차단으로 인해 Figma를 열 수 없습니다');
+                }
+                
+            } catch (error) {
+                console.error('❌ [openFigmaInBackground] 오류:', error);
             }
         }
 
