@@ -23,6 +23,18 @@ export default async function handler(req, res) {
 
     try {
         console.log('🔄 [Figma Update] 시작:', { templateId, userId, contentUpdates });
+        
+        // 환경변수 확인
+        if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+            console.error('❌ [Figma Update] 환경변수 누락:', { 
+                SUPABASE_URL: !!SUPABASE_URL, 
+                SUPABASE_SERVICE_KEY: !!SUPABASE_SERVICE_KEY 
+            });
+            return res.status(500).json({ 
+                success: false, 
+                error: '환경변수 설정 오류' 
+            });
+        }
 
         // 1. 템플릿 정보 가져오기
         const { data: template, error: templateError } = await supabase
