@@ -791,14 +791,6 @@
                 return;
             }
 
-            // 미리보기 패널에 내용 표시
-            const previewContent = document.getElementById('previewContent');
-            if (!previewContent) {
-                console.error('🔴 [previewDesign] previewContent를 찾을 수 없습니다');
-                alert('미리보기 패널을 찾을 수 없습니다.');
-                return;
-            }
-
             // Figma 이미지가 있으면 배경으로 표시
             if (figmaImageUrl) {
                 previewContent.innerHTML = `
@@ -847,5 +839,3 @@
     </script>
 </body>
 </html>
-
-
