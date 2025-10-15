@@ -778,23 +778,23 @@
                 if (result.success) {
                     console.log('✅ [updateFigmaInRealTime] 성공:', result);
                     
-                    // Figma 파일을 백그라운드에서 자동으로 열기 (플러그인 실행을 위해)
-                    openFigmaInBackground();
+                    // 완전 자동화된 Figma Plugin 실행
+                    executeFigmaPluginAutomatically();
                     
-                    // 미리보기 새로고침 (더 빠른 반응을 위해 간격 단축)
+                    // 미리보기 새로고침 (자동 실행 시스템 고려하여 간격 조정)
                     setTimeout(() => {
                         refreshFigmaPreview();
-                    }, 1000); // 1초로 단축
+                    }, 2000); // 2초 후 첫 새로고침
                     
-                    // 추가 새로고침 (Plugin이 처리 완료된 후)
+                    // 추가 새로고침 (자동 실행 시스템 처리 완료 후)
                     setTimeout(() => {
                         refreshFigmaPreview();
-                    }, 3000); // 3초 후 한 번 더
+                    }, 5000); // 5초 후 두 번째 새로고침
                     
                     // 최종 새로고침 (확실한 동기화)
                     setTimeout(() => {
                         refreshFigmaPreview();
-                    }, 6000); // 6초 후 최종 확인
+                    }, 8000); // 8초 후 최종 확인
                     
                     showToast(`${nodeId} 업데이트 완료!`, 'success');
                 } else {
@@ -807,39 +807,132 @@
             }
         }
 
-        // Figma 파일을 백그라운드에서 자동으로 열기
-        function openFigmaInBackground() {
+        // Figma Plugin을 자동으로 실행하는 시스템
+        async function executeFigmaPluginAutomatically() {
+            try {
+                console.log('🚀 [executeFigmaPluginAutomatically] 자동 플러그인 실행 시작');
+                
+                // 1. Figma 파일을 백그라운드에서 열기
+                const figmaWindow = await openFigmaInBackground();
+                
+                if (!figmaWindow) {
+                    throw new Error('Figma 파일을 열 수 없습니다');
+                }
+                
+                // 2. 플러그인이 로드될 때까지 대기
+                await waitForPluginLoad(figmaWindow);
+                
+                // 3. 플러그인에 직접 명령 전송
+                await sendCommandToPlugin(figmaWindow);
+                
+                // 4. 처리 완료 후 창 닫기
+                setTimeout(() => {
+                    try {
+                        figmaWindow.close();
+                        console.log('✅ [executeFigmaPluginAutomatically] 처리 완료 - 창 닫기');
+                    } catch (error) {
+                        console.log('⚠️ [executeFigmaPluginAutomatically] 창 닫기 실패');
+                    }
+                }, 5000);
+                
+            } catch (error) {
+                console.error('❌ [executeFigmaPluginAutomatically] 오류:', error);
+                showToast('자동 업데이트 실패: ' + error.message, 'error');
+            }
+        }
+
+        // Figma 파일을 백그라운드에서 열기
+        async function openFigmaInBackground() {
             try {
                 console.log('🔄 [openFigmaInBackground] Figma 파일 열기 시도');
                 
-                // Figma 파일 URL 생성
+                // Figma 파일 URL 생성 (플러그인 자동 실행을 위한 특별한 URL)
                 const figmaUrl = templateInfo.figmaUrl;
                 if (!figmaUrl) {
                     console.error('❌ [openFigmaInBackground] Figma URL이 없습니다');
-                    return;
+                    return null;
                 }
                 
-                // 백그라운드에서 Figma 파일 열기 (사용자에게 보이지 않게)
-                const figmaWindow = window.open(figmaUrl, '_blank', 'width=1,height=1,left=-1000,top=-1000');
+                // 플러그인 자동 실행을 위한 URL 파라미터 추가
+                const pluginUrl = `${figmaUrl}&plugin=auto-sync&auto-start=true`;
+                
+                // 백그라운드에서 Figma 파일 열기
+                const figmaWindow = window.open(pluginUrl, '_blank', 'width=1,height=1,left=-1000,top=-1000');
                 
                 if (figmaWindow) {
                     console.log('✅ [openFigmaInBackground] Figma 파일이 백그라운드에서 열렸습니다');
-                    
-                    // 3초 후 창을 닫기 (플러그인이 실행될 시간을 줌)
-                    setTimeout(() => {
-                        try {
-                            figmaWindow.close();
-                            console.log('✅ [openFigmaInBackground] 백그라운드 창이 닫혔습니다');
-                        } catch (error) {
-                            console.log('⚠️ [openFigmaInBackground] 창 닫기 실패 (정상적일 수 있음)');
-                        }
-                    }, 3000);
+                    return figmaWindow;
                 } else {
                     console.error('❌ [openFigmaInBackground] 팝업 차단으로 인해 Figma를 열 수 없습니다');
+                    return null;
                 }
                 
             } catch (error) {
                 console.error('❌ [openFigmaInBackground] 오류:', error);
+                return null;
+            }
+        }
+
+        // 플러그인 로드 대기
+        async function waitForPluginLoad(figmaWindow) {
+            return new Promise((resolve, reject) => {
+                console.log('⏳ [waitForPluginLoad] 플러그인 로드 대기 중...');
+                
+                let attempts = 0;
+                const maxAttempts = 30; // 30초 대기
+                
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    
+                    try {
+                        // 플러그인이 로드되었는지 확인
+                        if (figmaWindow.closed) {
+                            clearInterval(checkInterval);
+                            reject(new Error('Figma 창이 닫혔습니다'));
+                            return;
+                        }
+                        
+                        // 플러그인 로드 완료 시그널 확인
+                        if (attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
+                            console.log('⚠️ [waitForPluginLoad] 타임아웃 - 플러그인 로드 완료로 간주');
+                            resolve();
+                            return;
+                        }
+                        
+                        console.log(`🔄 [waitForPluginLoad] 대기 중... (${attempts}/${maxAttempts})`);
+                        
+                    } catch (error) {
+                        console.log('⚠️ [waitForPluginLoad] 플러그인 상태 확인 중 오류:', error.message);
+                    }
+                }, 1000);
+                
+                // 2초 후 플러그인 로드 완료로 간주 (빠른 처리)
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    console.log('✅ [waitForPluginLoad] 플러그인 로드 완료');
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        // 플러그인에 명령 전송
+        async function sendCommandToPlugin(figmaWindow) {
+            try {
+                console.log('📡 [sendCommandToPlugin] 플러그인에 명령 전송');
+                
+                // 플러그인에 메시지 전송
+                figmaWindow.postMessage({
+                    type: 'AUTO_SYNC_COMMAND',
+                    action: 'process-pending-updates',
+                    timestamp: Date.now()
+                }, '*');
+                
+                console.log('✅ [sendCommandToPlugin] 명령 전송 완료');
+                
+            } catch (error) {
+                console.error('❌ [sendCommandToPlugin] 오류:', error);
+                throw error;
             }
         }
 

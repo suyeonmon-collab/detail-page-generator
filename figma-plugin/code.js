@@ -183,6 +183,10 @@ figma.ui.onmessage = async (msg) => {
       case "check-update-requests":
         await checkAndProcessUpdateRequests();
         break;
+      case "AUTO_SYNC_COMMAND":
+        console.log('🚀 [AUTO_SYNC_COMMAND] 웹앱에서 자동 실행 명령 수신:', msg);
+        await handleAutoSyncCommand(msg);
+        break;
       case "close":
         stopAutoPolling(); // 자동 폴링 중지
         figma.closePlugin();
@@ -199,6 +203,39 @@ figma.ui.onmessage = async (msg) => {
     });
   }
 };
+
+// 웹앱에서 오는 자동 실행 명령 처리
+async function handleAutoSyncCommand(msg) {
+  try {
+    console.log('🔄 [handleAutoSyncCommand] 자동 동기화 시작');
+    
+    if (msg.action === 'process-pending-updates') {
+      console.log('📋 [handleAutoSyncCommand] 대기 중인 업데이트 처리 시작');
+      
+      // 즉시 대기 중인 업데이트 요청 처리
+      await checkAndProcessUpdateRequests();
+      
+      console.log('✅ [handleAutoSyncCommand] 자동 동기화 완료');
+      
+      // 웹앱에 완료 신호 전송
+      figma.ui.postMessage({
+        type: 'AUTO_SYNC_COMPLETE',
+        timestamp: Date.now(),
+        success: true
+      });
+    }
+    
+  } catch (error) {
+    console.error('❌ [handleAutoSyncCommand] 오류:', error);
+    
+    // 웹앱에 오류 신호 전송
+    figma.ui.postMessage({
+      type: 'AUTO_SYNC_ERROR',
+      timestamp: Date.now(),
+      error: error.message
+    });
+  }
+}
 
 // Handle node updates with exact ID matching
 async function handleNodeUpdates(payload) {
