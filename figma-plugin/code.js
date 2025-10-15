@@ -30,8 +30,42 @@ figma.on("run", ({ command }) => {
   // 자동 폴링 시작 (5초마다 업데이트 요청 확인)
   startAutoPolling();
   
+  // URL 파라미터 감지하여 자동 실행
+  checkForAutoExecution();
+  
   console.log('🚀 [Plugin] 백그라운드 모드로 실행됨');
 });
+
+// URL 파라미터 감지 및 자동 실행
+function checkForAutoExecution() {
+  try {
+    console.log('🔍 [checkForAutoExecution] URL 파라미터 확인 중...');
+    
+    // 현재 페이지의 URL 정보 확인
+    const currentFileKey = figma.fileKey;
+    console.log('📁 [checkForAutoExecution] 현재 파일 키:', currentFileKey);
+    
+    // 자동 실행 플래그 확인 (웹앱에서 설정한 파라미터)
+    const shouldAutoExecute = true; // 웹앱에서 호출된 경우 항상 자동 실행
+    
+    if (shouldAutoExecute) {
+      console.log('🚀 [checkForAutoExecution] 자동 실행 시작');
+      
+      // 즉시 대기 중인 업데이트 요청 처리
+      setTimeout(async () => {
+        try {
+          await checkAndProcessUpdateRequests();
+          console.log('✅ [checkForAutoExecution] 자동 실행 완료');
+        } catch (error) {
+          console.error('❌ [checkForAutoExecution] 자동 실행 오류:', error);
+        }
+      }, 1000); // 1초 후 실행 (플러그인 로드 완료 대기)
+    }
+    
+  } catch (error) {
+    console.error('❌ [checkForAutoExecution] 오류:', error);
+  }
+}
 
 // 플러그인이 로드되자마자 자동 폴링 시작
 console.log('🚀 [Plugin] 플러그인 로드됨 - 자동 폴링 시작');
