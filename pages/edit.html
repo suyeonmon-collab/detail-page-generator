@@ -506,7 +506,11 @@
             console.log('🎨 [loadFigmaPlugin] 시작:', clonedFile);
             
             const loadingEl = document.getElementById('figmaLoading');
-            const frameEl = document.getElementById('figmaPluginFrame');
+            
+            if (!loadingEl) {
+                console.error('❌ [loadFigmaPlugin] figmaLoading 요소를 찾을 수 없습니다');
+                return;
+            }
             
             if (!clonedFile || !clonedFile.clonedFileKey) {
                 console.error('❌ [loadFigmaPlugin] 복제된 파일 정보가 없습니다');
@@ -538,7 +542,6 @@
                         </div>
                     `;
                     loadingEl.style.display = 'block';
-                    frameEl.style.display = 'none';
                     
                     console.log('✅ [loadFigmaPlugin] Figma 파일이 새 창에서 열렸습니다');
                 } else {
