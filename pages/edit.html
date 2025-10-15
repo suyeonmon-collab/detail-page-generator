@@ -780,22 +780,77 @@
 
         // 미리보기 업데이트
         function updatePreview(nodeId, nodeType, value) {
-            const previewEl = document.getElementById('previewContent');
-            if (!previewEl) return;
-
-            // 해당 노드의 미리보기 요소 찾기 및 업데이트
-            const nodeEl = previewEl.querySelector(`[data-preview-node="${nodeId}"]`);
-            if (nodeEl) {
-                if (nodeType === 'text') {
-                    nodeEl.textContent = value;
-                } else if (nodeType === 'image' && value instanceof File) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        nodeEl.src = e.target.result;
-                    };
-                    reader.readAsDataURL(value);
-                }
+            console.log('🔄 [updatePreview] 시작:', { nodeId, nodeType, value });
+            
+            // 미리보기 패널이 보이도록 설정
+            const previewPanel = document.getElementById('preview-panel');
+            if (previewPanel) {
+                previewPanel.style.display = 'block';
             }
+            
+            // 실시간 텍스트 오버레이 업데이트
+            if (nodeType === 'text') {
+                updateTextOverlay(nodeId, value);
+            }
+            
+            // 미리보기 새로고침 (1초 후)
+            setTimeout(() => {
+                refreshFigmaPreview();
+            }, 1000);
+        }
+        
+        // 텍스트 오버레이 업데이트
+        function updateTextOverlay(nodeId, value) {
+            console.log('🔄 [updateTextOverlay] 시작:', { nodeId, value });
+            
+            // 기존 오버레이 제거
+            const existingOverlay = document.getElementById(`overlay-${nodeId}`);
+            if (existingOverlay) {
+                existingOverlay.remove();
+            }
+            
+            // 새로운 텍스트 오버레이 생성
+            const figmaImage = document.getElementById('figma-preview-image');
+            if (!figmaImage) return;
+            
+            const overlay = document.createElement('div');
+            overlay.id = `overlay-${nodeId}`;
+            overlay.style.cssText = `
+                position: absolute;
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 16px;
+                font-weight: bold;
+                z-index: 10;
+                pointer-events: none;
+                max-width: 250px;
+                word-wrap: break-word;
+                text-align: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            `;
+            
+            // 노드별 위치 설정
+            const positions = {
+                'title': { top: '15%', left: '50%', transform: 'translateX(-50%)' },
+                'subtitle': { top: '35%', left: '50%', transform: 'translateX(-50%)' },
+                'accent-text': { top: '55%', left: '50%', transform: 'translateX(-50%)' }
+            };
+            
+            const position = positions[nodeId] || { top: '50%', left: '50%', transform: 'translateX(-50%)' };
+            Object.assign(overlay.style, position);
+            
+            overlay.textContent = value || '';
+            
+            // 이미지 컨테이너에 오버레이 추가
+            const imageContainer = figmaImage.parentElement;
+            if (imageContainer) {
+                imageContainer.style.position = 'relative';
+                imageContainer.appendChild(overlay);
+            }
+            
+            console.log('✅ [updateTextOverlay] 완료:', { nodeId, value });
         }
 
         // Figma에 저장
