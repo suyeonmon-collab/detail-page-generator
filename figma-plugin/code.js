@@ -912,14 +912,43 @@ async function updateTextNodeInFigma(nodeId, textContent) {
     
     // 현재 페이지에서 해당 노드 찾기
     const page = figma.currentPage;
-    const nodes = page.findAll(n => n.name === nodeId && n.type === 'TEXT');
+    
+    // 1. 정확한 이름으로 찾기
+    let nodes = page.findAll(n => n.name === nodeId && n.type === 'TEXT');
+    
+    // 2. 정확한 이름이 없으면 부분 매칭으로 찾기
+    if (nodes.length === 0) {
+      nodes = page.findAll(n => {
+        if (n.type !== 'TEXT') return false;
+        const name = n.name.toLowerCase();
+        const searchId = nodeId.toLowerCase();
+        return name.includes(searchId) || searchId.includes(name);
+      });
+    }
+    
+    // 3. 여전히 없으면 모든 텍스트 노드 중에서 순서로 찾기
+    if (nodes.length === 0) {
+      const allTextNodes = page.findAll(n => n.type === 'TEXT');
+      console.log('🔍 [updateTextNodeInFigma] 모든 텍스트 노드:', allTextNodes.map(n => n.name));
+      
+      // nodeId에 따라 순서로 매칭
+      if (nodeId === 'title' && allTextNodes.length > 0) {
+        nodes = [allTextNodes[0]]; // 첫 번째 텍스트 노드
+      } else if (nodeId === 'subtitle' && allTextNodes.length > 1) {
+        nodes = [allTextNodes[1]]; // 두 번째 텍스트 노드
+      } else if (nodeId === 'accent-text' && allTextNodes.length > 2) {
+        nodes = [allTextNodes[2]]; // 세 번째 텍스트 노드
+      }
+    }
     
     if (nodes.length === 0) {
-      throw new Error(`노드 '${nodeId}'를 찾을 수 없습니다`);
+      console.warn(`⚠️ [updateTextNodeInFigma] 노드 '${nodeId}'를 찾을 수 없습니다. 건너뜁니다.`);
+      return; // 오류를 던지지 않고 건너뜀
     }
     
     // 첫 번째 매칭 노드 업데이트
     const textNode = nodes[0];
+    console.log('🎯 [updateTextNodeInFigma] 찾은 노드:', { name: textNode.name, type: textNode.type });
     
     // 폰트 로드 (필요한 경우)
     if (textNode.fontName && textNode.fontName.family) {
@@ -929,7 +958,7 @@ async function updateTextNodeInFigma(nodeId, textContent) {
     // 텍스트 내용 업데이트
     textNode.characters = textContent;
     
-    console.log('✅ [updateTextNodeInFigma] 완료:', { nodeId, textContent });
+    console.log('✅ [updateTextNodeInFigma] 완료:', { nodeId, textContent, actualNodeName: textNode.name });
     
   } catch (error) {
     console.error('❌ [updateTextNodeInFigma] 오류:', error);
