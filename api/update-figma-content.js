@@ -69,6 +69,14 @@ export default async function handler(req, res) {
         }
 
         console.log('🟢 [Figma Update] 사용자 파일 정보:', userFile);
+        
+        // 실제 사용할 파일 키 결정 (복제된 파일 키 우선)
+        const actualFileKey = userFile.cloned_file_key || template.figma_file_key;
+        console.log('🔄 [Figma Update] 사용할 파일 키:', { 
+            original: template.figma_file_key, 
+            cloned: userFile.cloned_file_key, 
+            actual: actualFileKey 
+        });
 
         // 3. 콘텐츠 업데이트 처리 (간단한 버전)
         const updateResults = [];
@@ -80,7 +88,7 @@ export default async function handler(req, res) {
                 // 텍스트 노드 업데이트
                 if (updates.text) {
                     const textUpdateResult = await updateTextNodeViaPlugin(
-                        template.figma_file_key, 
+                        actualFileKey, 
                         nodeId, 
                         updates.text,
                         userId

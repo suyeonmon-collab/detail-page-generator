@@ -746,11 +746,12 @@ async function checkAndProcessUpdateRequests() {
     const currentFileKey = figma.fileKey;
     console.log('🟢 [checkAndProcessUpdateRequests] 현재 파일 키:', currentFileKey);
     
-    // Supabase에서 대기 중인 업데이트 요청 가져오기
-    const updateRequests = await fetchUpdateRequests(currentFileKey);
+    // 모든 대기 중인 업데이트 요청 검색 (파일 키 무관)
+    const updateRequests = await fetchAllUpdateRequests();
     
     if (!updateRequests || updateRequests.length === 0) {
       console.log('🟡 [checkAndProcessUpdateRequests] 처리할 업데이트 요청이 없습니다');
+      figma.notify('처리할 디자인이 없습니다');
       return;
     }
     
@@ -766,6 +767,37 @@ async function checkAndProcessUpdateRequests() {
   } catch (error) {
     console.error('❌ [checkAndProcessUpdateRequests] 오류:', error);
     figma.notify(`업데이트 요청 처리 중 오류: ${error.message}`);
+  }
+}
+
+// Supabase에서 모든 대기 중인 업데이트 요청 가져오기
+async function fetchAllUpdateRequests() {
+  try {
+    console.log('🔄 [fetchAllUpdateRequests] 시작');
+    
+    // 모든 대기 중인 업데이트 요청 가져오기
+    const response = await fetch('https://geuboakvnddaaheahild.supabase.co/rest/v1/figma_update_requests?status=eq.pending', {
+      method: 'GET',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Supabase API 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ [fetchAllUpdateRequests] 성공:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('❌ [fetchAllUpdateRequests] 오류:', error);
+    
+    // 오류 발생 시 빈 배열 반환
+    return [];
   }
 }
 
