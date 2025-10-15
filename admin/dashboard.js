@@ -416,7 +416,10 @@ async function saveData() {
             description: cat.description,
             icon: cat.icon,
             color: cat.color,
-            templates: cat.templates
+            templates: cat.templates,
+            // 기존 데이터가 있으면 유지, 없으면 현재 시간 사용
+            created_at: cat.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString()
         }));
         
         const supabaseTemplates = templates.map(template => ({
@@ -430,7 +433,10 @@ async function saveData() {
             figma_file_key: template.figmaFileKey,
             price: template.price,
             enabled: template.enabled,
-            nodes: template.nodes
+            nodes: template.nodes,
+            // 기존 데이터가 있으면 유지, 없으면 현재 시간 사용
+            created_at: template.created_at || new Date().toISOString(),
+            updated_at: new Date().toISOString()
         }));
         
         console.log('🔵 [Admin] 변환된 데이터:', {
