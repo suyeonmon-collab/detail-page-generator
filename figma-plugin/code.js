@@ -140,6 +140,9 @@ figma.ui.onmessage = async (msg) => {
       case "clone-file":
         await handleFileClone(msg.payload);
         break;
+      case "check-update-requests":
+        await checkAndProcessUpdateRequests();
+        break;
       case "close":
         figma.closePlugin();
         break;
@@ -731,5 +734,168 @@ async function updateImageNode(imageData) {
   } catch (error) {
     console.error('이미지 업데이트 오류:', error);
     throw error;
+  }
+}
+
+// Supabase에서 업데이트 요청 확인 및 처리
+async function checkAndProcessUpdateRequests() {
+  try {
+    console.log('🔄 [checkAndProcessUpdateRequests] 시작');
+    
+    // 현재 파일 키 가져오기
+    const currentFileKey = figma.fileKey;
+    console.log('🟢 [checkAndProcessUpdateRequests] 현재 파일 키:', currentFileKey);
+    
+    // Supabase에서 대기 중인 업데이트 요청 가져오기
+    const updateRequests = await fetchUpdateRequests(currentFileKey);
+    
+    if (!updateRequests || updateRequests.length === 0) {
+      console.log('🟡 [checkAndProcessUpdateRequests] 처리할 업데이트 요청이 없습니다');
+      return;
+    }
+    
+    console.log(`🟢 [checkAndProcessUpdateRequests] ${updateRequests.length}개의 업데이트 요청 발견`);
+    
+    // 각 업데이트 요청 처리
+    for (const request of updateRequests) {
+      await processUpdateRequest(request);
+    }
+    
+    figma.notify(`✅ ${updateRequests.length}개의 업데이트 요청을 처리했습니다!`);
+    
+  } catch (error) {
+    console.error('❌ [checkAndProcessUpdateRequests] 오류:', error);
+    figma.notify(`업데이트 요청 처리 중 오류: ${error.message}`);
+  }
+}
+
+// Supabase에서 업데이트 요청 가져오기
+async function fetchUpdateRequests(fileKey) {
+  try {
+    // 실제로는 Supabase API를 호출해야 함
+    // 현재는 mock 데이터로 처리
+    const mockRequests = [
+      {
+        id: 'req-1',
+        user_id: 'anonymous',
+        file_key: fileKey,
+        node_id: 'title',
+        update_type: 'text',
+        content: '새로운 제목',
+        status: 'pending'
+      }
+    ];
+    
+    return mockRequests;
+  } catch (error) {
+    console.error('❌ [fetchUpdateRequests] 오류:', error);
+    return [];
+  }
+}
+
+// 개별 업데이트 요청 처리
+async function processUpdateRequest(request) {
+  try {
+    console.log('🔄 [processUpdateRequest] 시작:', request);
+    
+    // 요청 상태를 'processing'으로 업데이트
+    await updateRequestStatus(request.id, 'processing');
+    
+    if (request.update_type === 'text') {
+      await updateTextNodeInFigma(request.node_id, request.content);
+    } else if (request.update_type === 'image') {
+      await updateImageNodeInFigma(request.node_id, request.content);
+    }
+    
+    // 요청 상태를 'completed'로 업데이트
+    await updateRequestStatus(request.id, 'completed');
+    
+    console.log('✅ [processUpdateRequest] 완료:', request.id);
+    
+  } catch (error) {
+    console.error('❌ [processUpdateRequest] 오류:', error);
+    
+    // 요청 상태를 'failed'로 업데이트
+    await updateRequestStatus(request.id, 'failed', error.message);
+  }
+}
+
+// Figma에서 텍스트 노드 업데이트
+async function updateTextNodeInFigma(nodeId, textContent) {
+  try {
+    console.log('🔄 [updateTextNodeInFigma] 시작:', { nodeId, textContent });
+    
+    // 현재 페이지에서 해당 노드 찾기
+    const page = figma.currentPage;
+    const nodes = page.findAll(n => n.name === nodeId && n.type === 'TEXT');
+    
+    if (nodes.length === 0) {
+      throw new Error(`노드 '${nodeId}'를 찾을 수 없습니다`);
+    }
+    
+    // 첫 번째 매칭 노드 업데이트
+    const textNode = nodes[0];
+    
+    // 폰트 로드 (필요한 경우)
+    if (textNode.fontName && textNode.fontName.family) {
+      await figma.loadFontAsync(textNode.fontName);
+    }
+    
+    // 텍스트 내용 업데이트
+    textNode.characters = textContent;
+    
+    console.log('✅ [updateTextNodeInFigma] 완료:', { nodeId, textContent });
+    
+  } catch (error) {
+    console.error('❌ [updateTextNodeInFigma] 오류:', error);
+    throw error;
+  }
+}
+
+// Figma에서 이미지 노드 업데이트
+async function updateImageNodeInFigma(nodeId, imageContent) {
+  try {
+    console.log('🔄 [updateImageNodeInFigma] 시작:', { nodeId });
+    
+    // 현재 페이지에서 해당 노드 찾기
+    const page = figma.currentPage;
+    const nodes = page.findAll(n => n.name === nodeId && (n.type === 'RECTANGLE' || n.type === 'ELLIPSE'));
+    
+    if (nodes.length === 0) {
+      throw new Error(`이미지 노드 '${nodeId}'를 찾을 수 없습니다`);
+    }
+    
+    // 첫 번째 매칭 노드 업데이트
+    const imageNode = nodes[0];
+    
+    // Base64 이미지 디코딩 및 적용
+    if (imageContent && imageContent.startsWith('data:image')) {
+      const base64Data = imageContent.split(',')[1];
+      const imageBytes = figma.base64Decode(base64Data);
+      const image = figma.createImage(imageBytes);
+      
+      // 이미지 fill 적용
+      imageNode.fills = [{
+        type: 'IMAGE',
+        imageHash: image.hash,
+        scaleMode: 'FILL'
+      }];
+    }
+    
+    console.log('✅ [updateImageNodeInFigma] 완료:', { nodeId });
+    
+  } catch (error) {
+    console.error('❌ [updateImageNodeInFigma] 오류:', error);
+    throw error;
+  }
+}
+
+// 요청 상태 업데이트
+async function updateRequestStatus(requestId, status, errorMessage = null) {
+  try {
+    // 실제로는 Supabase API를 호출해야 함
+    console.log('🔄 [updateRequestStatus]:', { requestId, status, errorMessage });
+  } catch (error) {
+    console.error('❌ [updateRequestStatus] 오류:', error);
   }
 }
