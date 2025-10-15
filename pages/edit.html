@@ -426,7 +426,8 @@
             try {
                 console.log('🟢 [loadFigmaImage] Figma API 호출 시작');
                 
-                const response = await fetch(`${API_BASE}/figma-to-konva`, {
+                // 기존 generate-content API를 사용하여 Figma 이미지 가져오기
+                const response = await fetch(`${API_BASE}/generate-figma-preview`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -471,6 +472,8 @@
             
             // 초기 콘텐츠 설정
             editedContent = aiResult.aiContent || {};
+            console.log('🔵 [init] editedContent:', editedContent);
+            console.log('🔵 [init] editedContent keys:', Object.keys(editedContent));
             
             // Figma 이미지 로드
             await loadFigmaImage();
@@ -490,9 +493,32 @@
 
         // 편집 섹션 생성
         function generateEditSections() {
+            console.log('🔵 [generateEditSections] 시작');
+            console.log('🔵 [generateEditSections] editedContent:', editedContent);
+            console.log('🔵 [generateEditSections] editedContent keys:', Object.keys(editedContent));
+            
             const container = document.getElementById('editSections');
+            if (!container) {
+                console.error('🔴 [generateEditSections] editSections 컨테이너를 찾을 수 없습니다');
+                return;
+            }
+            
+            // 기존 내용 제거
+            container.innerHTML = '';
+            
+            if (Object.keys(editedContent).length === 0) {
+                console.log('🟡 [generateEditSections] 편집할 내용이 없습니다. 기본 텍스트 추가');
+                // 기본 텍스트 추가
+                editedContent = {
+                    'title': '제목을 입력하세요',
+                    'subtitle': '부제목을 입력하세요',
+                    'description': '설명을 입력하세요'
+                };
+            }
             
             Object.entries(editedContent).forEach(([key, value]) => {
+                console.log(`🟢 [generateEditSections] 섹션 생성: ${key} = ${value}`);
+                
                 const section = document.createElement('div');
                 section.className = 'edit-section';
                 
@@ -500,13 +526,15 @@
                 section.innerHTML = `
                     <label for="edit-${key}">
                         ${formatLabel(key)}
-                        <span class="char-count"><span id="count-${key}">${value.length}</span>/${maxLength}</span>
+                        <span class="char-count"><span id="count-${key}">${(value || '').length}</span>/${maxLength}</span>
                     </label>
                     <textarea 
                         id="edit-${key}" 
+                        name="${key}"
+                        data-key="${key}"
                         rows="4" 
                         maxlength="${maxLength}"
-                    >${value}</textarea>
+                    >${value || ''}</textarea>
                 `;
                 
                 container.appendChild(section);
@@ -521,6 +549,8 @@
                     updatePreview();
                 });
             });
+            
+            console.log('🟢 [generateEditSections] 완료. 생성된 섹션 수:', container.children.length);
         }
 
         // 레이블 포맷팅
