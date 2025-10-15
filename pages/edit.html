@@ -2220,10 +2220,13 @@ function startAutoPolling() {
             const preview = document.getElementById('previewContent');
             let html = '';
             
+            // 현재 Figma 이미지 URL 가져오기
+            const currentFigmaImageUrl = figmaImageUrl || templateInfo?.previewImage || 'https://placehold.co/1280x720/cccccc/ffffff?text=No+Preview';
+            
             // Figma 이미지가 있으면 배경으로 설정
-            if (figmaImageUrl) {
+            if (currentFigmaImageUrl) {
                 html += `
-                    <div style="position: relative; width: 100%; height: 100%; background-image: url('${figmaImageUrl}'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px;">
+                    <div style="position: relative; width: 100%; height: 100%; background-image: url('` + currentFigmaImageUrl + `'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px;">
                         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); border-radius: 8px;">
                             <!-- 텍스트 오버레이 -->
                             <div style="position: absolute; top: 20px; left: 20px; right: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
@@ -2524,10 +2527,13 @@ function startAutoPolling() {
                 return;
             }
 
+            // 현재 Figma 이미지 URL 가져오기
+            const currentFigmaImageUrl = figmaImageUrl || templateInfo?.previewImage || 'https://placehold.co/1280x720/cccccc/ffffff?text=No+Preview';
+            
             // Figma 이미지가 있으면 배경으로 표시
-            if (figmaImageUrl) {
+            if (currentFigmaImageUrl) {
                 previewContent.innerHTML = `
-                    <div style="position: relative; width: 100%; height: 100%; background-image: url('${figmaImageUrl}'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px; min-height: 400px;">
+                    <div style="position: relative; width: 100%; height: 100%; background-image: url('` + currentFigmaImageUrl + `'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px; min-height: 400px;">
                         <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); border-radius: 8px;">
                             <!-- 텍스트 오버레이 -->
                             <div style="position: absolute; top: 20px; left: 20px; right: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
