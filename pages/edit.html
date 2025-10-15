@@ -697,7 +697,29 @@
             if (previewPanel) {
                 previewPanel.style.display = 'block';
                 updatePreviewContent();
+                
+                // 미리보기 이미지 업데이트
+                const previewImg = previewPanel.querySelector('img');
+                if (previewImg) {
+                    previewImg.src = previewImg.src; // 이미지 새로고침
+                }
+                
+                showToast('미리보기가 업데이트되었습니다!', 'success');
+            } else {
+                showToast('미리보기 패널을 찾을 수 없습니다.', 'error');
             }
+        }
+
+        // 미리보기 콘텐츠 업데이트
+        function updatePreviewContent() {
+            const previewEl = document.getElementById('previewContent');
+            if (!previewEl || !window.currentContentUpdates) return;
+
+            // 현재 편집된 내용으로 미리보기 업데이트
+            Object.entries(window.currentContentUpdates).forEach(([nodeId, updates]) => {
+                updatePreview(nodeId, 'text', updates.text);
+                updatePreview(nodeId, 'image', updates.image);
+            });
         }
 
         // 토스트 메시지 표시
