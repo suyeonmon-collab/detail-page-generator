@@ -1585,52 +1585,21 @@ function startAutoPolling() {
                                 </div>
                             </div>
                             
-                            <div id="copy-scripts"></div>
+                            <div style="margin-top: 20px; padding: 15px; background: #f3f4f6; border-radius: 8px;">
+                                <h4>📝 설치 방법:</h4>
+                                <ol style="margin: 10px 0; padding-left: 20px;">
+                                    <li>위의 파일 내용을 각각 복사합니다</li>
+                                    <li>Figma에서 Plugins → Development → Import plugin from manifest...</li>
+                                    <li>manifest.json 내용을 붙여넣습니다</li>
+                                    <li>code.js와 ui.html 파일을 같은 폴더에 저장합니다</li>
+                                    <li>플러그인이 설치되면 사용할 수 있습니다</li>
+                                </ol>
+                            </div>
                         </body>
                         </html>
                     `;
                     
                     installWindow.document.write(installHtml);
-                    
-                    // 복사 함수를 별도로 추가
-                    const copyScript = '<script>' +
-                        'function copyToClipboard(elementId) {' +
-                            'const element = document.getElementById(elementId);' +
-                            'const text = element.textContent;' +
-                            'if (navigator.clipboard && window.isSecureContext) {' +
-                                'navigator.clipboard.writeText(text).then(() => {' +
-                                    'alert("복사되었습니다!");' +
-                                '}).catch(err => {' +
-                                    'fallbackCopyTextToClipboard(text);' +
-                                '});' +
-                            '} else {' +
-                                'fallbackCopyTextToClipboard(text);' +
-                            '}' +
-                        '}' +
-                        'function fallbackCopyTextToClipboard(text) {' +
-                            'const textArea = document.createElement("textarea");' +
-                            'textArea.value = text;' +
-                            'textArea.style.top = "0";' +
-                            'textArea.style.left = "0";' +
-                            'textArea.style.position = "fixed";' +
-                            'document.body.appendChild(textArea);' +
-                            'textArea.focus();' +
-                            'textArea.select();' +
-                            'try {' +
-                                'const successful = document.execCommand("copy");' +
-                                'if (successful) {' +
-                                    'alert("복사되었습니다!");' +
-                                '} else {' +
-                                    'alert("복사에 실패했습니다.");' +
-                                '}' +
-                            '} catch (err) {' +
-                                'alert("복사에 실패했습니다.");' +
-                            '}' +
-                            'document.body.removeChild(textArea);' +
-                        '}' +
-                    '</script>';
-                    
-                    installWindow.document.write(copyScript);
                     installWindow.document.close();
                     
                     console.log('✅ [openPluginInstallPage] Plugin 설치 안내 페이지가 열렸습니다');
