@@ -818,7 +818,17 @@ async function fetchAllUpdateRequests() {
     });
 
     console.log('🔄 [fetchAllUpdateRequests] 응답 상태:', response.status);
-    console.log('🔄 [fetchAllUpdateRequests] 응답 헤더:', Object.fromEntries(response.headers.entries()));
+    
+    // Figma Plugin 환경에서 headers.entries()가 지원되지 않을 수 있으므로 안전하게 처리
+    try {
+      if (response.headers && typeof response.headers.entries === 'function') {
+        console.log('🔄 [fetchAllUpdateRequests] 응답 헤더:', Object.fromEntries(response.headers.entries()));
+      } else {
+        console.log('🔄 [fetchAllUpdateRequests] 응답 헤더 (간단):', response.headers);
+      }
+    } catch (headerError) {
+      console.log('🔄 [fetchAllUpdateRequests] 헤더 로깅 건너뜀:', headerError.message);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
