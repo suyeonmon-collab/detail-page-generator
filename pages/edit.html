@@ -501,7 +501,7 @@
             }
         }
 
-        // Figma Plugin 로드 (새 창으로 열기)
+        // 실시간 Figma 편집 인터페이스 로드
         async function loadFigmaPlugin(clonedFile) {
             console.log('🎨 [loadFigmaPlugin] 시작:', clonedFile);
             
@@ -519,49 +519,237 @@
             }
 
             try {
-                // Figma 파일 URL 생성 (원본 파일 키 사용)
-                const originalFileKey = templateInfo.figmaFileKey || 'cwM0xdmxJNRijZ9iUPdKpf';
-                const figmaFileUrl = `https://www.figma.com/file/${originalFileKey}?node-id=${templateInfo.figmaNodeId}`;
-                console.log('🔗 [loadFigmaPlugin] Figma 파일 URL:', figmaFileUrl);
-                console.log('🔗 [loadFigmaPlugin] 원본 파일 키:', originalFileKey);
-                
-                // 새 창으로 Figma 파일 열기
-                const figmaWindow = window.open(figmaFileUrl, '_blank', 'width=1200,height=800');
-                
-                if (figmaWindow) {
-                    // 로딩 상태 업데이트
-                    loadingEl.innerHTML = `
-                        <div style="text-align: center; padding: 20px;">
-                            <h3>🎨 Figma에서 편집하기</h3>
-                            <p>Figma 파일이 새 창에서 열렸습니다.</p>
-                            <p>편집을 완료한 후 이 페이지로 돌아와주세요.</p>
-                            <button onclick="window.open('${figmaFileUrl}', '_blank')" 
-                                    style="background: #6366f1; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;">
-                                🔗 Figma 파일 다시 열기
+                // 실시간 편집 인터페이스 생성
+                loadingEl.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <h3>🎨 실시간 Figma 편집</h3>
+                        <p>아래에서 텍스트와 이미지를 편집하세요. 변경사항이 실시간으로 Figma에 반영됩니다.</p>
+                        <div id="realtimeEditInterface" style="margin-top: 20px;">
+                            <!-- 실시간 편집 인터페이스가 여기에 생성됩니다 -->
+                        </div>
+                        <div style="margin-top: 20px;">
+                            <button onclick="saveToFigma()" 
+                                    style="background: #10b981; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin-right: 10px;">
+                                💾 Figma에 저장
+                            </button>
+                            <button onclick="previewChanges()" 
+                                    style="background: #6366f1; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;">
+                                👁️ 변경사항 미리보기
                             </button>
                         </div>
-                    `;
-                    loadingEl.style.display = 'block';
-                    
-                    console.log('✅ [loadFigmaPlugin] Figma 파일이 새 창에서 열렸습니다');
-                } else {
-                    throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
-                }
+                    </div>
+                `;
+                
+                // 실시간 편집 인터페이스 생성
+                await createRealtimeEditInterface();
+                
+                console.log('✅ [loadFigmaPlugin] 실시간 편집 인터페이스 로드 완료');
                 
             } catch (error) {
                 console.error('❌ [loadFigmaPlugin] 오류:', error);
                 loadingEl.innerHTML = `
                     <div style="text-align: center; padding: 20px;">
-                        <h3>❌ Figma 파일 열기 실패</h3>
+                        <h3>❌ 편집 인터페이스 로드 실패</h3>
                         <p>오류: ${error.message}</p>
-                        <p>수동으로 Figma 파일을 열어주세요:</p>
-                        <button onclick="window.open('https://www.figma.com/file/${templateInfo.figmaFileKey || 'cwM0xdmxJNRijZ9iUPdKpf'}', '_blank')" 
-                                style="background: #6366f1; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
-                            🔗 Figma 파일 열기
-                        </button>
                     </div>
                 `;
             }
+        }
+
+        // 실시간 편집 인터페이스 생성
+        async function createRealtimeEditInterface() {
+            const interfaceEl = document.getElementById('realtimeEditInterface');
+            if (!interfaceEl) return;
+
+            // 템플릿의 노드 정보를 기반으로 편집 인터페이스 생성
+            const nodes = templateInfo.nodes || [];
+            
+            let interfaceHTML = '<div style="display: grid; gap: 15px; max-width: 600px; margin: 0 auto;">';
+            
+            nodes.forEach((node, index) => {
+                if (node.type === 'text') {
+                    interfaceHTML += `
+                        <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #374151;">
+                                ${node.placeholder || `텍스트 ${index + 1}`}
+                            </label>
+                            <input type="text" 
+                                   id="edit-${node.id}" 
+                                   data-node-id="${node.id}"
+                                   data-node-type="text"
+                                   placeholder="${node.placeholder || '텍스트를 입력하세요'}"
+                                   maxlength="${node.maxLength || 100}"
+                                   value="${editedContent[node.id] || ''}"
+                                   style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+                                   onchange="updateNodeContent('${node.id}', 'text', this.value)">
+                        </div>
+                    `;
+                } else if (node.type === 'image') {
+                    interfaceHTML += `
+                        <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #374151;">
+                                ${node.placeholder || `이미지 ${index + 1}`}
+                            </label>
+                            <input type="file" 
+                                   id="edit-${node.id}" 
+                                   data-node-id="${node.id}"
+                                   data-node-type="image"
+                                   accept="image/*"
+                                   style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;"
+                                   onchange="updateNodeContent('${node.id}', 'image', this.files[0])">
+                            <div style="margin-top: 10px; font-size: 12px; color: #6b7280;">
+                                지원 형식: JPG, PNG, GIF (최대 5MB)
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            interfaceHTML += '</div>';
+            interfaceEl.innerHTML = interfaceHTML;
+        }
+
+        // 노드 콘텐츠 업데이트
+        function updateNodeContent(nodeId, nodeType, value) {
+            console.log('🔄 [updateNodeContent]', { nodeId, nodeType, value });
+            
+            // 로컬 상태 업데이트
+            if (!window.currentContentUpdates) {
+                window.currentContentUpdates = {};
+            }
+            
+            if (!window.currentContentUpdates[nodeId]) {
+                window.currentContentUpdates[nodeId] = {};
+            }
+            
+            window.currentContentUpdates[nodeId][nodeType] = value;
+            
+            // 실시간 미리보기 업데이트
+            updatePreview(nodeId, nodeType, value);
+        }
+
+        // 미리보기 업데이트
+        function updatePreview(nodeId, nodeType, value) {
+            const previewEl = document.getElementById('previewContent');
+            if (!previewEl) return;
+
+            // 해당 노드의 미리보기 요소 찾기 및 업데이트
+            const nodeEl = previewEl.querySelector(`[data-preview-node="${nodeId}"]`);
+            if (nodeEl) {
+                if (nodeType === 'text') {
+                    nodeEl.textContent = value;
+                } else if (nodeType === 'image' && value instanceof File) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        nodeEl.src = e.target.result;
+                    };
+                    reader.readAsDataURL(value);
+                }
+            }
+        }
+
+        // Figma에 저장
+        async function saveToFigma() {
+            if (!window.currentContentUpdates) {
+                alert('변경된 내용이 없습니다.');
+                return;
+            }
+
+            const userId = window.Clerk?.user?.id || 'anonymous';
+            
+            try {
+                const response = await fetch(`${API_BASE}/update-figma-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        templateId: templateInfo.templateId,
+                        userId: userId,
+                        contentUpdates: window.currentContentUpdates
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API 오류: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ [saveToFigma] 성공:', result);
+                
+                showToast('Figma에 성공적으로 저장되었습니다!', 'success');
+                
+            } catch (error) {
+                console.error('❌ [saveToFigma] 오류:', error);
+                showToast('저장 중 오류가 발생했습니다: ' + error.message, 'error');
+            }
+        }
+
+        // 변경사항 미리보기
+        function previewChanges() {
+            if (!window.currentContentUpdates) {
+                alert('변경된 내용이 없습니다.');
+                return;
+            }
+
+            // 미리보기 패널 표시
+            const previewPanel = document.querySelector('.preview-canvas');
+            if (previewPanel) {
+                previewPanel.style.display = 'block';
+                updatePreviewContent();
+            }
+        }
+
+        // 토스트 메시지 표시
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            
+            // 타입별 색상 설정
+            switch (type) {
+                case 'success':
+                    toast.style.backgroundColor = '#10b981';
+                    break;
+                case 'error':
+                    toast.style.backgroundColor = '#ef4444';
+                    break;
+                case 'warning':
+                    toast.style.backgroundColor = '#f59e0b';
+                    break;
+                default:
+                    toast.style.backgroundColor = '#6366f1';
+            }
+            
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            // 애니메이션으로 표시
+            setTimeout(() => {
+                toast.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // 3초 후 자동 제거
+            setTimeout(() => {
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
         }
 
         // Figma 파일 복제

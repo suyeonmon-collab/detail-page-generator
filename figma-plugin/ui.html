@@ -627,7 +627,7 @@
     // 웹앱 연동 함수
     function processWebDesigns() {
       try {
-        setStatus('웹앱에서 대기 중인 디자인을 처리하고 있습니다...', 'info');
+        setStatus('🌐 웹앱에서 대기 중인 디자인을 확인하고 있습니다...', 'info');
         post('process-web-designs');
       } catch (error) {
         console.error('웹앱 디자인 처리 오류:', error);
@@ -640,15 +640,24 @@
       try {
         // 사용자 정보 입력 받기
         const userId = prompt('사용자 ID를 입력하세요:', 'anonymous');
-        if (!userId) return;
+        if (!userId) {
+          setStatus('사용자 ID가 필요합니다.', 'error');
+          return;
+        }
 
         const templateId = prompt('템플릿 ID를 입력하세요:', 'youtube-thumbnail-test');
-        if (!templateId) return;
+        if (!templateId) {
+          setStatus('템플릿 ID가 필요합니다.', 'error');
+          return;
+        }
 
         const templateName = prompt('템플릿 이름을 입력하세요:', '유튜브 썸네일 테스트');
-        if (!templateName) return;
+        if (!templateName) {
+          setStatus('템플릿 이름이 필요합니다.', 'error');
+          return;
+        }
 
-        setStatus('파일을 복제하고 있습니다...', 'info');
+        setStatus('📋 파일을 복제하고 있습니다...', 'info');
         
         post('clone-file', {
           userId: userId,
