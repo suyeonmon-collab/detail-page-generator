@@ -409,6 +409,35 @@ async function saveData() {
     try {
         console.log('🔵 [Admin] 데이터 저장 시작');
         
+        // Supabase 형식으로 데이터 변환
+        const supabaseCategories = categories.map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            description: cat.description,
+            icon: cat.icon,
+            color: cat.color,
+            templates: cat.templates
+        }));
+        
+        const supabaseTemplates = templates.map(template => ({
+            template_id: template.templateId,
+            category_id: template.categoryId,
+            name: template.name,
+            description: template.description,
+            preview_image: template.previewImage,
+            figma_url: template.figmaUrl,
+            figma_node_id: template.figmaNodeId,
+            figma_file_key: template.figmaFileKey,
+            price: template.price,
+            enabled: template.enabled,
+            nodes: template.nodes
+        }));
+        
+        console.log('🔵 [Admin] 변환된 데이터:', {
+            categories: supabaseCategories.length,
+            templates: supabaseTemplates.length
+        });
+        
         // Supabase API로 저장
         const response = await fetch('/api/admin/supabase-data', {
             method: 'POST',
@@ -416,8 +445,8 @@ async function saveData() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                categories,
-                templates
+                categories: supabaseCategories,
+                templates: supabaseTemplates
             })
         });
         
