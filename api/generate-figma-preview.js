@@ -109,7 +109,8 @@ module.exports = async (req, res) => {
       console.error('❌ [API] Figma 에러:', data.err);
       return res.status(500).json({
         success: false,
-        error: `Figma 에러: ${data.err}`
+        error: `Figma 에러: ${data.err}`,
+        figmaResponse: data
       });
     }
 
@@ -117,10 +118,17 @@ module.exports = async (req, res) => {
 
     if (!imageDownloadUrl) {
       console.error('❌ [API] 이미지 URL 없음. Figma 응답:', data);
+      console.error('❌ [API] 찾고 있는 Node ID:', normalizedNodeId);
+      console.error('❌ [API] 사용 가능한 Node IDs:', Object.keys(data.images || {}));
+      
       return res.status(500).json({
         success: false,
         error: '이미지를 생성할 수 없습니다',
-        figmaResponse: data
+        details: {
+          requestedNodeId: normalizedNodeId,
+          availableNodeIds: Object.keys(data.images || {}),
+          figmaResponse: data
+        }
       });
     }
 

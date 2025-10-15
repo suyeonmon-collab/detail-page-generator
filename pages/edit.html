@@ -458,7 +458,11 @@
             } catch (error) {
                 console.error('🔴 [loadFigmaImage] 오류:', error);
                 console.log('🟡 [loadFigmaImage] 기본 이미지 사용');
-                return null;
+                
+                // 기본 이미지로 fallback
+                figmaImageUrl = templateInfo.previewImage || 'https://placehold.co/1280x720/cccccc/ffffff?text=No+Preview';
+                console.log('🟡 [loadFigmaImage] Fallback 이미지:', figmaImageUrl);
+                return figmaImageUrl;
             }
         }
 
