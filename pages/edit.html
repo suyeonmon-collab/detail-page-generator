@@ -411,9 +411,55 @@
         
         let editedContent = {};
         let newImageData = null;
+        let figmaImageUrl = null;
+
+        // Figma 이미지 로드
+        async function loadFigmaImage() {
+            console.log('🔵 [loadFigmaImage] 시작');
+            console.log('🟢 [loadFigmaImage] 템플릿 정보:', templateInfo);
+            
+            if (!templateInfo.figmaUrl || !templateInfo.figmaNodeId) {
+                console.log('🔴 [loadFigmaImage] Figma 정보가 없습니다');
+                return null;
+            }
+            
+            try {
+                console.log('🟢 [loadFigmaImage] Figma API 호출 시작');
+                
+                const response = await fetch(`${API_BASE}/figma-to-konva`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        figmaUrl: templateInfo.figmaUrl,
+                        nodeId: templateInfo.figmaNodeId
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Figma API 오류: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('🟢 [loadFigmaImage] Figma API 응답:', result);
+                
+                if (result.success && result.imageUrl) {
+                    figmaImageUrl = result.imageUrl;
+                    console.log('🟢 [loadFigmaImage] 이미지 URL:', figmaImageUrl);
+                    return figmaImageUrl;
+                } else {
+                    throw new Error(result.error || 'Figma 이미지를 가져올 수 없습니다');
+                }
+            } catch (error) {
+                console.error('🔴 [loadFigmaImage] 오류:', error);
+                console.log('🟡 [loadFigmaImage] 기본 이미지 사용');
+                return null;
+            }
+        }
 
         // 페이지 초기화
-        function init() {
+        async function init() {
             if (!aiResult.requestId) {
                 alert('세션 정보가 없습니다.');
                 history.back();
@@ -421,9 +467,13 @@
             }
 
             console.log('AI Result:', aiResult);
+            console.log('Template Info:', templateInfo);
             
             // 초기 콘텐츠 설정
             editedContent = aiResult.aiContent || {};
+            
+            // Figma 이미지 로드
+            await loadFigmaImage();
             
             // 편집 섹션 생성
             generateEditSections();
@@ -498,14 +548,33 @@
             const preview = document.getElementById('previewContent');
             let html = '';
             
-            Object.entries(editedContent).forEach(([key, value]) => {
+            // Figma 이미지가 있으면 배경으로 설정
+            if (figmaImageUrl) {
                 html += `
-                    <div class="preview-section">
-                        <h3>${formatLabel(key)}</h3>
-                        <p>${value || '(비어있음)'}</p>
+                    <div style="position: relative; width: 100%; height: 100%; background-image: url('${figmaImageUrl}'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <!-- 텍스트 오버레이 -->
+                            <div style="position: absolute; top: 20px; left: 20px; right: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                                ${Object.entries(editedContent).map(([key, value]) => `
+                                    <div style="margin-bottom: 10px; font-size: 14px;">
+                                        <strong>${formatLabel(key)}:</strong> ${value || '(비어있음)'}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
                     </div>
                 `;
-            });
+            } else {
+                // Figma 이미지가 없으면 기본 미리보기
+                Object.entries(editedContent).forEach(([key, value]) => {
+                    html += `
+                        <div class="preview-section">
+                            <h3>${formatLabel(key)}</h3>
+                            <p>${value || '(비어있음)'}</p>
+                        </div>
+                    `;
+                });
+            }
             
             preview.innerHTML = html;
         }
@@ -722,17 +791,46 @@
                 return;
             }
 
-            previewContent.innerHTML = `
-                <div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <h3 style="margin-bottom: 16px; color: #2d3748;">📝 편집된 내용</h3>
-                    ${Object.entries(editedContent).map(([key, value]) => `
-                        <div style="margin-bottom: 12px; padding: 12px; background: #f7fafc; border-radius: 6px;">
-                            <strong style="color: #4a5568; font-size: 12px; text-transform: uppercase;">${key}:</strong>
-                            <div style="margin-top: 4px; color: #2d3748;">${value || '(비어있음)'}</div>
+            // 미리보기 패널에 내용 표시
+            const previewContent = document.getElementById('previewContent');
+            if (!previewContent) {
+                console.error('🔴 [previewDesign] previewContent를 찾을 수 없습니다');
+                alert('미리보기 패널을 찾을 수 없습니다.');
+                return;
+            }
+
+            // Figma 이미지가 있으면 배경으로 표시
+            if (figmaImageUrl) {
+                previewContent.innerHTML = `
+                    <div style="position: relative; width: 100%; height: 100%; background-image: url('${figmaImageUrl}'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px; min-height: 400px;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); border-radius: 8px;">
+                            <!-- 텍스트 오버레이 -->
+                            <div style="position: absolute; top: 20px; left: 20px; right: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
+                                <h3 style="margin-bottom: 16px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">📝 편집된 내용</h3>
+                                ${Object.entries(editedContent).map(([key, value]) => `
+                                    <div style="margin-bottom: 12px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 6px;">
+                                        <strong style="color: #ffd700; font-size: 12px; text-transform: uppercase;">${formatLabel(key)}:</strong>
+                                        <div style="margin-top: 4px; color: white;">${value || '(비어있음)'}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
-                    `).join('')}
-                </div>
-            `;
+                    </div>
+                `;
+            } else {
+                // Figma 이미지가 없으면 기본 표시
+                previewContent.innerHTML = `
+                    <div style="padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <h3 style="margin-bottom: 16px; color: #2d3748;">📝 편집된 내용</h3>
+                        ${Object.entries(editedContent).map(([key, value]) => `
+                            <div style="margin-bottom: 12px; padding: 12px; background: #f7fafc; border-radius: 6px;">
+                                <strong style="color: #4a5568; font-size: 12px; text-transform: uppercase;">${formatLabel(key)}:</strong>
+                                <div style="margin-top: 4px; color: #2d3748;">${value || '(비어있음)'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
 
             // 버튼 상태 변경
             document.getElementById('previewBtn').style.display = 'none';
