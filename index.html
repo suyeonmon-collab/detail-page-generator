@@ -282,8 +282,20 @@
             loading.style.display = 'block';
 
             try {
-                const response = await fetch('./data/categories.json');
-                const data = await response.json();
+                // Supabase API에서 데이터 로드
+                const response = await fetch('/api/admin/supabase-data', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API 오류: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                const data = result.data;
                 
                 loading.style.display = 'none';
                 
@@ -293,8 +305,24 @@
                     grid.appendChild(card);
                 });
             } catch (error) {
-                loading.innerHTML = '<p>카테고리를 불러오는데 실패했습니다.</p>';
-                console.error('Error loading categories:', error);
+                console.error('❌ Supabase 로드 실패, 로컬 파일 사용:', error);
+                
+                // Fallback: 로컬 파일 사용
+                try {
+                    const response = await fetch('./data/categories.json');
+                    const data = await response.json();
+                    
+                    loading.style.display = 'none';
+                    
+                    // 카테고리 카드 생성
+                    data.categories.forEach(category => {
+                        const card = createCategoryCard(category);
+                        grid.appendChild(card);
+                    });
+                } catch (fallbackError) {
+                    loading.innerHTML = '<p>카테고리를 불러오는데 실패했습니다.</p>';
+                    console.error('Error loading categories:', fallbackError);
+                }
             }
         }
 
