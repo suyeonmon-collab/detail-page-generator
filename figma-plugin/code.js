@@ -772,23 +772,34 @@ async function checkAndProcessUpdateRequests() {
 // Supabase에서 업데이트 요청 가져오기
 async function fetchUpdateRequests(fileKey) {
   try {
-    // 실제로는 Supabase API를 호출해야 함
-    // 현재는 mock 데이터로 처리
-    const mockRequests = [
-      {
-        id: 'req-1',
-        user_id: 'anonymous',
-        file_key: fileKey,
-        node_id: 'title',
-        update_type: 'text',
-        content: '새로운 제목',
-        status: 'pending'
-      }
-    ];
+    console.log('🔄 [fetchUpdateRequests] 시작:', fileKey);
     
-    return mockRequests;
+    // 실제 Supabase API 호출
+    const response = await fetch('https://geuboakvnddaaheahild.supabase.co/rest/v1/figma_update_requests', {
+      method: 'GET',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        file_key: fileKey,
+        status: 'pending'
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Supabase API 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ [fetchUpdateRequests] 성공:', data);
+    
+    return data;
   } catch (error) {
     console.error('❌ [fetchUpdateRequests] 오류:', error);
+    
+    // 오류 발생 시 빈 배열 반환
     return [];
   }
 }
@@ -893,8 +904,34 @@ async function updateImageNodeInFigma(nodeId, imageContent) {
 // 요청 상태 업데이트
 async function updateRequestStatus(requestId, status, errorMessage = null) {
   try {
-    // 실제로는 Supabase API를 호출해야 함
-    console.log('🔄 [updateRequestStatus]:', { requestId, status, errorMessage });
+    console.log('🔄 [updateRequestStatus] 시작:', { requestId, status, errorMessage });
+    
+    const updateData = {
+      status: status,
+      updated_at: new Date().toISOString()
+    };
+    
+    if (errorMessage) {
+      updateData.error_message = errorMessage;
+    }
+    
+    // 실제 Supabase API 호출
+    const response = await fetch(`https://geuboakvnddaaheahild.supabase.co/rest/v1/figma_update_requests?id=eq.${requestId}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
+        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updateData)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Supabase API 오류: ${response.status}`);
+    }
+
+    console.log('✅ [updateRequestStatus] 성공:', { requestId, status });
+    
   } catch (error) {
     console.error('❌ [updateRequestStatus] 오류:', error);
   }
