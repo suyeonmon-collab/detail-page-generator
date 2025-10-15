@@ -619,44 +619,53 @@ async function notifyDesignComplete(rowNumber, figmaLink, pngLink) {
 }
 
 /**
- * 자동 디자인 처리 (웹앱 연동)
+ * 자동 디자인 처리 (Supabase 연동)
  */
 async function processWebDesigns() {
   try {
-    figma.notify('웹앱에서 대기 중인 디자인을 확인하고 있습니다...');
+    console.log('🔄 [processWebDesigns] 시작');
+    figma.notify('Supabase에서 대기 중인 업데이트를 확인하고 있습니다...');
     
     const pendingDesigns = await fetchPendingDesigns();
     
     if (pendingDesigns.length === 0) {
-      figma.notify('처리할 디자인이 없습니다');
+      figma.notify('처리할 업데이트가 없습니다');
       return;
     }
     
-    figma.notify(`${pendingDesigns.length}개의 디자인을 처리합니다`);
+    figma.notify(`${pendingDesigns.length}개의 업데이트를 처리합니다`);
     
-    for (const design of pendingDesigns) {
+    for (const updateRequest of pendingDesigns) {
       try {
-        await processSingleDesign(design);
+        console.log('🔄 [processWebDesigns] 처리 중:', updateRequest);
         
-        // 완료 상태 전송
-        const figmaLink = `https://www.figma.com/file/${figma.fileKey}`;
-        const pngLink = 'PNG 링크는 별도 생성 필요'; // 실제로는 PNG 생성 후 링크
+        // Supabase 데이터 구조에 맞게 처리
+        if (updateRequest.update_type === 'text') {
+          await updateTextNodeInFigma(updateRequest.node_id, updateRequest.content);
+        } else if (updateRequest.update_type === 'image') {
+          await updateImageNodeInFigma(updateRequest.node_id, updateRequest.content);
+        }
         
-        await notifyDesignComplete(design.row, figmaLink, pngLink);
+        // 상태를 완료로 업데이트
+        await updateRequestStatus(updateRequest.id, 'completed');
         
-        figma.notify(`${design.productName} 디자인 완료`);
+        figma.notify(`${updateRequest.node_id} 업데이트 완료`);
         
       } catch (error) {
-        console.error(`디자인 처리 실패 (${design.productName}):`, error);
-        figma.notify(`${design.productName} 처리 실패: ${error.message}`);
+        console.error(`업데이트 처리 실패 (${updateRequest.node_id}):`, error);
+        
+        // 상태를 실패로 업데이트
+        await updateRequestStatus(updateRequest.id, 'failed', error.message);
+        
+        figma.notify(`${updateRequest.node_id} 처리 실패: ${error.message}`);
       }
     }
     
-    figma.notify('모든 디자인 처리 완료');
+    figma.notify('모든 업데이트 처리 완료');
     
   } catch (error) {
-    console.error('웹 디자인 처리 오류:', error);
-    figma.notify('웹 디자인 처리 중 오류 발생');
+    console.error('❌ [processWebDesigns] 전체 오류:', error);
+    figma.notify('업데이트 처리 중 오류 발생');
   }
 }
 
