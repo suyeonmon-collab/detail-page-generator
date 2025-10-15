@@ -426,7 +426,6 @@
             try {
                 console.log('🟢 [loadFigmaImage] Figma API 호출 시작');
                 
-                // 기존 generate-content API를 사용하여 Figma 이미지 가져오기
                 const response = await fetch(`${API_BASE}/generate-figma-preview`, {
                     method: 'POST',
                     headers: {
@@ -438,19 +437,23 @@
                     })
                 });
                 
+                console.log('🟢 [loadFigmaImage] 응답 상태:', response.status);
+                
                 if (!response.ok) {
-                    throw new Error(`Figma API 오류: ${response.status}`);
+                    const errorData = await response.json();
+                    console.error('🔴 [loadFigmaImage] API 오류:', errorData);
+                    throw new Error(`Figma API 오류: ${response.status} - ${errorData.error || '알 수 없는 오류'}`);
                 }
                 
                 const result = await response.json();
-                console.log('🟢 [loadFigmaImage] Figma API 응답:', result);
+                console.log('🟢 [loadFigmaImage] 성공:', result);
                 
                 if (result.success && result.imageUrl) {
                     figmaImageUrl = result.imageUrl;
                     console.log('🟢 [loadFigmaImage] 이미지 URL:', figmaImageUrl);
                     return figmaImageUrl;
                 } else {
-                    throw new Error(result.error || 'Figma 이미지를 가져올 수 없습니다');
+                    throw new Error('이미지 URL을 받지 못했습니다');
                 }
             } catch (error) {
                 console.error('🔴 [loadFigmaImage] 오류:', error);
