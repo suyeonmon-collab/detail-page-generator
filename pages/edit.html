@@ -648,17 +648,28 @@
 
         // 실시간 입력 감지 설정
         function setupRealtimeInputListeners() {
+            console.log('🔵 [setupRealtimeInputListeners] 시작');
+            
             // 텍스트 입력 필드들에 실시간 이벤트 리스너 추가
             const textInputs = document.querySelectorAll('input[type="text"], textarea');
+            console.log('🔵 [setupRealtimeInputListeners] 찾은 텍스트 입력 필드:', textInputs.length);
             
-            textInputs.forEach(input => {
+            textInputs.forEach((input, index) => {
                 const nodeId = input.getAttribute('data-node-id');
                 const nodeType = input.getAttribute('data-node-type');
+                
+                console.log(`🔵 [setupRealtimeInputListeners] 필드 ${index}:`, {
+                    id: input.id,
+                    nodeId: nodeId,
+                    nodeType: nodeType,
+                    hasDataAttributes: !!(nodeId && nodeType)
+                });
                 
                 if (nodeId && nodeType) {
                     // 실시간 입력 감지 (디바운싱 적용)
                     let timeoutId;
                     input.addEventListener('input', function() {
+                        console.log('🔄 [실시간 입력 감지]', { nodeId, nodeType, value: this.value });
                         clearTimeout(timeoutId);
                         timeoutId = setTimeout(() => {
                             updateNodeContent(nodeId, nodeType, this.value);
@@ -666,11 +677,14 @@
                     });
                     
                     console.log('✅ [setupRealtimeInputListeners] 리스너 추가:', { nodeId, nodeType });
+                } else {
+                    console.warn('⚠️ [setupRealtimeInputListeners] 데이터 속성이 없는 필드:', input.id);
                 }
             });
             
             // 이미지 업로드 필드들에 이벤트 리스너 추가
             const imageInputs = document.querySelectorAll('input[type="file"]');
+            console.log('🔵 [setupRealtimeInputListeners] 찾은 이미지 입력 필드:', imageInputs.length);
             
             imageInputs.forEach(input => {
                 const nodeId = input.getAttribute('data-node-id');
@@ -686,6 +700,8 @@
                     console.log('✅ [setupRealtimeInputListeners] 이미지 리스너 추가:', { nodeId, nodeType });
                 }
             });
+            
+            console.log('✅ [setupRealtimeInputListeners] 완료');
         }
 
         // 노드 콘텐츠 업데이트 (실시간 Figma 동기화)
@@ -1151,6 +1167,8 @@
                         id="edit-${key}" 
                         name="${key}"
                         data-key="${key}"
+                        data-node-id="${key}"
+                        data-node-type="text"
                         rows="4" 
                         maxlength="${maxLength}"
                     >${value || ''}</textarea>
