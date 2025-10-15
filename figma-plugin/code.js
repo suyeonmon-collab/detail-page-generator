@@ -17,12 +17,45 @@ if (typeof figma === 'undefined') {
   };
 }
 
+// 자동 폴링 변수
+let autoPollingInterval = null;
+
 figma.on("run", ({ command }) => {
   figma.showUI(__html__, { width: 480, height: 600 });
   
   // Initialize plugin with current page analysis
   analyzeCurrentPage();
+  
+  // 자동 폴링 시작 (10초마다 업데이트 요청 확인)
+  startAutoPolling();
 });
+
+// 자동 폴링 시작
+function startAutoPolling() {
+  if (autoPollingInterval) {
+    clearInterval(autoPollingInterval);
+  }
+  
+  autoPollingInterval = setInterval(async () => {
+    try {
+      console.log('🔄 [자동 폴링] 업데이트 요청 확인 중...');
+      await checkAndProcessUpdateRequests();
+    } catch (error) {
+      console.error('❌ [자동 폴링] 오류:', error);
+    }
+  }, 10000); // 10초마다 실행
+  
+  console.log('✅ [자동 폴링] 시작됨 (10초 간격)');
+}
+
+// 자동 폴링 중지
+function stopAutoPolling() {
+  if (autoPollingInterval) {
+    clearInterval(autoPollingInterval);
+    autoPollingInterval = null;
+    console.log('⏹️ [자동 폴링] 중지됨');
+  }
+}
 
 // Analyze current page to detect nodes
 function analyzeCurrentPage() {
@@ -144,6 +177,7 @@ figma.ui.onmessage = async (msg) => {
         await checkAndProcessUpdateRequests();
         break;
       case "close":
+        stopAutoPolling(); // 자동 폴링 중지
         figma.closePlugin();
         break;
       default:

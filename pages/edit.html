@@ -766,10 +766,15 @@
                 if (result.success) {
                     console.log('✅ [updateFigmaInRealTime] 성공:', result);
                     
-                    // 미리보기 새로고침 (약간의 지연 후)
+                    // 미리보기 새로고침 (Figma Plugin 처리 시간 고려하여 더 긴 지연)
                     setTimeout(() => {
                         refreshFigmaPreview();
-                    }, 1000);
+                    }, 2000); // 2초로 증가
+                    
+                    // 추가 새로고침 (Plugin이 처리 완료된 후)
+                    setTimeout(() => {
+                        refreshFigmaPreview();
+                    }, 5000); // 5초 후 한 번 더
                     
                     showToast(`${nodeId} 업데이트 완료!`, 'success');
                 } else {
