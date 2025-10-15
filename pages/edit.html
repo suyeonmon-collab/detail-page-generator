@@ -1585,51 +1585,58 @@ function startAutoPolling() {
                                 </div>
                             </div>
                             
-                            <script>
-                                function copyToClipboard(elementId) {
-                                    const element = document.getElementById(elementId);
-                                    const text = element.textContent;
-                                    
-                                    if (navigator.clipboard && window.isSecureContext) {
-                                        navigator.clipboard.writeText(text).then(() => {
-                                            alert('복사되었습니다!');
-                                        }).catch(err => {
-                                            fallbackCopyTextToClipboard(text);
-                                        });
-                                    } else {
-                                        fallbackCopyTextToClipboard(text);
-                                    }
-                                }
-                                
-                                function fallbackCopyTextToClipboard(text) {
-                                    const textArea = document.createElement("textarea");
-                                    textArea.value = text;
-                                    textArea.style.top = "0";
-                                    textArea.style.left = "0";
-                                    textArea.style.position = "fixed";
-                                    document.body.appendChild(textArea);
-                                    textArea.focus();
-                                    textArea.select();
-                                    
-                                    try {
-                                        const successful = document.execCommand('copy');
-                                        if (successful) {
-                                            alert('복사되었습니다!');
-                                        } else {
-                                            alert('복사에 실패했습니다.');
-                                        }
-                                    } catch (err) {
-                                        alert('복사에 실패했습니다.');
-                                    }
-                                    
-                                    document.body.removeChild(textArea);
-                                }
-                            </script>
+                            <div id="copy-scripts"></div>
                         </body>
                         </html>
                     `;
                     
                     installWindow.document.write(installHtml);
+                    
+                    // 복사 함수를 별도로 추가
+                    const copyScript = `
+                        <script>
+                            function copyToClipboard(elementId) {
+                                const element = document.getElementById(elementId);
+                                const text = element.textContent;
+                                
+                                if (navigator.clipboard && window.isSecureContext) {
+                                    navigator.clipboard.writeText(text).then(() => {
+                                        alert('복사되었습니다!');
+                                    }).catch(err => {
+                                        fallbackCopyTextToClipboard(text);
+                                    });
+                                } else {
+                                    fallbackCopyTextToClipboard(text);
+                                }
+                            }
+                            
+                            function fallbackCopyTextToClipboard(text) {
+                                const textArea = document.createElement("textarea");
+                                textArea.value = text;
+                                textArea.style.top = "0";
+                                textArea.style.left = "0";
+                                textArea.style.position = "fixed";
+                                document.body.appendChild(textArea);
+                                textArea.focus();
+                                textArea.select();
+                                
+                                try {
+                                    const successful = document.execCommand('copy');
+                                    if (successful) {
+                                        alert('복사되었습니다!');
+                                    } else {
+                                        alert('복사에 실패했습니다.');
+                                    }
+                                } catch (err) {
+                                    alert('복사에 실패했습니다.');
+                                }
+                                
+                                document.body.removeChild(textArea);
+                            }
+                        </script>
+                    `;
+                    
+                    installWindow.document.write(copyScript);
                     installWindow.document.close();
                     
                     console.log('✅ [openPluginInstallPage] Plugin 설치 안내 페이지가 열렸습니다');
