@@ -1,4 +1,4 @@
-// Enhanced Figma Plugin for Template-based Design Generation
+// Enhanced Figma Plugin for Template-based Design Generation with File Cloning
 
 // 피그마 플러그인 환경 설정
 if (typeof figma === 'undefined') {
@@ -11,7 +11,9 @@ if (typeof figma === 'undefined') {
     closePlugin: () => {},
     loadFontAsync: () => Promise.resolve(),
     base64Decode: (str) => new Uint8Array(),
-    createImage: () => ({ hash: 'mock' })
+    createImage: () => ({ hash: 'mock' }),
+    fileKey: 'mock-file-key',
+    root: { children: [] }
   };
 }
 
@@ -134,6 +136,9 @@ figma.ui.onmessage = async (msg) => {
         break;
       case "process-web-designs":
         await processWebDesigns();
+        break;
+      case "clone-file":
+        await handleFileClone(msg.payload);
         break;
       case "close":
         figma.closePlugin();
@@ -337,6 +342,206 @@ async function ensureEditableText(node) {
     }
   } catch (error) {
     console.warn('Font loading error:', error);
+  }
+}
+
+// ============================================
+// 파일 복제 기능
+// ============================================
+
+/**
+ * 파일 복제 처리
+ */
+async function handleFileClone(payload) {
+  try {
+    const { userId, templateId, templateName } = payload || {};
+    
+    if (!userId || !templateId || !templateName) {
+      figma.notify('파일 복제에 필요한 정보가 부족합니다.');
+      return;
+    }
+
+    figma.notify('파일을 복제하고 있습니다...');
+
+    // 현재 파일의 모든 페이지와 노드 복제
+    const clonedData = await cloneCurrentFile(userId, templateId, templateName);
+    
+    if (clonedData.success) {
+      figma.notify('파일이 성공적으로 복제되었습니다!');
+      
+      // 웹앱에 복제 완료 알림
+      await notifyCloneComplete(clonedData);
+      
+      figma.ui.postMessage({ 
+        type: "clone-complete", 
+        payload: clonedData 
+      });
+    } else {
+      figma.notify('파일 복제에 실패했습니다: ' + clonedData.error);
+    }
+
+  } catch (error) {
+    console.error('File clone error:', error);
+    figma.notify(`파일 복제 중 오류: ${error.message}`);
+    
+    figma.ui.postMessage({ 
+      type: "clone-error", 
+      payload: { error: error.message } 
+    });
+  }
+}
+
+/**
+ * 현재 파일 복제
+ */
+async function cloneCurrentFile(userId, templateId, templateName) {
+  try {
+    // 현재 파일의 모든 페이지 수집
+    const pages = figma.root.children.filter(node => node.type === 'PAGE');
+    
+    if (pages.length === 0) {
+      return { success: false, error: '복제할 페이지가 없습니다.' };
+    }
+
+    // 페이지별 노드 정보 수집
+    const clonedPages = [];
+    
+    for (const page of pages) {
+      const pageData = {
+        id: page.id,
+        name: page.name,
+        nodes: await collectPageNodes(page)
+      };
+      clonedPages.push(pageData);
+    }
+
+    // 복제된 파일 정보 생성
+    const timestamp = Date.now();
+    const clonedFileId = `${figma.fileKey}-${userId}-${timestamp}`;
+    
+    const clonedData = {
+      success: true,
+      clonedFileId: clonedFileId,
+      originalFileKey: figma.fileKey,
+      userId: userId,
+      templateId: templateId,
+      templateName: templateName,
+      pages: clonedPages,
+      nodeCount: clonedPages.reduce((total, page) => total + page.nodes.length, 0),
+      createdAt: new Date().toISOString()
+    };
+
+    console.log('파일 복제 완료:', clonedData);
+    return clonedData;
+
+  } catch (error) {
+    console.error('Clone current file error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * 페이지의 모든 노드 수집
+ */
+async function collectPageNodes(page) {
+  const nodes = [];
+  
+  function traverseNode(node, depth = 0) {
+    try {
+      const nodeData = {
+        id: node.id,
+        name: node.name || 'unnamed',
+        type: node.type,
+        x: node.x,
+        y: node.y,
+        width: node.width,
+        height: node.height,
+        depth: depth,
+        visible: node.visible !== false,
+        locked: node.locked || false
+      };
+
+      // 텍스트 노드의 경우 추가 정보 수집
+      if (node.type === 'TEXT') {
+        nodeData.characters = node.characters || '';
+        nodeData.fontSize = node.fontSize || 16;
+        nodeData.fontFamily = node.fontName ? 
+          `${node.fontName.family} ${node.fontName.style}` : 'Unknown';
+        nodeData.textAlignHorizontal = node.textAlignHorizontal || 'LEFT';
+        nodeData.textAlignVertical = node.textAlignVertical || 'TOP';
+      }
+
+      // 이미지 노드의 경우 추가 정보 수집
+      if (node.type === 'RECTANGLE' || node.type === 'ELLIPSE') {
+        nodeData.fills = node.fills || [];
+        nodeData.hasImage = node.fills && node.fills.some(fill => fill.type === 'IMAGE');
+      }
+
+      // 프레임/컴포넌트의 경우 추가 정보 수집
+      if (node.type === 'FRAME' || node.type === 'COMPONENT') {
+        nodeData.layoutMode = node.layoutMode || 'NONE';
+        nodeData.primaryAxisAlignItems = node.primaryAxisAlignItems || 'MIN';
+        nodeData.counterAxisAlignItems = node.counterAxisAlignItems || 'MIN';
+        nodeData.paddingLeft = node.paddingLeft || 0;
+        nodeData.paddingRight = node.paddingRight || 0;
+        nodeData.paddingTop = node.paddingTop || 0;
+        nodeData.paddingBottom = node.paddingBottom || 0;
+      }
+
+      nodes.push(nodeData);
+
+      // 자식 노드 재귀적으로 수집
+      if (node.children && node.children.length > 0) {
+        for (const child of node.children) {
+          traverseNode(child, depth + 1);
+        }
+      }
+
+    } catch (error) {
+      console.warn(`Error collecting node ${node.id}:`, error);
+    }
+  }
+
+  // 페이지의 모든 노드 순회
+  for (const child of page.children) {
+    traverseNode(child);
+  }
+
+  return nodes;
+}
+
+/**
+ * 복제 완료 알림을 웹앱에 전송
+ */
+async function notifyCloneComplete(clonedData) {
+  try {
+    const webAppUrl = 'https://detail-page-generator.vercel.app/api/clone-figma-file';
+    
+    const response = await fetch(webAppUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: clonedData.userId,
+        templateId: clonedData.templateId,
+        templateName: clonedData.templateName,
+        clonedFileId: clonedData.clonedFileId,
+        originalFileKey: clonedData.originalFileKey,
+        nodeCount: clonedData.nodeCount,
+        pages: clonedData.pages.length
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log('복제 완료 알림 전송 성공:', result);
+    } else {
+      console.error('복제 완료 알림 전송 실패:', response.status);
+    }
+
+  } catch (error) {
+    console.error('복제 완료 알림 전송 오류:', error);
   }
 }
 

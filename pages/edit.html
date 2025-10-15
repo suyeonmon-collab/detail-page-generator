@@ -515,14 +515,14 @@
             }
 
             try {
-                // Figma Plugin URL 생성
-                const pluginUrl = `https://www.figma.com/plugin/${clonedFile.clonedFileKey}?embed=1&node-id=${templateInfo.figmaNodeId}`;
-                console.log('🔗 [loadFigmaPlugin] Plugin URL:', pluginUrl);
-                
-                // iframe에 Plugin 로드
-                frameEl.src = pluginUrl;
-                frameEl.style.display = 'block';
-                loadingEl.style.display = 'none';
+        // Figma Plugin URL 생성 (실제 플러그인 호출)
+        const pluginUrl = `https://www.figma.com/plugin/detail-page-automator?file=${clonedFile.clonedFileKey}&node-id=${templateInfo.figmaNodeId}`;
+        console.log('🔗 [loadFigmaPlugin] Plugin URL:', pluginUrl);
+        
+        // iframe에 Plugin 로드
+        frameEl.src = pluginUrl;
+        frameEl.style.display = 'block';
+        loadingEl.style.display = 'none';
                 
                 console.log('✅ [loadFigmaPlugin] Plugin 로드 완료');
                 

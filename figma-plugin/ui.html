@@ -379,6 +379,14 @@
             const errorMsg = msg.payload && msg.payload.message;
             setStatus('오류: ' + (errorMsg || '알 수 없는 오류'), 'error');
             break;
+          case 'clone-complete':
+            const cloneData = msg.payload || {};
+            setStatus(`파일이 성공적으로 복제되었습니다! (${cloneData.nodeCount}개 노드)`, 'success');
+            break;
+          case 'clone-error':
+            const cloneError = msg.payload && msg.payload.error;
+            setStatus('파일 복제 실패: ' + (cloneError || '알 수 없는 오류'), 'error');
+            break;
           default:
             console.warn('Unknown message type:', msg.type);
         }
@@ -627,6 +635,32 @@
       }
     }
 
+    // 파일 복제 함수
+    function cloneFile() {
+      try {
+        // 사용자 정보 입력 받기
+        const userId = prompt('사용자 ID를 입력하세요:', 'anonymous');
+        if (!userId) return;
+
+        const templateId = prompt('템플릿 ID를 입력하세요:', 'youtube-thumbnail-test');
+        if (!templateId) return;
+
+        const templateName = prompt('템플릿 이름을 입력하세요:', '유튜브 썸네일 테스트');
+        if (!templateName) return;
+
+        setStatus('파일을 복제하고 있습니다...', 'info');
+        
+        post('clone-file', {
+          userId: userId,
+          templateId: templateId,
+          templateName: templateName
+        });
+      } catch (error) {
+        console.error('파일 복제 오류:', error);
+        setStatus('파일 복제 중 오류가 발생했습니다.', 'error');
+      }
+    }
+
     // DOM 로드 완료 후 초기화
     document.addEventListener('DOMContentLoaded', function() {
       try {
@@ -690,6 +724,10 @@
 
   <div class="button-group">
     <button class="web-integration" onclick="processWebDesigns()">🌐 웹앱 디자인 처리</button>
+  </div>
+
+  <div class="button-group">
+    <button class="web-integration" onclick="cloneFile()">📋 파일 복제</button>
   </div>
 
   <button class="danger" onclick="closePlugin()">❌ 닫기</button>
