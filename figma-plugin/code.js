@@ -776,12 +776,13 @@ async function fetchAllUpdateRequests() {
     console.log('🔄 [fetchAllUpdateRequests] 시작');
     
     // 모든 대기 중인 업데이트 요청 가져오기
-    const response = await fetch('https://geuboakvnddaaheahild.supabase.co/rest/v1/figma_update_requests?status=eq.pending', {
+    const response = await fetch('https://geuboakvnddaaheahild.supabase.co/rest/v1/figma_update_requests?status=eq.pending&order=created_at.desc', {
       method: 'GET',
       headers: {
         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
       }
     });
 

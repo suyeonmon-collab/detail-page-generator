@@ -1,114 +1,176 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
+import fetch from 'node-fetch';
 
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
-);
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const FIGMA_ACCESS_TOKEN = process.env.FIGMA_ACCESS_TOKEN;
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 export default async function handler(req, res) {
-    // CORS 헤더 설정
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+    if (req.method !== 'POST') {
+        return res.status(405).json({ success: false, error: 'Method Not Allowed' });
     }
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ success: false, error: 'Method not allowed' });
+    const { templateId, userId, templateName } = req.body;
+
+    if (!templateId || !userId) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'Missing templateId or userId' 
+        });
     }
 
     try {
-        const { templateId, userId, templateName } = req.body;
-
-        if (!templateId || !userId) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'templateId와 userId가 필요합니다' 
-            });
-        }
-
-        console.log('🔄 [Figma Clone] 파일 복제 시작:', { templateId, userId, templateName });
+        console.log('🔄 [Figma Clone] 시작:', { templateId, userId, templateName });
 
         // 1. 템플릿 정보 가져오기
         const { data: template, error: templateError } = await supabase
             .from('templates')
-            .select('figma_url, figma_file_key, figma_node_id, name')
+            .select('figma_file_key, figma_node_id, name')
             .eq('template_id', templateId)
             .single();
 
         if (templateError || !template) {
-            console.error('❌ [Figma Clone] 템플릿 조회 실패:', templateError);
+            console.error('❌ [Figma Clone] 템플릿 정보 조회 오류:', templateError);
             return res.status(404).json({ 
                 success: false, 
-                error: '템플릿을 찾을 수 없습니다' 
+                error: 'Template not found' 
             });
         }
 
         console.log('🟢 [Figma Clone] 템플릿 정보:', template);
 
-        // 2. 사용자별 고유 파일 정보 생성 (임시 해결책)
-        // TODO: 실제 Figma API 파일 복제 기능 구현 필요
+        // 2. 실제 Figma API로 파일 복제 시도
+        console.log('🔄 [Figma Clone] 실제 Figma API 복제 시도');
         
-        const timestamp = Date.now();
-        const clonedFileKey = `${template.figma_file_key}-${userId}-${timestamp}`;
-        const clonedFileName = `${templateName || template.name} - ${userId}`;
-        
-        console.log('🟢 [Figma Clone] 사용자별 파일 정보 생성:', {
-            originalFileKey: template.figma_file_key,
-            clonedFileKey: clonedFileKey,
-            fileName: clonedFileName
-        });
+        try {
+            // Figma API로 파일 복제 시도
+            const cloneResponse = await fetch(`https://api.figma.com/v1/files/${template.figma_file_key}/copy`, {
+                method: 'POST',
+                headers: {
+                    'X-Figma-Token': FIGMA_ACCESS_TOKEN,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: `${templateName || template.name} - ${userId}`,
+                    description: `복제된 파일 - ${new Date().toISOString()}`
+                })
+            });
 
-        // 3. 복제된 파일 정보를 Supabase에 저장
-        const { data: userFile, error: saveError } = await supabase
-            .from('user_figma_files')
-            .insert({
-                user_id: userId,
-                template_id: templateId,
-                original_file_key: template.figma_file_key,
-                cloned_file_key: clonedFileKey,
-                cloned_file_url: `https://www.figma.com/file/${template.figma_file_key}?node-id=${template.figma_node_id}`,
-                file_name: clonedFileName,
-                status: 'active',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            })
-            .select()
-            .single();
+            if (cloneResponse.ok) {
+                const cloneData = await cloneResponse.json();
+                console.log('✅ [Figma Clone] 실제 복제 성공:', cloneData);
+                
+                const clonedFileKey = cloneData.file.key;
+                const clonedFileName = cloneData.file.name;
+                const clonedFileUrl = `https://www.figma.com/file/${clonedFileKey}?node-id=${template.figma_node_id}`;
+                
+                // 3. 복제된 파일 정보를 Supabase에 저장
+                const { data: userFile, error: saveError } = await supabase
+                    .from('user_figma_files')
+                    .insert({
+                        user_id: userId,
+                        template_id: templateId,
+                        original_file_key: template.figma_file_key,
+                        cloned_file_key: clonedFileKey,
+                        cloned_file_url: clonedFileUrl,
+                        file_name: clonedFileName,
+                        status: 'active',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
 
-        if (saveError) {
-            console.error('❌ [Figma Clone] Supabase 저장 실패:', saveError);
+                if (saveError) {
+                    console.error('❌ [Figma Clone] Supabase 저장 실패:', saveError);
+                    return res.status(500).json({ 
+                        success: false, 
+                        error: '파일 정보 저장 실패',
+                        details: saveError.message
+                    });
+                }
+
+                console.log('✅ [Figma Clone] 완료:', userFile);
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Figma 파일이 성공적으로 복제되었습니다',
+                    data: {
+                        fileId: userFile.id,
+                        clonedFileKey: clonedFileKey,
+                        clonedFileUrl: clonedFileUrl,
+                        fileName: clonedFileName,
+                        templateId: templateId,
+                        userId: userId,
+                        realClone: true
+                    }
+                });
+                
+            } else {
+                const errorText = await cloneResponse.text();
+                console.warn('⚠️ [Figma Clone] 실제 복제 실패, 시뮬레이션 모드로 전환:', errorText);
+                
+                // 실제 복제가 실패하면 시뮬레이션 모드
+                const timestamp = Date.now();
+                const clonedFileKey = `${template.figma_file_key}-${userId}-${timestamp}`;
+                const clonedFileName = `${templateName || template.name} - ${userId}`;
+                const clonedFileUrl = `https://www.figma.com/file/${template.figma_file_key}?node-id=${template.figma_node_id}`;
+                
+                const { data: userFile, error: saveError } = await supabase
+                    .from('user_figma_files')
+                    .insert({
+                        user_id: userId,
+                        template_id: templateId,
+                        original_file_key: template.figma_file_key,
+                        cloned_file_key: clonedFileKey,
+                        cloned_file_url: clonedFileUrl,
+                        file_name: clonedFileName,
+                        status: 'active',
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                    .select()
+                    .single();
+
+                if (saveError) {
+                    console.error('❌ [Figma Clone] Supabase 저장 실패:', saveError);
+                    return res.status(500).json({ 
+                        success: false, 
+                        error: '파일 정보 저장 실패',
+                        details: saveError.message
+                    });
+                }
+
+                console.log('✅ [Figma Clone] 시뮬레이션 모드 완료:', userFile);
+
+                return res.status(200).json({
+                    success: true,
+                    message: 'Figma 파일 복제가 시뮬레이션 모드로 완료되었습니다 (실제 복제는 실패)',
+                    data: {
+                        fileId: userFile.id,
+                        clonedFileKey: clonedFileKey,
+                        clonedFileUrl: clonedFileUrl,
+                        fileName: clonedFileName,
+                        templateId: templateId,
+                        userId: userId,
+                        simulationMode: true
+                    }
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ [Figma Clone] 복제 오류:', error);
             return res.status(500).json({ 
                 success: false, 
-                error: '파일 정보 저장 실패',
-                details: saveError.message
+                error: 'Figma 파일 복제 실패',
+                details: error.message
             });
         }
 
-        console.log('✅ [Figma Clone] 완료:', userFile);
-
-        // 4. 응답 반환
-        return res.status(200).json({
-            success: true,
-            data: {
-                fileId: userFile.id,
-                clonedFileKey: clonedFileKey,
-                clonedFileUrl: `https://www.figma.com/file/${template.figma_file_key}?node-id=${template.figma_node_id}`,
-                fileName: clonedFileName,
-                templateId: templateId,
-                userId: userId
-            },
-            message: 'Figma 파일이 성공적으로 복제되었습니다'
-        });
-
     } catch (error) {
-        console.error('❌ [Figma Clone] 예상치 못한 오류:', error);
-        return res.status(500).json({ 
-            success: false, 
-            error: '서버 오류',
-            details: error.message
-        });
+        console.error('❌ [Figma Clone] 서버 오류:', error);
+        return res.status(500).json({ success: false, error: error.message });
     }
 }
