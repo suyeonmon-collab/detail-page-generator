@@ -775,19 +775,38 @@ async function fetchAllUpdateRequests() {
   try {
     console.log('🔄 [fetchAllUpdateRequests] 시작');
     
+    // Supabase 설정
+    const SUPABASE_URL = 'https://geuboakvnddaaheahild.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds';
+    
+    console.log('🔄 [fetchAllUpdateRequests] Supabase URL:', SUPABASE_URL);
+    console.log('🔄 [fetchAllUpdateRequests] API Key 길이:', SUPABASE_ANON_KEY.length);
+    
     // 모든 대기 중인 업데이트 요청 가져오기
-    const response = await fetch('https://geuboakvnddaaheahild.supabase.co/rest/v1/figma_update_requests?status=eq.pending&order=created_at.desc', {
+    const url = `${SUPABASE_URL}/rest/v1/figma_update_requests?status=eq.pending&order=created_at.desc`;
+    console.log('🔄 [fetchAllUpdateRequests] 요청 URL:', url);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal'
       }
     });
 
+    console.log('🔄 [fetchAllUpdateRequests] 응답 상태:', response.status);
+    console.log('🔄 [fetchAllUpdateRequests] 응답 헤더:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      throw new Error(`Supabase API 오류: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ [fetchAllUpdateRequests] Supabase API 오류:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText
+      });
+      throw new Error(`Supabase API 오류: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -795,7 +814,8 @@ async function fetchAllUpdateRequests() {
     
     return data;
   } catch (error) {
-    console.error('❌ [fetchAllUpdateRequests] 오류:', error);
+    console.error('❌ [fetchAllUpdateRequests] 전체 오류:', error);
+    console.error('❌ [fetchAllUpdateRequests] 오류 스택:', error.stack);
     
     // 오류 발생 시 빈 배열 반환
     return [];
@@ -939,6 +959,10 @@ async function updateRequestStatus(requestId, status, errorMessage = null) {
   try {
     console.log('🔄 [updateRequestStatus] 시작:', { requestId, status, errorMessage });
     
+    // Supabase 설정
+    const SUPABASE_URL = 'https://geuboakvnddaaheahild.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds';
+    
     const updateData = {
       status: status,
       updated_at: new Date().toISOString()
@@ -948,24 +972,38 @@ async function updateRequestStatus(requestId, status, errorMessage = null) {
       updateData.error_message = errorMessage;
     }
     
+    const url = `${SUPABASE_URL}/rest/v1/figma_update_requests?id=eq.${requestId}`;
+    console.log('🔄 [updateRequestStatus] 요청 URL:', url);
+    console.log('🔄 [updateRequestStatus] 업데이트 데이터:', updateData);
+    
     // 실제 Supabase API 호출
-    const response = await fetch(`https://geuboakvnddaaheahild.supabase.co/rest/v1/figma_update_requests?id=eq.${requestId}`, {
+    const response = await fetch(url, {
       method: 'PATCH',
       headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
-        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdldWJvYWt2bmRkYWFoZWFoaWxkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMTU5OTUsImV4cCI6MjA3NTU5MTk5NX0.MOa29kzB6vQ4cR7hHJAHRKUKA5kGBQdr15_-2hdOVds',
-        'Content-Type': 'application/json'
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
       },
       body: JSON.stringify(updateData)
     });
 
+    console.log('🔄 [updateRequestStatus] 응답 상태:', response.status);
+
     if (!response.ok) {
-      throw new Error(`Supabase API 오류: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ [updateRequestStatus] Supabase API 오류:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText: errorText
+      });
+      throw new Error(`Supabase API 오류: ${response.status} - ${errorText}`);
     }
 
     console.log('✅ [updateRequestStatus] 성공:', { requestId, status });
     
   } catch (error) {
-    console.error('❌ [updateRequestStatus] 오류:', error);
+    console.error('❌ [updateRequestStatus] 전체 오류:', error);
+    console.error('❌ [updateRequestStatus] 오류 스택:', error.stack);
   }
 }
