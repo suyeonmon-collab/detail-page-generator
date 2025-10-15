@@ -1008,15 +1008,23 @@
             }
         }
 
-        // Figma 파일을 보이는 창으로 열기 (사용자가 직접 제어)
+        // Figma 파일을 보이는 창으로 열기 (자동 설치 시도)
         async function openFigmaInBackground() {
             try {
-                console.log('🔄 [openFigmaInBackground] Figma 파일 열기 시도');
+                console.log('🔄 [openFigmaInBackground] Figma 파일 열기 시도 (자동 설치)');
+                
+                // 사전 허용 확인
+                const hasPermission = await checkPluginInstallPermission();
+                if (!hasPermission) {
+                    console.log('⚠️ [openFigmaInBackground] 사용자가 자동 설치를 거부했습니다');
+                    showDesignProcessingPopup();
+                    return null;
+                }
                 
                 // 디자인 생성 중 팝업 표시
                 showDesignProcessingPopup();
                 
-                // Figma 파일 URL 생성 (플러그인 자동 실행을 위한 특별한 URL)
+                // Figma 파일 URL 생성 (플러그인 자동 설치 및 실행을 위한 특별한 URL)
                 const figmaUrl = templateInfo.figmaUrl;
                 if (!figmaUrl) {
                     console.error('❌ [openFigmaInBackground] Figma URL이 없습니다');
@@ -1024,17 +1032,22 @@
                     return null;
                 }
                 
-                // 플러그인 자동 실행을 위한 최강화된 URL 파라미터 추가
-                const pluginUrl = `${figmaUrl}#plugin=auto-sync&auto-start=true&plugin-id=auto-sync-plugin&auto-execute=true&force-plugin=true&plugin-command=run&plugin-args=auto-sync`;
+                // 플러그인 자동 설치 및 실행을 위한 최강화된 URL 파라미터 추가
+                const pluginUrl = `${figmaUrl}#plugin=auto-sync&auto-install=true&auto-start=true&plugin-id=auto-sync-plugin&auto-execute=true&force-plugin=true&plugin-command=run&plugin-args=auto-sync&plugin-url=https://detail-page-generator.vercel.app/figma-plugin/`;
                 
                 // 거의 숨기기 수준의 작은 창으로 Figma 파일 열기
                 const figmaWindow = window.open(pluginUrl, '_blank', 'width=1,height=1,left=-1000,top=-1000');
                 
                 if (figmaWindow) {
-                    console.log('✅ [openFigmaInBackground] Figma 파일이 열렸습니다');
+                    console.log('✅ [openFigmaInBackground] Figma 파일이 열렸습니다 (자동 설치 시도)');
                     
                     // 창이 닫혔는지 주기적으로 확인
                     checkWindowClosed(figmaWindow);
+                    
+                    // 자동 설치 시도
+                    setTimeout(() => {
+                        attemptAutoPluginInstall(figmaWindow);
+                    }, 2000);
                     
                     return figmaWindow;
                 } else {
@@ -1097,8 +1110,8 @@
                             margin-bottom: 30px;
                             line-height: 1.5;
                         ">
-                            <strong>중요:</strong> Figma에서 Plugin이 자동으로 실행되지 않을 수 있습니다.<br>
-                            아래 단계를 따라 Plugin을 수동으로 실행해주세요.
+                            <strong>자동 설치 시도 중...</strong> Figma에서 Plugin을 자동으로 설치하고 실행합니다.<br>
+                            자동 설치가 실패하면 아래 단계를 따라 수동으로 실행해주세요.
                         </div>
                         <div style="
                             background: #f8f9fa;
@@ -1268,6 +1281,151 @@
             }
             
             document.body.removeChild(textArea);
+        }
+
+        // Plugin 자동 설치 허용 확인
+        async function checkPluginInstallPermission() {
+            return new Promise((resolve) => {
+                // 이미 허용했는지 확인
+                const hasPermission = localStorage.getItem('figma-plugin-auto-install');
+                if (hasPermission === 'true') {
+                    resolve(true);
+                    return;
+                }
+                
+                // 허용 팝업 표시
+                const permissionPopup = document.createElement('div');
+                permissionPopup.innerHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0, 0, 0, 0.8);
+                        z-index: 10001;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    ">
+                        <div style="
+                            background: white;
+                            padding: 40px;
+                            border-radius: 12px;
+                            text-align: center;
+                            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+                            max-width: 500px;
+                            width: 90%;
+                        ">
+                            <div style="
+                                font-size: 24px;
+                                font-weight: bold;
+                                color: #333;
+                                margin-bottom: 20px;
+                            ">
+                                🤖 자동 Plugin 설치 허용
+                            </div>
+                            <div style="
+                                font-size: 16px;
+                                color: #666;
+                                margin-bottom: 30px;
+                                line-height: 1.5;
+                            ">
+                                더 편리한 사용을 위해 Figma Plugin을 자동으로 설치하고 실행하시겠습니까?<br>
+                                <strong>한 번만 허용하면 이후에는 자동으로 처리됩니다.</strong>
+                            </div>
+                            <div style="
+                                background: #f8f9fa;
+                                padding: 20px;
+                                border-radius: 8px;
+                                margin-bottom: 20px;
+                                text-align: left;
+                            ">
+                                <div style="font-weight: bold; margin-bottom: 10px;">✅ 자동 설치의 장점:</div>
+                                <div style="margin-bottom: 8px;">• 매번 수동으로 Plugin을 설치할 필요 없음</div>
+                                <div style="margin-bottom: 8px;">• 텍스트 변경이 즉시 반영됨</div>
+                                <div style="margin-bottom: 8px;">• 더 빠르고 편리한 작업 가능</div>
+                                <div>• 언제든지 설정에서 비활성화 가능</div>
+                            </div>
+                            <button onclick="grantPluginPermission(true)" style="
+                                background: #28a745;
+                                color: white;
+                                border: none;
+                                padding: 12px 24px;
+                                border-radius: 6px;
+                                font-size: 16px;
+                                cursor: pointer;
+                                margin-right: 10px;
+                            ">
+                                ✅ 허용하고 자동 설치
+                            </button>
+                            <button onclick="grantPluginPermission(false)" style="
+                                background: #6c757d;
+                                color: white;
+                                border: none;
+                                padding: 12px 24px;
+                                border-radius: 6px;
+                                font-size: 16px;
+                                cursor: pointer;
+                            ">
+                                ❌ 수동 설치 유지
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(permissionPopup);
+                
+                // 전역 함수로 설정
+                window.grantPluginPermission = (granted) => {
+                    localStorage.setItem('figma-plugin-auto-install', granted.toString());
+                    document.body.removeChild(permissionPopup);
+                    resolve(granted);
+                };
+            });
+        }
+
+        // 자동 Plugin 설치 시도
+        async function attemptAutoPluginInstall(figmaWindow) {
+            try {
+                console.log('🚀 [attemptAutoPluginInstall] 자동 Plugin 설치 시도');
+                
+                // Figma 창에 Plugin 설치 명령 전송
+                figmaWindow.postMessage({
+                    type: 'INSTALL_PLUGIN',
+                    pluginUrl: 'https://detail-page-generator.vercel.app/figma-plugin/',
+                    pluginId: 'auto-sync-plugin',
+                    timestamp: Date.now()
+                }, '*');
+                
+                console.log('✅ [attemptAutoPluginInstall] Plugin 설치 명령 전송 완료');
+                
+                // 설치 상태 확인
+                setTimeout(() => {
+                    checkPluginInstallStatus(figmaWindow);
+                }, 5000);
+                
+            } catch (error) {
+                console.error('❌ [attemptAutoPluginInstall] 오류:', error);
+            }
+        }
+
+        // Plugin 설치 상태 확인
+        async function checkPluginInstallStatus(figmaWindow) {
+            try {
+                console.log('🔍 [checkPluginInstallStatus] Plugin 설치 상태 확인');
+                
+                // Plugin 실행 상태 확인
+                figmaWindow.postMessage({
+                    type: 'CHECK_PLUGIN_STATUS',
+                    timestamp: Date.now()
+                }, '*');
+                
+                console.log('✅ [checkPluginInstallStatus] 상태 확인 명령 전송 완료');
+                
+            } catch (error) {
+                console.error('❌ [checkPluginInstallStatus] 오류:', error);
+            }
         }
 
         // 플러그인 로드 대기
