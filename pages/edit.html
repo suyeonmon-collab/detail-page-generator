@@ -1484,21 +1484,16 @@
             }
         }
 
-        // Plugin 설치 페이지 열기 (GitHub Raw URL 사용)
+        // Plugin 설치 페이지 열기 (직접 파일 내용 표시)
         function openPluginInstallPage() {
             try {
                 console.log('🚀 [openPluginInstallPage] Plugin 설치 페이지 열기');
                 
-                // GitHub Raw URL로 Plugin 파일들에 직접 접근
-                const manifestUrl = 'https://raw.githubusercontent.com/suyeonmon-collab/detail-page-generator/main/public/figma-plugin/manifest.json';
-                const codeUrl = 'https://raw.githubusercontent.com/suyeonmon-collab/detail-page-generator/main/public/figma-plugin/code.js';
-                const uiUrl = 'https://raw.githubusercontent.com/suyeonmon-collab/detail-page-generator/main/public/figma-plugin/ui.html';
-                
                 // Plugin 설치 안내 페이지를 새 창으로 열기
-                const installWindow = window.open('', '_blank', 'width=800,height=600,left=100,top=100');
+                const installWindow = window.open('', '_blank', 'width=900,height=700,left=100,top=100');
                 
                 if (installWindow) {
-                    // Plugin 설치 안내 HTML 생성
+                    // Plugin 설치 안내 HTML 생성 (직접 파일 내용 포함)
                     const installHtml = `
                         <!DOCTYPE html>
                         <html lang="ko">
@@ -1508,14 +1503,17 @@
                             <title>Figma Plugin 설치 안내</title>
                             <style>
                                 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-                                .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+                                .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
                                 h1 { color: #333; margin-bottom: 20px; }
                                 .step { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #667eea; }
                                 .step h3 { margin: 0 0 10px 0; color: #667eea; }
-                                .code { background: #2d3748; color: #e2e8f0; padding: 10px; border-radius: 6px; font-family: monospace; margin: 10px 0; }
+                                .code { background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 6px; font-family: monospace; margin: 10px 0; white-space: pre-wrap; font-size: 12px; max-height: 200px; overflow-y: auto; }
                                 .button { background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; margin: 5px; }
                                 .button:hover { background: #5a67d8; }
-                                .url { background: #e9ecef; padding: 8px; border-radius: 4px; font-family: monospace; word-break: break-all; }
+                                .copy-btn { background: #28a745; font-size: 12px; padding: 5px 10px; }
+                                .copy-btn:hover { background: #218838; }
+                                .file-content { margin: 10px 0; }
+                                .file-title { font-weight: bold; color: #667eea; margin-bottom: 5px; }
                             </style>
                         </head>
                         <body>
@@ -1523,27 +1521,63 @@
                                 <h1>🚀 Figma Plugin 설치 안내</h1>
                                 
                                 <div class="step">
-                                    <h3>1단계: Plugin 파일 다운로드</h3>
-                                    <p>아래 버튼을 클릭하여 Plugin 파일들을 다운로드하세요:</p>
-                                    <button class="button" onclick="downloadFile('${manifestUrl}', 'manifest.json')">📄 manifest.json 다운로드</button>
-                                    <button class="button" onclick="downloadFile('${codeUrl}', 'code.js')">⚙️ code.js 다운로드</button>
-                                    <button class="button" onclick="downloadFile('${uiUrl}', 'ui.html')">🖥️ ui.html 다운로드</button>
+                                    <h3>1단계: Plugin 파일 생성</h3>
+                                    <p>아래 파일들을 복사하여 로컬에 저장하세요:</p>
+                                    
+                                    <div class="file-content">
+                                        <div class="file-title">📄 manifest.json</div>
+                                        <div class="code" id="manifest-content">{
+  "name": "Auto Sync Plugin",
+  "id": "auto-sync-plugin",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "relaunchButtons": [
+    { "command": "open", "name": "Open Panel" }
+  ]
+}</div>
+                                        <button class="button copy-btn" onclick="copyToClipboard('manifest-content')">📋 복사</button>
+                                    </div>
+                                    
+                                    <div class="file-content">
+                                        <div class="file-title">⚙️ code.js (일부만 표시)</div>
+                                        <div class="code" id="code-content">// Figma Plugin Code
+// 전체 코드는 너무 길어서 일부만 표시됩니다.
+// 실제 설치 시에는 전체 파일이 필요합니다.
+
+figma.showUI(__html__, { width: 300, height: 400 });
+
+// 자동 폴링 시작
+function startAutoPolling() {
+  console.log('🔄 자동 폴링 시작');
+  // ... 전체 코드는 별도로 제공됩니다
+}</div>
+                                        <button class="button copy-btn" onclick="copyToClipboard('code-content')">📋 복사</button>
+                                    </div>
                                 </div>
                                 
                                 <div class="step">
                                     <h3>2단계: Figma에서 Plugin 설치</h3>
                                     <p>1. Figma를 열고 <strong>Plugins</strong> 메뉴 클릭</p>
                                     <p>2. <strong>Development</strong> → <strong>Import plugin from URL</strong> 클릭</p>
-                                    <p>3. 다음 URL 입력:</p>
-                                    <div class="url">${manifestUrl}</div>
-                                    <p>4. <strong>Install</strong> 버튼 클릭</p>
+                                    <p>3. <strong>Create a new plugin</strong> 선택</p>
+                                    <p>4. 위의 파일들을 복사하여 Plugin 폴더에 저장</p>
+                                    <p>5. <strong>Run</strong> 버튼으로 Plugin 실행</p>
                                 </div>
                                 
                                 <div class="step">
-                                    <h3>3단계: Plugin 실행</h3>
+                                    <h3>3단계: Plugin 실행 및 테스트</h3>
                                     <p>1. 설치된 Plugin을 <strong>Run</strong> 버튼으로 실행</p>
                                     <p>2. 웹앱에서 텍스트를 수정하고 "미리보기 새로고침" 클릭</p>
                                     <p>3. Plugin이 자동으로 텍스트를 업데이트합니다</p>
+                                </div>
+                                
+                                <div class="step">
+                                    <h3>⚠️ 중요 안내</h3>
+                                    <p>• <strong>code.js</strong> 파일은 매우 길어서 여기서는 일부만 표시됩니다</p>
+                                    <p>• 전체 Plugin 파일이 필요하시면 개발자에게 문의하세요</p>
+                                    <p>• 또는 GitHub 저장소를 public으로 변경하여 접근 가능하게 하세요</p>
                                 </div>
                                 
                                 <div style="text-align: center; margin-top: 30px;">
@@ -1552,14 +1586,43 @@
                             </div>
                             
                             <script>
-                                function downloadFile(url, filename) {
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.download = filename;
-                                    link.target = '_blank';
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
+                                function copyToClipboard(elementId) {
+                                    const element = document.getElementById(elementId);
+                                    const text = element.textContent;
+                                    
+                                    if (navigator.clipboard && window.isSecureContext) {
+                                        navigator.clipboard.writeText(text).then(() => {
+                                            alert('복사되었습니다!');
+                                        }).catch(err => {
+                                            fallbackCopyTextToClipboard(text);
+                                        });
+                                    } else {
+                                        fallbackCopyTextToClipboard(text);
+                                    }
+                                }
+                                
+                                function fallbackCopyTextToClipboard(text) {
+                                    const textArea = document.createElement("textarea");
+                                    textArea.value = text;
+                                    textArea.style.top = "0";
+                                    textArea.style.left = "0";
+                                    textArea.style.position = "fixed";
+                                    document.body.appendChild(textArea);
+                                    textArea.focus();
+                                    textArea.select();
+                                    
+                                    try {
+                                        const successful = document.execCommand('copy');
+                                        if (successful) {
+                                            alert('복사되었습니다!');
+                                        } else {
+                                            alert('복사에 실패했습니다.');
+                                        }
+                                    } catch (err) {
+                                        alert('복사에 실패했습니다.');
+                                    }
+                                    
+                                    document.body.removeChild(textArea);
                                 }
                             </script>
                         </body>
@@ -1570,7 +1633,7 @@
                     installWindow.document.close();
                     
                     console.log('✅ [openPluginInstallPage] Plugin 설치 안내 페이지가 열렸습니다');
-                    showToast('Plugin 설치 안내 페이지가 열렸습니다. 단계를 따라 설치해주세요.', 'info');
+                    showToast('Plugin 설치 안내 페이지가 열렸습니다. 파일 내용을 복사하여 설치해주세요.', 'info');
                 } else {
                     console.error('❌ [openPluginInstallPage] 팝업 차단으로 인해 페이지를 열 수 없습니다');
                     showToast('팝업이 차단되었습니다. URL을 수동으로 복사해주세요.', 'error');
