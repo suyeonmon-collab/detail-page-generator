@@ -993,16 +993,23 @@ async function processUpdateRequest(request) {
   }
 }
 
-// Figma에서 텍스트 노드 업데이트
+// Figma에서 텍스트 노드 업데이트 (강화된 디버깅)
 async function updateTextNodeInFigma(nodeId, textContent) {
   try {
     console.log('🔄 [updateTextNodeInFigma] 시작:', { nodeId, textContent });
     
     // 현재 페이지에서 해당 노드 찾기
     const page = figma.currentPage;
+    console.log('📄 [updateTextNodeInFigma] 현재 페이지:', page.name);
+    
+    // 모든 텍스트 노드 먼저 확인
+    const allTextNodes = page.findAll(n => n.type === 'TEXT');
+    console.log('🔍 [updateTextNodeInFigma] 페이지의 모든 텍스트 노드:', 
+      allTextNodes.map(n => ({ name: n.name, characters: n.characters })));
     
     // 1. 정확한 이름으로 찾기
     let nodes = page.findAll(n => n.name === nodeId && n.type === 'TEXT');
+    console.log('🎯 [updateTextNodeInFigma] 정확한 이름 매칭 결과:', nodes.length);
     
     // 2. 정확한 이름이 없으면 부분 매칭으로 찾기
     if (nodes.length === 0) {
@@ -1012,41 +1019,68 @@ async function updateTextNodeInFigma(nodeId, textContent) {
         const searchId = nodeId.toLowerCase();
         return name.includes(searchId) || searchId.includes(name);
       });
+      console.log('🔍 [updateTextNodeInFigma] 부분 매칭 결과:', nodes.length);
     }
     
     // 3. 여전히 없으면 모든 텍스트 노드 중에서 순서로 찾기
     if (nodes.length === 0) {
-      const allTextNodes = page.findAll(n => n.type === 'TEXT');
-      console.log('🔍 [updateTextNodeInFigma] 모든 텍스트 노드:', allTextNodes.map(n => n.name));
+      console.log('🔍 [updateTextNodeInFigma] 순서 기반 매칭 시도');
       
       // nodeId에 따라 순서로 매칭
       if (nodeId === 'title' && allTextNodes.length > 0) {
         nodes = [allTextNodes[0]]; // 첫 번째 텍스트 노드
+        console.log('🎯 [updateTextNodeInFigma] title 매칭:', allTextNodes[0].name);
       } else if (nodeId === 'subtitle' && allTextNodes.length > 1) {
         nodes = [allTextNodes[1]]; // 두 번째 텍스트 노드
+        console.log('🎯 [updateTextNodeInFigma] subtitle 매칭:', allTextNodes[1].name);
       } else if (nodeId === 'accent-text' && allTextNodes.length > 2) {
         nodes = [allTextNodes[2]]; // 세 번째 텍스트 노드
+        console.log('🎯 [updateTextNodeInFigma] accent-text 매칭:', allTextNodes[2].name);
+      } else if (nodeId.includes('section') && allTextNodes.length > 0) {
+        // section1, section2 등에 대한 매칭
+        const sectionNumber = parseInt(nodeId.replace('section', ''));
+        if (sectionNumber && allTextNodes.length >= sectionNumber) {
+          nodes = [allTextNodes[sectionNumber - 1]];
+          console.log('🎯 [updateTextNodeInFigma] section 매칭:', allTextNodes[sectionNumber - 1].name);
+        }
       }
     }
     
     if (nodes.length === 0) {
       console.warn(`⚠️ [updateTextNodeInFigma] 노드 '${nodeId}'를 찾을 수 없습니다. 건너뜁니다.`);
+      console.log('📋 [updateTextNodeInFigma] 사용 가능한 노드들:', 
+        allTextNodes.map(n => n.name));
       return; // 오류를 던지지 않고 건너뜀
     }
     
     // 첫 번째 매칭 노드 업데이트
     const textNode = nodes[0];
-    console.log('🎯 [updateTextNodeInFigma] 찾은 노드:', { name: textNode.name, type: textNode.type });
+    console.log('🎯 [updateTextNodeInFigma] 찾은 노드:', { 
+      name: textNode.name, 
+      type: textNode.type,
+      currentText: textNode.characters 
+    });
     
     // 폰트 로드 (필요한 경우)
     if (textNode.fontName && textNode.fontName.family) {
+      console.log('🔤 [updateTextNodeInFigma] 폰트 로드:', textNode.fontName);
       await figma.loadFontAsync(textNode.fontName);
     }
     
     // 텍스트 내용 업데이트
+    console.log('✏️ [updateTextNodeInFigma] 텍스트 업데이트:', {
+      from: textNode.characters,
+      to: textContent
+    });
+    
     textNode.characters = textContent;
     
-    console.log('✅ [updateTextNodeInFigma] 완료:', { nodeId, textContent, actualNodeName: textNode.name });
+    console.log('✅ [updateTextNodeInFigma] 완료:', { 
+      nodeId, 
+      textContent, 
+      actualNodeName: textNode.name,
+      finalText: textNode.characters 
+    });
     
   } catch (error) {
     console.error('❌ [updateTextNodeInFigma] 오류:', error);

@@ -998,8 +998,8 @@
                 // 플러그인 자동 실행을 위한 URL 파라미터 추가
                 const pluginUrl = `${figmaUrl}&plugin=auto-sync&auto-start=true`;
                 
-                // 보이는 창으로 Figma 파일 열기 (사용자가 직접 제어 가능)
-                const figmaWindow = window.open(pluginUrl, '_blank', 'width=1200,height=800,left=100,top=100');
+                // 작은 창으로 Figma 파일 열기 (사용자가 직접 제어 가능)
+                const figmaWindow = window.open(pluginUrl, '_blank', 'width=400,height=300,left=100,top=100');
                 
                 if (figmaWindow) {
                     console.log('✅ [openFigmaInBackground] Figma 파일이 열렸습니다');
