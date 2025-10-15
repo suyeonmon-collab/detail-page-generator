@@ -100,9 +100,13 @@ async function getData(req, res) {
 // 데이터 저장
 async function saveData(req, res) {
     try {
+        console.log('🔵 [Supabase] POST 요청 받음');
+        console.log('🔵 [Supabase] 요청 본문:', JSON.stringify(req.body, null, 2));
+        
         const { categories, templates } = req.body;
 
         if (!categories || !templates) {
+            console.error('❌ [Supabase] 필수 데이터 누락:', { categories: !!categories, templates: !!templates });
             return res.status(400).json({ 
                 success: false, 
                 error: 'categories와 templates가 필요합니다.' 
@@ -115,7 +119,7 @@ async function saveData(req, res) {
         // 카테고리 저장 (upsert) - 개별 처리
         console.log('🔵 [Supabase] 카테고리 저장 시작');
         for (const category of categories) {
-            console.log(`  - 카테고리 저장: ${category.id}`);
+            console.log(`  - 카테고리 저장: ${category.id}`, JSON.stringify(category, null, 2));
             const { error: categoryError } = await supabase
                 .from('categories')
                 .upsert(category, { 
@@ -133,7 +137,7 @@ async function saveData(req, res) {
         // 템플릿 저장 (upsert) - 개별 처리
         console.log('🔵 [Supabase] 템플릿 저장 시작');
         for (const template of templates) {
-            console.log(`  - 템플릿 저장: ${template.template_id}`);
+            console.log(`  - 템플릿 저장: ${template.template_id}`, JSON.stringify(template, null, 2));
             const { error: templateError } = await supabase
                 .from('templates')
                 .upsert(template, { 
@@ -161,6 +165,7 @@ async function saveData(req, res) {
 
     } catch (error) {
         console.error('❌ [Supabase] 데이터 저장 오류:', error);
+        console.error('❌ [Supabase] 오류 스택:', error.stack);
         return res.status(500).json({ 
             success: false, 
             error: error.message || '데이터 저장 중 오류가 발생했습니다.' 
