@@ -438,6 +438,11 @@
             
             try {
                 console.log('🟢 [loadFigmaImage] Figma API 호출 시작');
+                console.log('🔍 [loadFigmaImage] 요청 URL:', `${API_BASE}/generate-figma-preview`);
+                console.log('🔍 [loadFigmaImage] 요청 데이터:', {
+                    figmaUrl: templateInfo.figmaUrl,
+                    nodeId: templateInfo.figmaNodeId
+                });
                 
                 const response = await fetch(`${API_BASE}/generate-figma-preview`, {
                     method: 'POST',
