@@ -18,6 +18,51 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadData() {
     showLoading();
     try {
+        console.log('🔵 [Admin] 데이터 로드 시작');
+        
+        // Supabase API로 데이터 로드
+        const response = await fetch('/api/admin/supabase-data', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`API 오류: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || '데이터 로드 실패');
+        }
+
+        categories = result.data.categories || [];
+        templates = result.data.templates || [];
+
+        console.log('✅ [Admin] 데이터 로드 성공');
+        console.log(`📊 카테고리: ${categories.length}개, 템플릿: ${templates.length}개`);
+
+        renderCategories();
+        renderTemplates();
+        populateCategorySelect();
+        
+    } catch (error) {
+        console.error('❌ [Admin] 데이터 로드 실패:', error);
+        showToast('데이터를 불러오는데 실패했습니다: ' + error.message, 'error');
+        
+        // Fallback: 기존 JSON 파일 로드
+        console.log('🔄 [Admin] Fallback: JSON 파일 로드 시도');
+        await loadDataFromJSON();
+    } finally {
+        hideLoading();
+    }
+}
+
+// Fallback: JSON 파일에서 데이터 로드
+async function loadDataFromJSON() {
+    try {
         // categories.json 로드
         const categoriesResponse = await fetch('/data/categories.json');
         const categoriesData = await categoriesResponse.json();
@@ -31,11 +76,11 @@ async function loadData() {
         renderCategories();
         renderTemplates();
         populateCategorySelect();
+        
+        console.log('✅ [Admin] JSON 파일 로드 성공');
     } catch (error) {
-        console.error('데이터 로드 실패:', error);
-        showToast('데이터를 불러오는데 실패했습니다.', 'error');
-    } finally {
-        hideLoading();
+        console.error('❌ [Admin] JSON 파일 로드도 실패:', error);
+        showToast('모든 데이터 로드 방법이 실패했습니다.', 'error');
     }
 }
 
@@ -362,7 +407,48 @@ async function saveData() {
     showLoading();
     
     try {
-        // API로 저장
+        console.log('🔵 [Admin] 데이터 저장 시작');
+        
+        // Supabase API로 저장
+        const response = await fetch('/api/admin/supabase-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                categories,
+                templates
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API 오류: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || '저장 실패');
+        }
+        
+        console.log('✅ [Admin] Supabase 저장 성공:', result);
+        showToast('✅ 데이터가 Supabase에 성공적으로 저장되었습니다!', 'success');
+        
+    } catch (error) {
+        console.error('❌ [Admin] Supabase 저장 실패:', error);
+        showToast('❌ Supabase 저장 실패: ' + error.message, 'error');
+        
+        // Fallback: 기존 파일 저장 API 시도
+        console.log('🔄 [Admin] Fallback: 파일 저장 API 시도');
+        await saveDataToFile();
+    } finally {
+        hideLoading();
+    }
+}
+
+// Fallback: 기존 파일 저장 API 사용
+async function saveDataToFile() {
+    try {
         const response = await fetch('/api/admin/save-data', {
             method: 'POST',
             headers: {
@@ -375,21 +461,26 @@ async function saveData() {
         });
         
         if (!response.ok) {
-            throw new Error('저장 실패');
+            throw new Error('파일 저장 API 오류');
         }
         
         const result = await response.json();
         
         if (!result.success) {
-            throw new Error(result.error || '저장 실패');
+            throw new Error(result.error || '파일 저장 실패');
         }
         
-        console.log('데이터 저장 성공');
+        console.log('✅ [Admin] 파일 저장 성공:', result);
+        
+        if (result.warning) {
+            showToast('⚠️ ' + result.warning, 'error');
+        } else {
+            showToast('✅ 데이터가 파일에 저장되었습니다!', 'success');
+        }
+        
     } catch (error) {
-        console.error('저장 오류:', error);
-        showToast('저장에 실패했습니다: ' + error.message, 'error');
-    } finally {
-        hideLoading();
+        console.error('❌ [Admin] 파일 저장도 실패:', error);
+        showToast('❌ 모든 저장 방법이 실패했습니다: ' + error.message, 'error');
     }
 }
 

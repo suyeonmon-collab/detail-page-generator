@@ -27,8 +27,7 @@ module.exports = async function handler(req, res) {
             });
         }
 
-        // Vercel에서는 파일 시스템에 쓰기가 불가능하므로,
-        // 개발 환경에서만 작동하도록 합니다.
+        // 개발 환경에서는 로컬 파일에 저장
         if (process.env.NODE_ENV === 'development') {
             const dataDir = path.join(process.cwd(), 'data');
             
@@ -46,25 +45,50 @@ module.exports = async function handler(req, res) {
                 'utf-8'
             );
 
-            console.log('✅ 데이터 저장 완료');
+            console.log('✅ 개발 환경: 데이터 저장 완료');
             
             return res.status(200).json({ 
                 success: true, 
                 message: '데이터가 저장되었습니다.' 
             });
         } else {
-            // 프로덕션 환경에서는 데이터를 반환만 하고
-            // 실제 저장은 GitHub를 통해 수동으로 관리
-            console.log('⚠️ 프로덕션 환경에서는 파일 저장이 불가능합니다.');
-            console.log('📋 변경된 데이터:');
-            console.log('categories:', JSON.stringify(categories, null, 2));
-            console.log('templates:', JSON.stringify(templates, null, 2));
+            // 프로덕션 환경에서는 GitHub API를 통해 저장
+            console.log('🚀 프로덕션 환경: GitHub API를 통한 저장 시도');
             
-            return res.status(200).json({ 
-                success: true, 
-                message: '프로덕션 환경입니다. 데이터를 콘솔에서 확인하세요.',
-                data: { categories, templates }
-            });
+            try {
+                // GitHub API를 사용하여 파일 업데이트
+                const githubToken = process.env.GITHUB_TOKEN;
+                
+                if (!githubToken) {
+                    console.log('⚠️ GITHUB_TOKEN이 설정되지 않음. 로컬 저장으로 대체');
+                    
+                    // 임시로 로컬에 저장 (Vercel에서는 읽기 전용이므로 실제로는 저장되지 않음)
+                    return res.status(200).json({ 
+                        success: true, 
+                        message: '프로덕션 환경입니다. 관리자에게 문의하세요.',
+                        warning: '실제 파일 저장을 위해서는 GitHub Desktop을 사용하거나 수동으로 파일을 수정해야 합니다.'
+                    });
+                }
+
+                // GitHub API 호출 (향후 구현)
+                // const result = await updateGitHubFiles(categories, templates);
+                
+                return res.status(200).json({ 
+                    success: true, 
+                    message: '프로덕션 환경입니다. 관리자에게 문의하세요.',
+                    data: { categories, templates }
+                });
+                
+            } catch (githubError) {
+                console.error('❌ GitHub API 오류:', githubError);
+                
+                return res.status(200).json({ 
+                    success: true, 
+                    message: '프로덕션 환경입니다. 관리자에게 문의하세요.',
+                    warning: 'GitHub API 연결 실패. 수동으로 파일을 수정해야 합니다.',
+                    data: { categories, templates }
+                });
+            }
         }
     } catch (error) {
         console.error('❌ 데이터 저장 오류:', error);

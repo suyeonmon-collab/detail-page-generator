@@ -1,0 +1,167 @@
+const { createClient } = require('@supabase/supabase-js');
+
+// Supabase 클라이언트 초기화
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error('❌ Supabase 환경 변수가 설정되지 않았습니다.');
+    console.error('SUPABASE_URL:', supabaseUrl ? '설정됨' : '없음');
+    console.error('SUPABASE_ANON_KEY:', supabaseKey ? '설정됨' : '없음');
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+module.exports = async function handler(req, res) {
+    // CORS 헤더
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // OPTIONS 요청 처리
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    try {
+        if (req.method === 'GET') {
+            // 데이터 조회
+            return await getData(req, res);
+        } else if (req.method === 'POST') {
+            // 데이터 저장
+            return await saveData(req, res);
+        } else {
+            return res.status(405).json({ 
+                success: false, 
+                error: 'Method not allowed' 
+            });
+        }
+    } catch (error) {
+        console.error('❌ Supabase API 오류:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message || '서버 오류가 발생했습니다.' 
+        });
+    }
+};
+
+// 데이터 조회
+async function getData(req, res) {
+    try {
+        console.log('🔵 [Supabase] 데이터 조회 시작');
+
+        // 카테고리 조회
+        const { data: categories, error: categoriesError } = await supabase
+            .from('categories')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        if (categoriesError) {
+            throw new Error(`카테고리 조회 실패: ${categoriesError.message}`);
+        }
+
+        // 템플릿 조회
+        const { data: templates, error: templatesError } = await supabase
+            .from('templates')
+            .select('*')
+            .order('created_at', { ascending: true });
+
+        if (templatesError) {
+            throw new Error(`템플릿 조회 실패: ${templatesError.message}`);
+        }
+
+        console.log('✅ [Supabase] 데이터 조회 성공');
+        console.log(`📊 카테고리: ${categories.length}개, 템플릿: ${templates.length}개`);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                categories: categories || [],
+                templates: templates || []
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ [Supabase] 데이터 조회 오류:', error);
+        return res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+}
+
+// 데이터 저장
+async function saveData(req, res) {
+    try {
+        const { categories, templates } = req.body;
+
+        if (!categories || !templates) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'categories와 templates가 필요합니다.' 
+            });
+        }
+
+        console.log('🔵 [Supabase] 데이터 저장 시작');
+        console.log(`📊 저장할 데이터: 카테고리 ${categories.length}개, 템플릿 ${templates.length}개`);
+
+        // 트랜잭션 시작
+        const { data: result, error } = await supabase.rpc('save_admin_data', {
+            categories_data: categories,
+            templates_data: templates
+        });
+
+        if (error) {
+            // RPC 함수가 없으면 개별 저장
+            console.log('⚠️ [Supabase] RPC 함수 없음, 개별 저장 시도');
+
+            // 카테고리 저장 (upsert)
+            for (const category of categories) {
+                const { error: categoryError } = await supabase
+                    .from('categories')
+                    .upsert(category, { 
+                        onConflict: 'id',
+                        ignoreDuplicates: false 
+                    });
+
+                if (categoryError) {
+                    console.error('❌ [Supabase] 카테고리 저장 오류:', categoryError);
+                    throw new Error(`카테고리 저장 실패: ${categoryError.message}`);
+                }
+            }
+
+            // 템플릿 저장 (upsert)
+            for (const template of templates) {
+                const { error: templateError } = await supabase
+                    .from('templates')
+                    .upsert(template, { 
+                        onConflict: 'template_id',
+                        ignoreDuplicates: false 
+                    });
+
+                if (templateError) {
+                    console.error('❌ [Supabase] 템플릿 저장 오류:', templateError);
+                    throw new Error(`템플릿 저장 실패: ${templateError.message}`);
+                }
+            }
+        }
+
+        console.log('✅ [Supabase] 데이터 저장 성공');
+
+        return res.status(200).json({ 
+            success: true, 
+            message: '데이터가 Supabase에 저장되었습니다.',
+            data: {
+                categories: categories.length,
+                templates: templates.length
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ [Supabase] 데이터 저장 오류:', error);
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message || '데이터 저장 중 오류가 발생했습니다.' 
+        });
+    }
+}
