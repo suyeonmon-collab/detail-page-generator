@@ -2226,29 +2226,25 @@ function startAutoPolling() {
             
             // Figma 이미지가 있으면 배경으로 설정
             if (currentFigmaImageUrl) {
-                html += `
-                    <div style="position: relative; width: 100%; height: 100%; background-image: url('` + currentFigmaImageUrl + `'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px;">
-                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                            <!-- 텍스트 오버레이 -->
-                            <div style="position: absolute; top: 20px; left: 20px; right: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                                ${Object.entries(editedContent).map(([key, value]) => `
-                                    <div style="margin-bottom: 10px; font-size: 14px;">
-                                        <strong>${formatLabel(key)}:</strong> ${value || '(비어있음)'}
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                html += '<div style="position: relative; width: 100%; height: 100%; background-image: url(\'' + currentFigmaImageUrl + '\'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px;">' +
+                    '<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); border-radius: 8px;">' +
+                        '<!-- 텍스트 오버레이 -->' +
+                        '<div style="position: absolute; top: 20px; left: 20px; right: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">' +
+                            Object.entries(editedContent).map(([key, value]) => 
+                                '<div style="margin-bottom: 10px; font-size: 14px;">' +
+                                    '<strong>' + formatLabel(key) + ':</strong> ' + (value || '(비어있음)') +
+                                '</div>'
+                            ).join('') +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
             } else {
                 // Figma 이미지가 없으면 기본 미리보기
                 Object.entries(editedContent).forEach(([key, value]) => {
-                    html += `
-                        <div class="preview-section">
-                            <h3>${formatLabel(key)}</h3>
-                            <p>${value || '(비어있음)'}</p>
-                        </div>
-                    `;
+                    html += '<div class="preview-section">' +
+                        '<h3>' + formatLabel(key) + '</h3>' +
+                        '<p>' + (value || '(비어있음)') + '</p>' +
+                    '</div>';
                 });
             }
             
@@ -2533,22 +2529,20 @@ function startAutoPolling() {
             
             // Figma 이미지가 있으면 배경으로 표시
             if (currentFigmaImageUrl) {
-                previewContent.innerHTML = `
-                    <div style="position: relative; width: 100%; height: 100%; background-image: url('` + currentFigmaImageUrl + `'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px; min-height: 400px;">
-                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); border-radius: 8px;">
-                            <!-- 텍스트 오버레이 -->
-                            <div style="position: absolute; top: 20px; left: 20px; right: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-                                <h3 style="margin-bottom: 16px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">📝 편집된 내용</h3>
-                                ${Object.entries(editedContent).map(([key, value]) => `
-                                    <div style="margin-bottom: 12px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 6px;">
-                                        <strong style="color: #ffd700; font-size: 12px; text-transform: uppercase;">${formatLabel(key)}:</strong>
-                                        <div style="margin-top: 4px; color: white;">${value || '(비어있음)'}</div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                previewContent.innerHTML = '<div style="position: relative; width: 100%; height: 100%; background-image: url(\'' + currentFigmaImageUrl + '\'); background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 8px; min-height: 400px;">' +
+                    '<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.1); border-radius: 8px;">' +
+                        '<!-- 텍스트 오버레이 -->' +
+                        '<div style="position: absolute; top: 20px; left: 20px; right: 20px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">' +
+                            '<h3 style="margin-bottom: 16px; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">📝 편집된 내용</h3>' +
+                            Object.entries(editedContent).map(([key, value]) => 
+                                '<div style="margin-bottom: 12px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 6px;">' +
+                                    '<strong style="color: #ffd700; font-size: 12px; text-transform: uppercase;">' + formatLabel(key) + ':</strong>' +
+                                    '<div style="margin-top: 4px; color: white;">' + (value || '(비어있음)') + '</div>' +
+                                '</div>'
+                            ).join('') +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
             } else {
                 // Figma 이미지가 없으면 기본 표시
                 previewContent.innerHTML = `
