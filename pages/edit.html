@@ -646,7 +646,49 @@
             }
         }
 
-        // 노드 콘텐츠 업데이트
+        // 실시간 입력 감지 설정
+        function setupRealtimeInputListeners() {
+            // 텍스트 입력 필드들에 실시간 이벤트 리스너 추가
+            const textInputs = document.querySelectorAll('input[type="text"], textarea');
+            
+            textInputs.forEach(input => {
+                const nodeId = input.getAttribute('data-node-id');
+                const nodeType = input.getAttribute('data-node-type');
+                
+                if (nodeId && nodeType) {
+                    // 실시간 입력 감지 (디바운싱 적용)
+                    let timeoutId;
+                    input.addEventListener('input', function() {
+                        clearTimeout(timeoutId);
+                        timeoutId = setTimeout(() => {
+                            updateNodeContent(nodeId, nodeType, this.value);
+                        }, 500); // 0.5초 지연
+                    });
+                    
+                    console.log('✅ [setupRealtimeInputListeners] 리스너 추가:', { nodeId, nodeType });
+                }
+            });
+            
+            // 이미지 업로드 필드들에 이벤트 리스너 추가
+            const imageInputs = document.querySelectorAll('input[type="file"]');
+            
+            imageInputs.forEach(input => {
+                const nodeId = input.getAttribute('data-node-id');
+                const nodeType = input.getAttribute('data-node-type');
+                
+                if (nodeId && nodeType) {
+                    input.addEventListener('change', function() {
+                        if (this.files && this.files[0]) {
+                            updateNodeContent(nodeId, nodeType, this.files[0]);
+                        }
+                    });
+                    
+                    console.log('✅ [setupRealtimeInputListeners] 이미지 리스너 추가:', { nodeId, nodeType });
+                }
+            });
+        }
+
+        // 노드 콘텐츠 업데이트 (실시간 Figma 동기화)
         function updateNodeContent(nodeId, nodeType, value) {
             console.log('🔄 [updateNodeContent]', { nodeId, nodeType, value });
             
@@ -661,8 +703,63 @@
             
             window.currentContentUpdates[nodeId][nodeType] = value;
             
-            // 실시간 미리보기 업데이트
+            // 실시간 Figma 업데이트
+            updateFigmaInRealTime(nodeId, nodeType, value);
+            
+            // 미리보기 업데이트
             updatePreview(nodeId, nodeType, value);
+        }
+
+        // 실시간 Figma 업데이트
+        async function updateFigmaInRealTime(nodeId, nodeType, value) {
+            try {
+                console.log('🔄 [updateFigmaInRealTime] 시작:', { nodeId, nodeType, value });
+                
+                const userId = window.Clerk?.user?.id || 'anonymous';
+                
+                // 즉시 업데이트할 콘텐츠 준비
+                const updateData = {
+                    [nodeId]: {
+                        [nodeType]: value
+                    }
+                };
+                
+                // Figma API로 실시간 업데이트
+                const response = await fetch(`${API_BASE}/update-figma-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        templateId: templateInfo.templateId,
+                        userId: userId,
+                        contentUpdates: updateData
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API 오류: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('✅ [updateFigmaInRealTime] 성공:', result);
+                    
+                    // 미리보기 새로고침 (약간의 지연 후)
+                    setTimeout(() => {
+                        refreshFigmaPreview();
+                    }, 1000);
+                    
+                    showToast(`${nodeId} 업데이트 완료!`, 'success');
+                } else {
+                    throw new Error(result.error || '업데이트 실패');
+                }
+                
+            } catch (error) {
+                console.error('❌ [updateFigmaInRealTime] 오류:', error);
+                showToast(`업데이트 실패: ${error.message}`, 'error');
+            }
         }
 
         // 미리보기 업데이트
@@ -886,6 +983,9 @@
             
             // 편집 섹션 생성
             generateEditSections();
+            
+            // 실시간 입력 리스너 설정
+            setupRealtimeInputListeners();
             
             // 미리보기 업데이트
             updatePreview();
