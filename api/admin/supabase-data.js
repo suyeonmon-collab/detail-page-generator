@@ -1,16 +1,17 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Supabase 클라이언트 초기화
+// Supabase 클라이언트 초기화 (관리자용 - SERVICE_KEY 사용)
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
+if (!supabaseUrl || !supabaseServiceKey) {
     console.error('❌ Supabase 환경 변수가 설정되지 않았습니다.');
     console.error('SUPABASE_URL:', supabaseUrl ? '설정됨' : '없음');
-    console.error('SUPABASE_ANON_KEY:', supabaseKey ? '설정됨' : '없음');
+    console.error('SUPABASE_SERVICE_KEY:', supabaseServiceKey ? '설정됨' : '없음');
+    throw new Error('Supabase 환경 변수가 설정되지 않았습니다.');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 module.exports = async function handler(req, res) {
     // CORS 헤더
@@ -22,6 +23,12 @@ module.exports = async function handler(req, res) {
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
+
+    // 디버깅 로그
+    console.log('🔵 [Supabase API] 요청 시작:', req.method);
+    console.log('🔵 [Supabase API] 환경 변수 확인:');
+    console.log('  - SUPABASE_URL:', process.env.SUPABASE_URL ? '설정됨' : '없음');
+    console.log('  - SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '설정됨' : '없음');
 
     try {
         if (req.method === 'GET') {
