@@ -66,6 +66,12 @@ export default async function handler(req, res) {
                 const clonedFileName = cloneData.file.name;
                 const clonedFileUrl = `https://www.figma.com/file/${clonedFileKey}?node-id=${template.figma_node_id}`;
                 
+                console.log('🟢 [Figma Clone] 실제 복제된 파일 정보:', {
+                    clonedFileKey,
+                    clonedFileName,
+                    clonedFileUrl
+                });
+                
                 // 3. 복제된 파일 정보를 Supabase에 저장
                 const { data: userFile, error: saveError } = await supabase
                     .from('user_figma_files')
@@ -113,10 +119,19 @@ export default async function handler(req, res) {
                 console.warn('⚠️ [Figma Clone] 실제 복제 실패, 시뮬레이션 모드로 전환:', errorText);
                 
                 // 실제 복제가 실패하면 시뮬레이션 모드
+                // URL에서 실제 파일 키 추출
+                const actualFileKey = template.figma_file_key; // 원본 파일 키 사용
                 const timestamp = Date.now();
-                const clonedFileKey = `${template.figma_file_key}-${userId}-${timestamp}`;
+                const clonedFileKey = `${actualFileKey}-${userId}-${timestamp}`;
                 const clonedFileName = `${templateName || template.name} - ${userId}`;
-                const clonedFileUrl = `https://www.figma.com/file/${template.figma_file_key}?node-id=${template.figma_node_id}`;
+                const clonedFileUrl = `https://www.figma.com/file/${actualFileKey}?node-id=${template.figma_node_id}`;
+                
+                console.log('🟡 [Figma Clone] 시뮬레이션 모드 파일 정보:', {
+                    actualFileKey,
+                    clonedFileKey,
+                    clonedFileName,
+                    clonedFileUrl
+                });
                 
                 const { data: userFile, error: saveError } = await supabase
                     .from('user_figma_files')
@@ -124,7 +139,7 @@ export default async function handler(req, res) {
                         user_id: userId,
                         template_id: templateId,
                         original_file_key: template.figma_file_key,
-                        cloned_file_key: clonedFileKey,
+                        cloned_file_key: actualFileKey, // 실제 파일 키 사용
                         cloned_file_url: clonedFileUrl,
                         file_name: clonedFileName,
                         status: 'active',
@@ -150,7 +165,7 @@ export default async function handler(req, res) {
                     message: 'Figma 파일 복제가 시뮬레이션 모드로 완료되었습니다 (실제 복제는 실패)',
                     data: {
                         fileId: userFile.id,
-                        clonedFileKey: clonedFileKey,
+                        clonedFileKey: actualFileKey, // 실제 파일 키 사용
                         clonedFileUrl: clonedFileUrl,
                         fileName: clonedFileName,
                         templateId: templateId,
