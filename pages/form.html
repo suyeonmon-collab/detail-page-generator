@@ -222,6 +222,81 @@
             transform: none;
         }
 
+        .ai-option-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            border: 1px solid #e9ecef;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .radio-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .radio-option input[type="radio"] {
+            margin: 0;
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+
+        .radio-option input[type="radio"]:checked + .radio-label {
+            color: #667eea;
+        }
+
+        .radio-option:has(input[type="radio"]:checked) {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .radio-label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .radio-label strong {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .radio-label small {
+            font-size: 12px;
+            color: #718096;
+            line-height: 1.4;
+        }
+
         .error-message {
             background: #fed7d7;
             border: 1px solid #fc8181;
@@ -327,9 +402,32 @@
                     <div class="help-text">최종 파일을 받을 이메일 주소를 입력하세요</div>
                 </div>
 
+                <!-- AI 콘텐츠 생성 선택 -->
+                <div class="ai-option-section">
+                    <div class="section-title">
+                        <span>🤖 AI 콘텐츠 생성</span>
+                    </div>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="aiOption" value="yes" checked>
+                            <span class="radio-label">
+                                <strong>AI로 콘텐츠 생성하기</strong>
+                                <small>입력한 정보를 바탕으로 AI가 자동으로 콘텐츠를 생성합니다</small>
+                            </span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="aiOption" value="no">
+                            <span class="radio-label">
+                                <strong>직접 편집하기</strong>
+                                <small>입력한 내용을 그대로 사용하여 디자인을 편집합니다</small>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
                 <div class="submit-section">
                     <button type="submit" class="submit-btn" id="submitBtn">
-                        🎨 AI 콘텐츠 생성하기
+                        🎨 디자인 편집하기
                     </button>
                 </div>
             </form>
@@ -578,6 +676,10 @@
             e.preventDefault();
 
             const formData = new FormData(e.target);
+            const aiOption = formData.get('aiOption');
+            
+            console.log('🔵 [handleSubmit] AI 옵션:', aiOption);
+
             const data = {
                 templateId: templateInfo.templateId,
                 categoryId: templateInfo.categoryId,
@@ -585,7 +687,8 @@
                 targetAudience: formData.get('targetAudience'),
                 customerEmail: formData.get('customerEmail'),
                 content: {},
-                images: imageData
+                images: imageData,
+                aiOption: aiOption
             };
 
             // 모든 필드 데이터 수집
@@ -602,37 +705,68 @@
             document.getElementById('submitBtn').disabled = true;
 
             try {
-                const response = await fetch(`${API_BASE}/generate-content`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
+                if (aiOption === 'yes') {
+                    // AI 콘텐츠 생성
+                    console.log('🤖 [handleSubmit] AI 콘텐츠 생성 시작');
+                    
+                    const response = await fetch(`${API_BASE}/generate-content`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || '서버 오류가 발생했습니다.');
-                }
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || '서버 오류가 발생했습니다.');
+                    }
 
-                const result = await response.json();
-                console.log('AI generation result:', result);
+                    const result = await response.json();
+                    console.log('AI generation result:', result);
 
-                if (result.success) {
+                    if (result.success) {
+                        // 세션에 결과 저장
+                        sessionStorage.setItem('aiResult', JSON.stringify(result));
+                        
+                        // 편집 화면으로 이동
+                        window.location.href = `./edit.html?requestId=${result.requestId}`;
+                    } else {
+                        throw new Error(result.error || 'AI 생성에 실패했습니다.');
+                    }
+                } else {
+                    // 직접 편집 (AI 없이)
+                    console.log('✏️ [handleSubmit] 직접 편집 모드');
+                    
+                    // 직접 편집용 결과 생성
+                    const directResult = {
+                        success: true,
+                        requestId: generateRequestId(),
+                        aiContent: data.content,
+                        previewUrl: templateInfo.previewImage,
+                        message: '직접 편집 모드로 이동합니다.',
+                        templateInfo: templateInfo,
+                        aiOption: 'no'
+                    };
+
                     // 세션에 결과 저장
-                    sessionStorage.setItem('aiResult', JSON.stringify(result));
+                    sessionStorage.setItem('aiResult', JSON.stringify(directResult));
                     
                     // 편집 화면으로 이동
-                    window.location.href = `./edit.html?requestId=${result.requestId}`;
-                } else {
-                    throw new Error(result.error || '콘텐츠 생성에 실패했습니다.');
+                    window.location.href = `./edit.html?requestId=${directResult.requestId}`;
                 }
             } catch (error) {
                 console.error('Error:', error);
                 showError(error.message);
+            } finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
                 document.getElementById('submitBtn').disabled = false;
             }
+        }
+
+        // 요청 ID 생성 함수
+        function generateRequestId() {
+            return 'direct-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         }
 
         // 에러 표시

@@ -364,9 +364,22 @@
                 <button class="btn btn-primary" id="previewBtn" onclick="previewDesign()">
                     👀 미리보기 보기
                 </button>
+                
+                <!-- AI 옵션에 따른 버튼들 -->
+                <div id="aiButtons" style="display: none;">
+                    <button class="btn btn-success" id="aiGenerateBtn" onclick="generateAIContent()">
+                        🤖 AI 컨텐츠 생성하기
+                    </button>
+                    <button class="btn btn-primary" id="paymentBtn" onclick="proceedToPayment()">
+                        💳 결제하기
+                    </button>
+                </div>
+                
+                <!-- 기존 디자인 생성 버튼 (AI 모드가 아닐 때) -->
                 <button class="btn btn-primary" id="submitBtn" onclick="submitDesign()" style="display: none;">
                     🎨 디자인 생성하기 (결제 전)
                 </button>
+                
                 <button class="btn btn-secondary" onclick="resetForm()">
                     ↺ 다시 시작
                 </button>
@@ -482,6 +495,9 @@
             console.log('🔵 [init] editedContent:', editedContent);
             console.log('🔵 [init] editedContent keys:', Object.keys(editedContent));
             
+            // AI 옵션에 따른 UI 설정
+            setupUIForAIOption();
+            
             // Figma 이미지 로드
             await loadFigmaImage();
             
@@ -496,6 +512,119 @@
             
             // 복사 방지
             preventCopy();
+        }
+
+        // AI 옵션에 따른 UI 설정
+        function setupUIForAIOption() {
+            const aiOption = aiResult.aiOption || 'yes'; // 기본값은 AI 사용
+            console.log('🔵 [setupUIForAIOption] AI 옵션:', aiOption);
+            
+            if (aiOption === 'yes') {
+                // AI 모드: AI 컨텐츠 생성 + 결제하기 버튼 표시
+                document.getElementById('aiButtons').style.display = 'block';
+                document.getElementById('submitBtn').style.display = 'none';
+            } else {
+                // 직접 편집 모드: 기존 디자인 생성 버튼 표시
+                document.getElementById('aiButtons').style.display = 'none';
+                document.getElementById('submitBtn').style.display = 'block';
+            }
+        }
+
+        // AI 컨텐츠 생성 함수
+        async function generateAIContent() {
+            console.log('🤖 [generateAIContent] 시작');
+            
+            const confirmGenerate = confirm(
+                '🤖 AI로 컨텐츠를 생성하시겠습니까?\n\n' +
+                '✅ 현재 입력한 내용을 바탕으로 AI가 더 매력적인 텍스트를 생성합니다\n' +
+                '✅ 생성된 내용은 미리보기에서 확인할 수 있습니다\n' +
+                '✅ 만족하지 않으시면 언제든 다시 편집할 수 있습니다\n\n' +
+                '계속하시겠습니까?'
+            );
+            
+            if (!confirmGenerate) {
+                console.log('🔴 [generateAIContent] 사용자가 취소함');
+                return;
+            }
+            
+            try {
+                // 로딩 표시
+                const btn = document.getElementById('aiGenerateBtn');
+                const originalText = btn.textContent;
+                btn.textContent = '🤖 AI 생성 중...';
+                btn.disabled = true;
+                
+                // AI 컨텐츠 생성 요청
+                const response = await fetch(`${API_BASE}/generate-content`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        templateId: templateInfo.templateId,
+                        categoryId: templateInfo.categoryId,
+                        templateName: templateInfo.name,
+                        content: editedContent,
+                        images: newImageData,
+                        aiOption: 'yes'
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'AI 생성에 실패했습니다.');
+                }
+                
+                const result = await response.json();
+                console.log('🤖 [generateAIContent] AI 결과:', result);
+                
+                if (result.success && result.aiContent) {
+                    // AI 생성된 내용으로 업데이트
+                    editedContent = result.aiContent;
+                    
+                    // 편집 섹션 다시 생성
+                    generateEditSections();
+                    
+                    // 미리보기 업데이트
+                    updatePreview();
+                    
+                    showToast('AI 컨텐츠가 성공적으로 생성되었습니다!', 'success');
+                } else {
+                    throw new Error(result.error || 'AI 컨텐츠 생성에 실패했습니다.');
+                }
+                
+            } catch (error) {
+                console.error('🔴 [generateAIContent] 오류:', error);
+                showToast('AI 컨텐츠 생성 중 오류가 발생했습니다: ' + error.message, 'error');
+            } finally {
+                // 버튼 복원
+                const btn = document.getElementById('aiGenerateBtn');
+                btn.textContent = '🤖 AI 컨텐츠 생성하기';
+                btn.disabled = false;
+            }
+        }
+
+        // 결제하기 함수
+        function proceedToPayment() {
+            console.log('💳 [proceedToPayment] 시작');
+            
+            const confirmPayment = confirm(
+                '💳 결제를 진행하시겠습니까?\n\n' +
+                '✅ 현재 편집한 내용으로 최종 디자인을 생성합니다\n' +
+                '✅ 워터마크 없는 고품질 이미지를 다운로드할 수 있습니다\n' +
+                '✅ 결제 후 이메일로 최종 파일을 받으실 수 있습니다\n\n' +
+                '계속하시겠습니까?'
+            );
+            
+            if (!confirmPayment) {
+                console.log('🔴 [proceedToPayment] 사용자가 취소함');
+                return;
+            }
+            
+            // 결제 페이지로 이동
+            const paymentUrl = `./payment.html?requestId=${aiResult.requestId}`;
+            console.log('🟢 [proceedToPayment] 결제 페이지로 이동:', paymentUrl);
+            window.location.href = paymentUrl;
         }
 
         // 편집 섹션 생성
