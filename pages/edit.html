@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>디자인 편집 - 신디야</title>
+    
+    <!-- Clerk Authentication -->
+    <script async crossorigin="anonymous" 
+        data-clerk-publishable-key="pk_test_bWludC1nZWNrby02Mi5jbGVyay5hY2NvdW50cy5kZXYk" 
+        src="https://mint-gecko-62.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js" 
+        type="text/javascript">
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -766,15 +774,20 @@
                 if (result.success) {
                     console.log('✅ [updateFigmaInRealTime] 성공:', result);
                     
-                    // 미리보기 새로고침 (Figma Plugin 처리 시간 고려하여 더 긴 지연)
+                    // 미리보기 새로고침 (더 빠른 반응을 위해 간격 단축)
                     setTimeout(() => {
                         refreshFigmaPreview();
-                    }, 2000); // 2초로 증가
+                    }, 1000); // 1초로 단축
                     
                     // 추가 새로고침 (Plugin이 처리 완료된 후)
                     setTimeout(() => {
                         refreshFigmaPreview();
-                    }, 5000); // 5초 후 한 번 더
+                    }, 3000); // 3초 후 한 번 더
+                    
+                    // 최종 새로고침 (확실한 동기화)
+                    setTimeout(() => {
+                        refreshFigmaPreview();
+                    }, 6000); // 6초 후 최종 확인
                     
                     showToast(`${nodeId} 업데이트 완료!`, 'success');
                 } else {
@@ -1028,8 +1041,24 @@
             }
         }
 
+        // Clerk 초기화
+        async function initClerk() {
+            try {
+                if (window.Clerk) {
+                    await window.Clerk.load();
+                    console.log('✅ [Clerk] 로드 완료');
+                } else {
+                    console.log('⚠️ [Clerk] Clerk가 아직 로드되지 않았습니다');
+                }
+            } catch (error) {
+                console.error('❌ [Clerk] 초기화 실패:', error);
+            }
+        }
+
         // 페이지 초기화
         async function init() {
+            // Clerk 초기화 먼저 실행
+            await initClerk();
             if (!aiResult.requestId) {
                 alert('세션 정보가 없습니다.');
                 history.back();

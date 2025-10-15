@@ -30,6 +30,10 @@ figma.on("run", ({ command }) => {
   startAutoPolling();
 });
 
+// 플러그인이 로드되자마자 자동 폴링 시작
+console.log('🚀 [Plugin] 플러그인 로드됨 - 자동 폴링 시작');
+startAutoPolling();
+
 // 자동 폴링 시작
 function startAutoPolling() {
   if (autoPollingInterval) {
@@ -43,9 +47,9 @@ function startAutoPolling() {
     } catch (error) {
       console.error('❌ [자동 폴링] 오류:', error);
     }
-  }, 10000); // 10초마다 실행
+  }, 5000); // 5초마다 실행 (더 빠른 반응)
   
-  console.log('✅ [자동 폴링] 시작됨 (10초 간격)');
+  console.log('✅ [자동 폴링] 시작됨 (5초 간격)');
 }
 
 // 자동 폴링 중지
