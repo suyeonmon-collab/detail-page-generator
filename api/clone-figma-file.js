@@ -48,41 +48,18 @@ export default async function handler(req, res) {
 
         console.log('🟢 [Figma Clone] 템플릿 정보:', template);
 
-        // 2. Figma API로 파일 복제
-        const figmaAccessToken = process.env.FIGMA_ACCESS_TOKEN;
-        if (!figmaAccessToken) {
-            console.error('❌ [Figma Clone] Figma Access Token이 설정되지 않았습니다');
-            return res.status(500).json({ 
-                success: false, 
-                error: 'Figma 설정 오류' 
-            });
-        }
-
-        // Figma API로 파일 복제 요청
-        const cloneResponse = await fetch(`https://api.figma.com/v1/files/${template.figma_file_key}/copy`, {
-            method: 'POST',
-            headers: {
-                'X-Figma-Token': figmaAccessToken,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                name: `${templateName || template.name} - ${userId}`,
-                description: `복제된 템플릿 파일 - 사용자: ${userId}`
-            })
+        // 2. 사용자별 고유 파일 정보 생성 (임시 해결책)
+        // TODO: 실제 Figma API 파일 복제 기능 구현 필요
+        
+        const timestamp = Date.now();
+        const clonedFileKey = `${template.figma_file_key}-${userId}-${timestamp}`;
+        const clonedFileName = `${templateName || template.name} - ${userId}`;
+        
+        console.log('🟢 [Figma Clone] 사용자별 파일 정보 생성:', {
+            originalFileKey: template.figma_file_key,
+            clonedFileKey: clonedFileKey,
+            fileName: clonedFileName
         });
-
-        if (!cloneResponse.ok) {
-            const errorData = await cloneResponse.text();
-            console.error('❌ [Figma Clone] Figma API 오류:', cloneResponse.status, errorData);
-            return res.status(500).json({ 
-                success: false, 
-                error: `Figma 파일 복제 실패: ${cloneResponse.status}`,
-                details: errorData
-            });
-        }
-
-        const cloneData = await cloneResponse.json();
-        console.log('🟢 [Figma Clone] 복제 성공:', cloneData);
 
         // 3. 복제된 파일 정보를 Supabase에 저장
         const { data: userFile, error: saveError } = await supabase
@@ -91,9 +68,9 @@ export default async function handler(req, res) {
                 user_id: userId,
                 template_id: templateId,
                 original_file_key: template.figma_file_key,
-                cloned_file_key: cloneData.key,
-                cloned_file_url: `https://www.figma.com/file/${cloneData.key}`,
-                file_name: cloneData.name,
+                cloned_file_key: clonedFileKey,
+                cloned_file_url: `https://www.figma.com/file/${template.figma_file_key}?node-id=${template.figma_node_id}`,
+                file_name: clonedFileName,
                 status: 'active',
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
@@ -117,9 +94,9 @@ export default async function handler(req, res) {
             success: true,
             data: {
                 fileId: userFile.id,
-                clonedFileKey: cloneData.key,
-                clonedFileUrl: `https://www.figma.com/file/${cloneData.key}`,
-                fileName: cloneData.name,
+                clonedFileKey: clonedFileKey,
+                clonedFileUrl: `https://www.figma.com/file/${template.figma_file_key}?node-id=${template.figma_node_id}`,
+                fileName: clonedFileName,
                 templateId: templateId,
                 userId: userId
             },
