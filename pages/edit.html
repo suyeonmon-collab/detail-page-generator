@@ -1024,8 +1024,8 @@
                     return null;
                 }
                 
-                // 플러그인 자동 실행을 위한 강화된 URL 파라미터 추가
-                const pluginUrl = `${figmaUrl}&plugin=auto-sync&auto-start=true&plugin-id=auto-sync-plugin&auto-execute=true&force-plugin=true`;
+                // 플러그인 자동 실행을 위한 최강화된 URL 파라미터 추가
+                const pluginUrl = `${figmaUrl}#plugin=auto-sync&auto-start=true&plugin-id=auto-sync-plugin&auto-execute=true&force-plugin=true&plugin-command=run&plugin-args=auto-sync`;
                 
                 // 거의 숨기기 수준의 작은 창으로 Figma 파일 열기
                 const figmaWindow = window.open(pluginUrl, '_blank', 'width=1,height=1,left=-1000,top=-1000');

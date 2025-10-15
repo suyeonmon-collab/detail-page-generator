@@ -21,6 +21,8 @@ if (typeof figma === 'undefined') {
 let autoPollingInterval = null;
 
 figma.on("run", ({ command }) => {
+  console.log('🚀 [figma.on("run")] 플러그인 실행됨 - command:', command);
+  
   // UI를 숨기고 백그라운드에서만 작동
   figma.showUI(__html__, { width: 1, height: 1, visible: false });
   
@@ -32,6 +34,16 @@ figma.on("run", ({ command }) => {
   
   // URL 파라미터 감지하여 자동 실행
   checkForAutoExecution();
+  
+  // 즉시 업데이트 요청 처리 시도
+  setTimeout(async () => {
+    try {
+      console.log('🚀 [figma.on("run")] 즉시 업데이트 요청 처리 시도');
+      await checkAndProcessUpdateRequests();
+    } catch (error) {
+      console.error('❌ [figma.on("run")] 즉시 처리 오류:', error);
+    }
+  }, 500);
   
   console.log('🚀 [Plugin] 백그라운드 모드로 실행됨');
 });
@@ -90,26 +102,47 @@ function checkForAutoExecution() {
   }
 }
 
-// 플러그인이 로드되자마자 자동 폴링 시작 (강화된 버전)
-console.log('🚀 [Plugin] 플러그인 로드됨 - 자동 폴링 시작');
-startAutoPolling();
+// 플러그인 로드 시 즉시 실행 (최우선)
+console.log('🚀 [Plugin] 플러그인 코드 로드됨 - 즉시 실행 시작');
 
-// 추가적인 자동 실행 시도 (플러그인 로드 직후)
+// 즉시 자동 실행 시도
 setTimeout(() => {
-  console.log('🚀 [Plugin] 추가 자동 실행 시도');
-  checkForAutoExecution();
+  console.log('🚀 [Plugin] 즉시 자동 실행 시도');
+  checkAndProcessUpdateRequests();
+}, 500);
+
+setTimeout(() => {
+  console.log('🚀 [Plugin] 1초 후 자동 실행 시도');
+  checkAndProcessUpdateRequests();
+}, 1000);
+
+setTimeout(() => {
+  console.log('🚀 [Plugin] 2초 후 자동 실행 시도');
+  checkAndProcessUpdateRequests();
 }, 2000);
 
 setTimeout(() => {
-  console.log('🚀 [Plugin] 두 번째 추가 자동 실행 시도');
-  checkForAutoExecution();
+  console.log('🚀 [Plugin] 3초 후 자동 실행 시도');
+  checkAndProcessUpdateRequests();
+}, 3000);
+
+setTimeout(() => {
+  console.log('🚀 [Plugin] 5초 후 자동 실행 시도');
+  checkAndProcessUpdateRequests();
 }, 5000);
 
-// 자동 폴링 시작
+setTimeout(() => {
+  console.log('🚀 [Plugin] 10초 후 자동 실행 시도');
+  checkAndProcessUpdateRequests();
+}, 10000);
+
+// 자동 폴링 시작 (더 강력한 버전)
 function startAutoPolling() {
   if (autoPollingInterval) {
     clearInterval(autoPollingInterval);
   }
+  
+  console.log('🔄 [startAutoPolling] 자동 폴링 시작 (5초 간격)');
   
   autoPollingInterval = setInterval(async () => {
     try {
@@ -118,7 +151,17 @@ function startAutoPolling() {
     } catch (error) {
       console.error('❌ [자동 폴링] 오류:', error);
     }
-  }, 5000); // 5초마다 실행 (더 빠른 반응)
+  }, 5000); // 5초마다 실행
+  
+  // 즉시 한 번 실행
+  setTimeout(async () => {
+    try {
+      console.log('🔄 [즉시 폴링] 업데이트 요청 확인 중...');
+      await checkAndProcessUpdateRequests();
+    } catch (error) {
+      console.error('❌ [즉시 폴링] 오류:', error);
+    }
+  }, 1000);
   
   console.log('✅ [자동 폴링] 시작됨 (5초 간격)');
 }
