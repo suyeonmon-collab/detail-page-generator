@@ -38,8 +38,33 @@ async function loadData() {
             throw new Error(result.error || '데이터 로드 실패');
         }
 
-        categories = result.data.categories || [];
-        templates = result.data.templates || [];
+        // Supabase 데이터를 관리자 페이지 형식으로 변환
+        categories = (result.data.categories || []).map(cat => ({
+            id: cat.id,
+            name: cat.name,
+            description: cat.description,
+            icon: cat.icon,
+            color: cat.color,
+            templates: cat.templates,
+            created_at: cat.created_at,
+            updated_at: cat.updated_at
+        }));
+        
+        templates = (result.data.templates || []).map(template => ({
+            templateId: template.template_id,
+            categoryId: template.category_id,
+            name: template.name,
+            description: template.description,
+            previewImage: template.preview_image,
+            figmaUrl: template.figma_url,
+            figmaNodeId: template.figma_node_id,
+            figmaFileKey: template.figma_file_key,
+            price: template.price,
+            enabled: template.enabled,
+            nodes: template.nodes,
+            created_at: template.created_at,
+            updated_at: template.updated_at
+        }));
 
         console.log('✅ [Admin] 데이터 로드 성공');
         console.log(`📊 카테고리: ${categories.length}개, 템플릿: ${templates.length}개`);
