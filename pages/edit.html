@@ -475,6 +475,13 @@
                 // 기본 이미지로 fallback
                 figmaImageUrl = templateInfo.previewImage || 'https://placehold.co/1280x720/cccccc/ffffff?text=No+Preview';
                 console.log('🟡 [loadFigmaImage] Fallback 이미지:', figmaImageUrl);
+                
+                // 사용자에게 친화적인 알림 (한 번만 표시)
+                if (!window.figmaErrorShown) {
+                    showToast('📝 템플릿 미리보기 이미지를 사용합니다. 관리자 페이지에서 Figma 연결을 설정할 수 있습니다.', 'info');
+                    window.figmaErrorShown = true;
+                }
+                
                 return figmaImageUrl;
             }
         }
@@ -891,6 +898,67 @@
                 }
             });
         }
+
+        // Toast 메시지 표시
+        function showToast(message, type = 'info') {
+            // 기존 toast 제거
+            const existingToast = document.querySelector('.toast');
+            if (existingToast) {
+                existingToast.remove();
+            }
+
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <span class="toast-icon">${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                    <span class="toast-message">${message}</span>
+                </div>
+            `;
+
+            // 스타일 추가
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                font-size: 14px;
+                font-weight: 500;
+                max-width: 400px;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            document.body.appendChild(toast);
+
+            // 4초 후 자동 제거
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // CSS 애니메이션 추가
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
 
         // 텍스트 편집 기능
         function enableTextEdit() {
