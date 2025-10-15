@@ -515,9 +515,11 @@
             }
 
             try {
-                // Figma 파일 URL 생성 (새 창으로 열기)
-                const figmaFileUrl = `https://www.figma.com/file/${clonedFile.clonedFileKey}?node-id=${templateInfo.figmaNodeId}`;
+                // Figma 파일 URL 생성 (원본 파일 키 사용)
+                const originalFileKey = templateInfo.figmaFileKey || 'cwM0xdmxJNRijZ9iUPdKpf';
+                const figmaFileUrl = `https://www.figma.com/file/${originalFileKey}?node-id=${templateInfo.figmaNodeId}`;
                 console.log('🔗 [loadFigmaPlugin] Figma 파일 URL:', figmaFileUrl);
+                console.log('🔗 [loadFigmaPlugin] 원본 파일 키:', originalFileKey);
                 
                 // 새 창으로 Figma 파일 열기
                 const figmaWindow = window.open(figmaFileUrl, '_blank', 'width=1200,height=800');
@@ -550,7 +552,7 @@
                         <h3>❌ Figma 파일 열기 실패</h3>
                         <p>오류: ${error.message}</p>
                         <p>수동으로 Figma 파일을 열어주세요:</p>
-                        <button onclick="window.open('https://www.figma.com/file/${clonedFile.clonedFileKey}', '_blank')" 
+                        <button onclick="window.open('https://www.figma.com/file/${templateInfo.figmaFileKey || 'cwM0xdmxJNRijZ9iUPdKpf'}', '_blank')" 
                                 style="background: #6366f1; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;">
                             🔗 Figma 파일 열기
                         </button>
