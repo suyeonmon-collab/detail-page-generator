@@ -308,24 +308,29 @@ function extractFigmaInfo() {
         if (url.hostname.includes('figma.com')) {
             const pathParts = url.pathname.split('/').filter(part => part);
             
-            console.log('🔍 [extractFigmaInfo] URL 파싱:', {
-                hostname: url.hostname,
-                pathname: url.pathname,
-                pathParts: pathParts,
-                searchParams: Object.fromEntries(url.searchParams)
-            });
+        console.log('🔍 [extractFigmaInfo] URL 파싱 시작:', {
+            originalUrl: figmaUrl,
+            normalizedUrl: normalizedUrl,
+            hostname: url.hostname,
+            pathname: url.pathname,
+            pathParts: pathParts,
+            searchParams: Object.fromEntries(url.searchParams)
+        });
             
             // /file/ID 형식
             if (pathParts[0] === 'file' && pathParts[1]) {
                 fileId = pathParts[1];
+                console.log('✅ [extractFigmaInfo] /file/ 형식으로 파일 ID 추출:', fileId);
             }
             // /design/ID 형식 (한글 파일명 포함)
             else if (pathParts[0] === 'design' && pathParts[1]) {
                 fileId = pathParts[1];
+                console.log('✅ [extractFigmaInfo] /design/ 형식으로 파일 ID 추출:', fileId);
             }
             // 직접 ID 형식
             else if (pathParts[0] && pathParts[0].length > 10) {
                 fileId = pathParts[0];
+                console.log('✅ [extractFigmaInfo] 직접 ID 형식으로 파일 ID 추출:', fileId);
             }
             
             // Node ID 추출 (다양한 파라미터명 지원)
@@ -339,8 +344,8 @@ function extractFigmaInfo() {
         if (!fileId) {
             console.log('🔍 [extractFigmaInfo] 정규식으로 재시도');
             
-            // Figma 파일 ID 패턴: 20자리 영숫자 문자열
-            const fileIdPattern = /\/[a-zA-Z0-9]{20,}/;
+            // Figma 파일 ID 패턴: 정확히 20자리 영숫자 문자열
+            const fileIdPattern = /\/[a-zA-Z0-9]{20}/;
             const match = figmaUrl.match(fileIdPattern);
             
             if (match) {
@@ -363,7 +368,12 @@ function extractFigmaInfo() {
         // 전역 변수에 저장
         currentFigmaFileKey = fileId;
         
-        console.log('🔍 [Admin] Figma 정보 추출:', { fileId, nodeId, originalUrl: figmaUrl });
+        console.log('🎉 [extractFigmaInfo] 최종 결과:', { 
+            fileId, 
+            nodeId, 
+            originalUrl: figmaUrl,
+            success: true 
+        });
         
     } catch (error) {
         console.error('❌ [Admin] Figma URL 파싱 오류:', error);
