@@ -115,13 +115,36 @@ async function analyzeLayers() {
     
     // 모든 노드 수집
     const allNodes = page.findAll();
+    console.log('📊 [Admin Plugin] 총 노드 수:', allNodes.length);
     
-    for (const node of allNodes) {
-      const layerInfo = await analyzeNode(node);
-      if (layerInfo) {
-        // 모든 편집 가능한 레이어를 자동으로 활성화
-        layerInfo.editable = true;
-        layers.push(layerInfo);
+    let processedCount = 0;
+    const maxNodes = Math.min(allNodes.length, 100); // 최대 100개 노드만 처리
+    
+    for (let i = 0; i < maxNodes; i++) {
+      const node = allNodes[i];
+      try {
+        const layerInfo = await analyzeNode(node);
+        if (layerInfo) {
+          // 모든 편집 가능한 레이어를 자동으로 활성화
+          layerInfo.editable = true;
+          layers.push(layerInfo);
+          console.log(`✅ [Admin Plugin] 레이어 분석 완료: ${layerInfo.name} (${layerInfo.type})`);
+        }
+        processedCount++;
+        
+        // 진행 상황 업데이트 (매 5개마다)
+        if (processedCount % 5 === 0) {
+          console.log(`📈 [Admin Plugin] 분석 진행: ${processedCount}/${maxNodes}`);
+          figma.notify(`레이어 분석 중... ${processedCount}/${maxNodes}`);
+        }
+        
+        // 타임아웃 방지를 위한 짧은 대기
+        if (processedCount % 20 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 10));
+        }
+      } catch (nodeError) {
+        console.warn(`⚠️ [Admin Plugin] 노드 분석 실패 (${node.id}):`, nodeError);
+        processedCount++;
       }
     }
     
@@ -164,10 +187,10 @@ async function analyzeNode(node) {
       editType: getDefaultEditType(node),
       currentValue: getCurrentValue(node),
       position: {
-        x: node.x,
-        y: node.y,
-        width: node.width,
-        height: node.height
+        x: node.x || 0,
+        y: node.y || 0,
+        width: node.width || 0,
+        height: node.height || 0
       },
       styles: await extractStyles(node)
     };
@@ -230,30 +253,31 @@ async function extractStyles(node) {
   
   try {
     if (node.type === 'TEXT') {
-      // 텍스트 스타일
+      // 텍스트 스타일 - 안전한 접근
       styles.fontSize = node.fontSize || 16;
-      styles.fontFamily = node.fontName ? `${node.fontName.family} ${node.fontName.style}` : 'Unknown';
+      styles.fontFamily = (node.fontName && node.fontName.family) ? 
+        `${node.fontName.family} ${node.fontName.style || ''}` : 'Unknown';
       styles.textAlignHorizontal = node.textAlignHorizontal || 'LEFT';
       styles.textAlignVertical = node.textAlignVertical || 'TOP';
       styles.letterSpacing = node.letterSpacing || { value: 0, unit: 'PIXELS' };
       styles.lineHeight = node.lineHeight || { value: 1, unit: 'AUTO' };
       
-      // 색상 정보
-      if (node.fills && node.fills.length > 0) {
+      // 색상 정보 - 안전한 접근
+      if (node.fills && Array.isArray(node.fills) && node.fills.length > 0) {
         const fill = node.fills[0];
-        if (fill.type === 'SOLID') {
+        if (fill && fill.type === 'SOLID' && fill.color) {
           styles.color = rgbToHex(fill.color);
         }
       }
     } else if (['RECTANGLE', 'ELLIPSE', 'POLYGON', 'STAR'].includes(node.type)) {
-      // 도형 스타일
-      styles.fills = node.fills || [];
-      styles.strokes = node.strokes || [];
+      // 도형 스타일 - 안전한 접근
+      styles.fills = Array.isArray(node.fills) ? node.fills : [];
+      styles.strokes = Array.isArray(node.strokes) ? node.strokes : [];
       styles.strokeWeight = node.strokeWeight || 0;
       styles.cornerRadius = node.cornerRadius || 0;
       
-      // 효과 정보
-      styles.effects = node.effects || [];
+      // 효과 정보 - 안전한 접근
+      styles.effects = Array.isArray(node.effects) ? node.effects : [];
     }
     
     return styles;
