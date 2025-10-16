@@ -265,11 +265,44 @@ function extractFigmaInfo() {
     }
     
     try {
-        // Figma URL 파싱
-        const url = new URL(figmaUrl);
-        const pathParts = url.pathname.split('/');
-        const fileId = pathParts[pathParts.length - 1];
-        const nodeId = url.searchParams.get('node-id') || '0-1';
+        // Figma URL 파싱 - 다양한 형식 지원
+        let fileId = '';
+        let nodeId = '0-1';
+        
+        // URL 정규화
+        let normalizedUrl = figmaUrl.trim();
+        if (!normalizedUrl.startsWith('http')) {
+            normalizedUrl = 'https://' + normalizedUrl;
+        }
+        
+        const url = new URL(normalizedUrl);
+        
+        // 다양한 Figma URL 형식 지원
+        if (url.hostname.includes('figma.com')) {
+            const pathParts = url.pathname.split('/').filter(part => part);
+            
+            // /file/ID 형식
+            if (pathParts[0] === 'file' && pathParts[1]) {
+                fileId = pathParts[1];
+            }
+            // /design/ID 형식
+            else if (pathParts[0] === 'design' && pathParts[1]) {
+                fileId = pathParts[1];
+            }
+            // 직접 ID 형식
+            else if (pathParts[0] && pathParts[0].length > 10) {
+                fileId = pathParts[0];
+            }
+            
+            // Node ID 추출
+            nodeId = url.searchParams.get('node-id') || 
+                    url.searchParams.get('nodeId') || 
+                    '0-1';
+        }
+        
+        if (!fileId) {
+            throw new Error('Figma 파일 ID를 찾을 수 없습니다');
+        }
         
         // 추출된 정보 표시
         document.getElementById('extractedFileId').textContent = fileId;
@@ -281,12 +314,26 @@ function extractFigmaInfo() {
         // 전역 변수에 저장
         currentFigmaFileKey = fileId;
         
-        console.log('🔍 [Admin] Figma 정보 추출:', { fileId, nodeId });
+        console.log('🔍 [Admin] Figma 정보 추출:', { fileId, nodeId, originalUrl: figmaUrl });
         
     } catch (error) {
         console.error('❌ [Admin] Figma URL 파싱 오류:', error);
         figmaInfo.style.display = 'none';
         figmaPluginInfo.style.display = 'none';
+        
+        // 사용자에게 친화적인 오류 메시지 표시
+        const figmaPluginInfo = document.getElementById('figmaPluginInfo');
+        if (figmaPluginInfo) {
+            figmaPluginInfo.innerHTML = `
+                <div class="info-item" style="color: #ef4444;">
+                    <strong>오류:</strong> 유효한 Figma URL을 입력해주세요
+                </div>
+                <div class="info-item" style="font-size: 11px; color: #6b7280;">
+                    예: https://www.figma.com/file/abc123/Design-Name?node-id=2-2
+                </div>
+            `;
+            figmaPluginInfo.style.display = 'block';
+        }
     }
 }
 

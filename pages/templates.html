@@ -350,7 +350,9 @@
                     price: templatePrice,
                     previewImage: previewImage,
                     figmaUrl: figmaUrl,
-                    nodes: nodes
+                    nodes: nodes,
+                    // 원본 템플릿 데이터도 포함
+                    originalTemplate: template
                 });
             });
 
@@ -378,11 +380,23 @@
             sessionStorage.setItem('selectedTemplate', JSON.stringify(template));
             
             // 웹 편집 페이지로 이동 (새로운 기능)
-            if (template.figmaUrl && template.nodes) {
+            // figmaUrl과 nodes가 있는지 확인 (다양한 필드명 지원)
+            const hasFigmaData = (template.figmaUrl || template.figma_url) && 
+                                (template.nodes || template.originalTemplate?.nodes);
+            
+            console.log('Figma data check:', {
+                figmaUrl: template.figmaUrl || template.figma_url,
+                nodes: template.nodes || template.originalTemplate?.nodes,
+                hasFigmaData: hasFigmaData
+            });
+            
+            if (hasFigmaData) {
                 // 피그마 플러그인으로 설정된 템플릿인 경우 웹 편집 페이지로 이동
+                console.log('Redirecting to template-editor.html');
                 window.location.href = `./template-editor.html?template=${template.templateId}`;
             } else {
                 // 기존 방식: 입력 폼 페이지로 이동
+                console.log('Redirecting to form.html');
                 window.location.href = `./form.html?template=${template.templateId}`;
             }
         }
