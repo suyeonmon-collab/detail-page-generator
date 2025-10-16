@@ -334,7 +334,7 @@
                     <div class="template-footer">
                         <span class="template-price">${templatePrice.toLocaleString()}원</span>
                         <button class="select-button">
-                            ${figmaUrl && nodes ? '웹에서 편집' : '선택하기'}
+                            웹에서 편집
                         </button>
                     </div>
                 </div>
@@ -379,26 +379,9 @@
             // 세션에 템플릿 정보 저장
             sessionStorage.setItem('selectedTemplate', JSON.stringify(template));
             
-            // 웹 편집 페이지로 이동 (새로운 기능)
-            // figmaUrl과 nodes가 있는지 확인 (다양한 필드명 지원)
-            const hasFigmaData = (template.figmaUrl || template.figma_url) && 
-                                (template.nodes || template.originalTemplate?.nodes);
-            
-            console.log('Figma data check:', {
-                figmaUrl: template.figmaUrl || template.figma_url,
-                nodes: template.nodes || template.originalTemplate?.nodes,
-                hasFigmaData: hasFigmaData
-            });
-            
-            if (hasFigmaData) {
-                // 피그마 플러그인으로 설정된 템플릿인 경우 웹 편집 페이지로 이동
-                console.log('Redirecting to template-editor.html');
-                window.location.href = `./template-editor.html?template=${template.templateId}`;
-            } else {
-                // 기존 방식: 입력 폼 페이지로 이동
-                console.log('Redirecting to form.html');
-                window.location.href = `./form.html?template=${template.templateId}`;
-            }
+            // 웹 편집 페이지로 이동 (모든 템플릿은 웹 편집만 지원)
+            console.log('Redirecting to template-editor.html');
+            window.location.href = `./template-editor.html?template=${template.templateId}`;
         }
 
         // 에러 표시
