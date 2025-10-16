@@ -522,9 +522,6 @@
                 // 템플릿 정보 업데이트
                 updateTemplateInfo(result);
                 
-                // 자동으로 Figma 플러그인 실행
-                await autoLaunchFigmaPlugin(result);
-                
                 // 캔버스 생성
                 generateCanvas();
                 
@@ -548,80 +545,6 @@
             if (template.preview_image) {
                 const preview = document.getElementById('templatePreview');
                 preview.innerHTML = `<img src="${template.preview_image}" alt="미리보기" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
-            }
-        }
-
-        // 자동으로 Figma 플러그인 실행
-        async function autoLaunchFigmaPlugin(templateData) {
-            try {
-                console.log('🚀 [autoLaunchFigmaPlugin] 자동 플러그인 실행 시작');
-                showToast('Figma 플러그인을 실행하는 중...', 'info');
-
-                if (!templateData.figmaUrl || !templateData.figmaFileKey) {
-                    throw new Error('Figma URL 또는 파일 키가 없습니다');
-                }
-
-                // Figma URL에서 파일 키 추출
-                const fileKey = templateData.figmaFileKey;
-                const nodeId = templateData.figmaNodeId || '0-1';
-
-                console.log('🔍 [autoLaunchFigmaPlugin] 파일 정보:', { fileKey, nodeId });
-
-                // Figma 플러그인 실행을 위한 URL 생성
-                const figmaPluginUrl = `https://www.figma.com/file/${fileKey}?node-id=${nodeId}&plugin=auto-sync-plugin`;
-                
-                console.log('🔗 [autoLaunchFigmaPlugin] 플러그인 URL:', figmaPluginUrl);
-
-                // 새 창에서 Figma 플러그인 실행
-                const figmaWindow = window.open(
-                    figmaPluginUrl,
-                    'figma-plugin',
-                    'width=1,height=1,left=-1000,top=-1000,visible=false'
-                );
-
-                if (!figmaWindow) {
-                    throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
-                }
-
-                // 플러그인 로딩 대기
-                await new Promise(resolve => setTimeout(resolve, 3000));
-
-                // 플러그인에 템플릿 데이터 전송
-                try {
-                    figmaWindow.postMessage({
-                        type: 'load-template',
-                        payload: {
-                            templateId: templateData.templateId,
-                            nodes: templateData.nodes,
-                            figmaUrl: templateData.figmaUrl,
-                            fileKey: fileKey,
-                            nodeId: nodeId
-                        }
-                    }, '*');
-                    
-                    console.log('✅ [autoLaunchFigmaPlugin] 플러그인에 데이터 전송 완료');
-                } catch (messageError) {
-                    console.warn('⚠️ [autoLaunchFigmaPlugin] 메시지 전송 실패:', messageError);
-                }
-
-                // 창 닫기 (3분 후)
-                setTimeout(() => {
-                    try {
-                        figmaWindow.close();
-                        console.log('🔒 [autoLaunchFigmaPlugin] Figma 창 닫기 완료');
-                    } catch (closeError) {
-                        console.warn('⚠️ [autoLaunchFigmaPlugin] 창 닫기 실패:', closeError);
-                    }
-                }, 180000); // 3분
-
-                showToast('Figma 플러그인이 실행되었습니다. 이제 웹에서 편집할 수 있습니다!', 'success');
-
-            } catch (error) {
-                console.error('❌ [autoLaunchFigmaPlugin] 오류:', error);
-                showToast(`Figma 플러그인 실행 실패: ${error.message}`, 'error');
-                
-                // 수동 실행 안내
-                showToast('수동으로 Figma에서 플러그인을 실행해주세요.', 'warning');
             }
         }
 

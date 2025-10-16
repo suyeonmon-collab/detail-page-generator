@@ -32,6 +32,16 @@ figma.on("run", ({ command }) => {
   // 파일 정보 전송
   sendFileInfo();
   
+  // 관리자 모드 자동 실행
+  setTimeout(async () => {
+    try {
+      console.log('🔄 [Admin Plugin] 관리자 모드 자동 실행 시작');
+      await analyzeLayers();
+    } catch (error) {
+      console.error('❌ [Admin Plugin] 자동 실행 오류:', error);
+    }
+  }, 2000);
+  
   console.log('✅ [Admin Plugin] 플러그인 초기화 완료');
 });
 

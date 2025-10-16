@@ -424,6 +424,66 @@ function openFigmaPlugin() {
     }
 }
 
+// 자동으로 Figma 플러그인 실행 (템플릿용)
+async function autoLaunchFigmaPluginForTemplate(templateId, figmaUrl, fileKey) {
+    try {
+        console.log('🚀 [autoLaunchFigmaPluginForTemplate] 시작:', { templateId, figmaUrl, fileKey });
+        
+        // Figma 플러그인 실행을 위한 URL 생성
+        const figmaPluginUrl = `https://www.figma.com/file/${fileKey}?node-id=0-1&plugin=auto-sync-plugin`;
+        
+        console.log('🔗 [autoLaunchFigmaPluginForTemplate] 플러그인 URL:', figmaPluginUrl);
+
+        // 새 창에서 Figma 플러그인 실행
+        const figmaWindow = window.open(
+            figmaPluginUrl,
+            'figma-plugin-template',
+            'width=1,height=1,left=-1000,top=-1000,visible=false'
+        );
+
+        if (!figmaWindow) {
+            throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+        }
+
+        // 플러그인 로딩 대기
+        await new Promise(resolve => setTimeout(resolve, 3000));
+
+        // 플러그인에 템플릿 데이터 전송
+        try {
+            figmaWindow.postMessage({
+                type: 'admin-template-setup',
+                payload: {
+                    templateId: templateId,
+                    figmaUrl: figmaUrl,
+                    fileKey: fileKey,
+                    nodeId: '0-1',
+                    mode: 'admin-setup' // 관리자 설정 모드
+                }
+            }, '*');
+            
+            console.log('✅ [autoLaunchFigmaPluginForTemplate] 플러그인에 데이터 전송 완료');
+        } catch (messageError) {
+            console.warn('⚠️ [autoLaunchFigmaPluginForTemplate] 메시지 전송 실패:', messageError);
+        }
+
+        // 창 닫기 (5분 후)
+        setTimeout(() => {
+            try {
+                figmaWindow.close();
+                console.log('🔒 [autoLaunchFigmaPluginForTemplate] Figma 창 닫기 완료');
+            } catch (closeError) {
+                console.warn('⚠️ [autoLaunchFigmaPluginForTemplate] 창 닫기 실패:', closeError);
+            }
+        }, 300000); // 5분
+
+        console.log('✅ [autoLaunchFigmaPluginForTemplate] 완료');
+
+    } catch (error) {
+        console.error('❌ [autoLaunchFigmaPluginForTemplate] 오류:', error);
+        throw error;
+    }
+}
+
 // 플러그인 메시지 처리
 function handlePluginMessage(event) {
     try {
@@ -633,9 +693,55 @@ async function saveTemplate() {
             return;
         }
 
-        // 피그마 URL이 있으면 플러그인 연동 방식 사용
+        // 피그마 URL이 있으면 자동으로 플러그인 실행
         if (figmaUrl && currentFigmaFileKey) {
-            showToast('피그마 플러그인을 통해 템플릿을 등록해주세요', 'info');
+            console.log('🚀 [Admin] Figma URL이 있으므로 자동으로 플러그인 실행');
+            
+            // 먼저 기본 템플릿 정보를 데이터베이스에 저장
+            const basicTemplateData = {
+                template_id: templateId,
+                category_id: categoryId,
+                name: name,
+                description: description,
+                figma_url: figmaUrl,
+                figma_file_key: currentFigmaFileKey,
+                figma_node_id: '0-1',
+                price: price,
+                enabled: enabled,
+                nodes: {} // 플러그인에서 채워질 예정
+            };
+
+            try {
+                // 기본 템플릿 정보 저장
+                const response = await fetch('/api/templates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(basicTemplateData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('템플릿 저장 실패');
+                }
+
+                console.log('✅ [Admin] 기본 템플릿 정보 저장 완료');
+
+                // 자동으로 Figma 플러그인 실행
+                await autoLaunchFigmaPluginForTemplate(templateId, figmaUrl, currentFigmaFileKey);
+                
+                showToast('템플릿이 저장되었습니다. Figma 플러그인에서 레이어를 설정해주세요.', 'success');
+                
+                // 모달 닫기
+                closeTemplateModal();
+                
+                // 데이터 새로고침
+                loadData();
+                
+            } catch (error) {
+                console.error('❌ [Admin] 템플릿 저장 오류:', error);
+                showToast('템플릿 저장 중 오류가 발생했습니다.', 'error');
+            }
             return;
         }
 
