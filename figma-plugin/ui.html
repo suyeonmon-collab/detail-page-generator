@@ -50,410 +50,15 @@
     .file-info strong {
       color: #1976d2;
     }
-    
-    .screen {
-      display: none;
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 16px;
-    }
 
-    .screen.active {
-      display: block;
-    }
-
-    .mode-indicator {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 6px;
-      padding: 8px 12px;
-      margin-bottom: 16px;
-      font-size: 12px;
-      font-weight: 500;
-      color: #0369a1;
-    }
-
-    .mode-indicator.edit-mode {
-      background: #fef3c7;
-      border-color: #fbbf24;
-      color: #92400e;
-    }
-
-    .button-group {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 14px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-align: center;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      background: #f1f5f9;
-      color: #475569;
-      border: 1px solid #e2e8f0;
-    }
-
-    .btn-secondary:hover {
-      background: #e2e8f0;
-    }
-
-    .btn-success {
-      background: #10b981;
-      color: white;
-    }
-
-    .btn-success:hover {
-      background: #059669;
-    }
-
-    .btn-danger {
-      background: #ef4444;
-      color: white;
-    }
-
-    .btn-danger:hover {
-      background: #dc2626;
-    }
-
-    .btn:disabled {
-      background: #d1d5db;
-      color: #9ca3af;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .template-list {
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-    }
-
-    .template-item {
-      display: flex;
-      align-items: center;
-      padding: 12px;
-      border-bottom: 1px solid #f3f4f6;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .template-item:hover {
-      background: #f9fafb;
-    }
-
-    .template-item:last-child {
-      border-bottom: none;
-    }
-
-    .template-thumbnail {
-      width: 40px;
-      height: 40px;
-      border-radius: 6px;
-      background: #f3f4f6;
-      margin-right: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: #6b7280;
-    }
-
-    .template-info {
-      flex: 1;
-    }
-
-    .template-name {
-      font-size: 13px;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 2px;
-    }
-
-    .template-date {
-      font-size: 11px;
-      color: #6b7280;
-    }
-
-    .template-select-btn {
-      padding: 6px 12px;
-      background: #667eea;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-    }
-
-    .template-delete-btn {
-      padding: 6px 12px;
-      background: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      margin-left: 4px;
-    }
-
-    .template-delete-btn:hover {
-      background: #dc2626;
-    }
-
-    .template-actions {
-      display: flex;
-      align-items: center;
-    }
-
-    .layer-tree {
-      display: flex;
-      gap: 16px;
-      height: 500px;
-    }
-
-    .layer-list {
-      flex: 1;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      overflow-y: auto;
-      background: #fafafa;
-    }
-
-    .layer-item {
-      padding: 8px 12px;
-      border-bottom: 1px solid #f3f4f6;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 12px;
-    }
-
-    .layer-item:hover {
-      background: #f0f9ff;
-    }
-
-    .layer-item.selected {
-      background: #dbeafe;
-      border-left: 3px solid #3b82f6;
-    }
-
-    .layer-item.editable {
-      background: #f0fdf4;
-    }
-
-    .layer-item.editable.selected {
-      background: #dcfce7;
-      border-left-color: #10b981;
-    }
-
-    .layer-name {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
-
-    .layer-type {
-      font-size: 10px;
-      color: #6b7280;
-    }
-
-    .layer-settings {
-      flex: 1;
-      padding: 16px;
-      background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-    }
-
-    .settings-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #374151;
-    }
-
-    .form-group {
-      margin-bottom: 16px;
-    }
-
-    .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 6px;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 12px;
-      transition: border-color 0.2s;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-
-    .form-select {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 6px;
-      font-size: 12px;
-      background: white;
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .checkbox {
-      width: 16px;
-      height: 16px;
-    }
-
-    .checkbox-label {
-      font-size: 12px;
-      color: #374151;
-      margin: 0;
-    }
-
-    .current-value {
-      background: #f3f4f6;
-      border-radius: 4px;
-      padding: 8px;
-      font-size: 11px;
-      color: #6b7280;
-      margin-top: 8px;
-    }
-
-    .status {
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
-      display: none;
-    }
-
-    .status.success {
-      background: #dcfce7;
-      color: #166534;
-      border: 1px solid #bbf7d0;
-    }
-
-    .status.error {
-      background: #fef2f2;
-      color: #dc2626;
-      border: 1px solid #fecaca;
-    }
-
-    .status.info {
-      background: #dbeafe;
-      color: #1e40af;
-      border: 1px solid #bfdbfe;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #6b7280;
-    }
-
-    .loading-spinner {
-      width: 24px;
-      height: 24px;
-      border: 2px solid #e5e7eb;
-      border-top: 2px solid #667eea;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 12px;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: #6b7280;
-    }
-
-    .empty-state-icon {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
-
-    .empty-state-text {
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .empty-state-subtext {
-      font-size: 12px;
-    }
-
-    .preview-url {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 8px 12px;
-      font-size: 11px;
-      font-family: monospace;
-      word-break: break-all;
-      margin-top: 8px;
-    }
-
-    .copy-btn {
-      background: #10b981;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 10px;
-      cursor: pointer;
-      margin-top: 4px;
-    }
-
-    .copy-btn:hover {
-      background: #059669;
-    }
-
-    /* 자동 편집 모드 스타일 */
     .auto-edit-notice {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
       color: white;
       padding: 16px;
-      border-radius: 8px;
-      margin-bottom: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
       text-align: center;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
     }
 
     .notice-icon {
@@ -462,56 +67,59 @@
     }
 
     .notice-text {
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 600;
       margin-bottom: 4px;
     }
 
     .notice-subtext {
-      font-size: 11px;
+      font-size: 12px;
       opacity: 0.9;
     }
 
     .layer-summary {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 16px;
-      padding: 12px;
-      background: #f8fafc;
-      border-radius: 8px;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .summary-item {
-      flex: 1;
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .summary-item:last-child {
+      border-bottom: none;
     }
 
     .summary-label {
-      display: block;
-      font-size: 11px;
-      color: #6b7280;
-      margin-bottom: 4px;
+      font-size: 14px;
+      color: #666;
     }
 
     .summary-value {
-      display: block;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
-      color: #1f2937;
+      color: #4caf50;
     }
 
     .layer-preview {
       background: white;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
+      border-radius: 12px;
       padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     .layer-preview h4 {
-      margin: 0 0 12px 0;
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: #333;
     }
 
     .layer-list-compact {
@@ -522,24 +130,24 @@
     .layer-item-compact {
       display: flex;
       align-items: center;
-      padding: 8px;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
     }
 
     .layer-item-compact:last-child {
-      border-bottom: none;
+      margin-bottom: 0;
     }
 
     .layer-icon {
-      width: 24px;
-      height: 24px;
+      width: 20px;
+      height: 20px;
+      margin-right: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #f3f4f6;
-      border-radius: 4px;
-      margin-right: 8px;
       font-size: 12px;
     }
 
@@ -548,592 +156,540 @@
     }
 
     .layer-name {
+      font-size: 13px;
       font-weight: 500;
-      color: #1f2937;
+      color: #333;
       margin-bottom: 2px;
     }
 
     .layer-type {
-      font-size: 10px;
-      color: #6b7280;
+      font-size: 11px;
+      color: #666;
     }
 
     .layer-status {
-      font-size: 10px;
-      color: #10b981;
+      font-size: 11px;
+      color: #4caf50;
       font-weight: 500;
+    }
+
+    .template-section {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .template-section h3 {
+      margin: 0 0 12px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .template-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .template-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .template-item:hover {
+      background: #e9ecef;
+      border-color: #667eea;
+    }
+
+    .template-item.selected {
+      background: #e3f2fd;
+      border-color: #1976d2;
+    }
+
+    .template-preview {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
+      margin-right: 12px;
+      background: #ddd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .template-info {
+      flex: 1;
+    }
+
+    .template-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .template-description {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .template-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a6fd8;
+    }
+
+    .btn-secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #5a6268;
+    }
+
+    .btn-success {
+      background: #4caf50;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #45a049;
+    }
+
+    .btn-danger {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #d32f2f;
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 11px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .status-indicator.success {
+      background: #4caf50;
+    }
+
+    .status-indicator.warning {
+      background: #ff9800;
+    }
+
+    .status-indicator.error {
+      background: #f44336;
+    }
+
+    .status-indicator.info {
+      background: #2196f3;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      color: #666;
+    }
+
+    .loading::after {
+      content: '';
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ddd;
+      border-top: 2px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .empty-state-subtext {
+      font-size: 13px;
+      opacity: 0.7;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>🎨 템플릿 웹 편집 설정</h1>
-    <p>관리자용 피그마 템플릿 설정 도구</p>
+    <p>관리자용 템플릿 설정 도구</p>
   </div>
 
-  <div class="file-info">
-    <strong>현재 파일:</strong> <span id="currentFileName">분석 중...</span>
+  <div class="file-info" id="fileInfo">
+    <strong>파일:</strong> <span id="fileName">로딩 중...</span><br>
+    <strong>키:</strong> <span id="fileKey">로딩 중...</span>
   </div>
 
-  <!-- 초기 화면 -->
-  <div id="initialScreen" class="screen active">
-    <div class="button-group">
-      <button class="btn btn-primary" onclick="showNewTemplateScreen()">
-        ✨ 새 템플릿 만들기
-      </button>
-      <button class="btn btn-secondary" onclick="showTemplateListScreen()">
-        📝 기존 템플릿 수정하기
-      </button>
+  <!-- 자동 편집 모드 알림 -->
+  <div class="auto-edit-notice">
+    <div class="notice-icon">🤖</div>
+    <div class="notice-text">자동 편집 모드</div>
+    <div class="notice-subtext">모든 편집 가능한 레이어가 자동으로 활성화되었습니다</div>
+  </div>
+
+  <!-- 레이어 요약 -->
+  <div class="layer-summary" id="layerSummary" style="display: none;">
+    <div class="summary-item">
+      <span class="summary-label">총 레이어:</span>
+      <span class="summary-value" id="totalLayers">0개</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">편집 가능:</span>
+      <span class="summary-value" id="editableLayers">0개</span>
     </div>
   </div>
 
-  <!-- 템플릿 목록 화면 -->
-  <div id="templateListScreen" class="screen">
-    <div class="mode-indicator">
-      📝 기존 템플릿 수정 모드
+  <!-- 레이어 미리보기 -->
+  <div class="layer-preview" id="layerPreview" style="display: none;">
+    <h4>편집 가능한 레이어 목록</h4>
+    <div class="layer-list-compact" id="layerListCompact">
+      <!-- 레이어 목록이 여기에 동적으로 생성됩니다 -->
     </div>
+  </div>
+
+  <!-- 템플릿 관리 섹션 -->
+  <div class="template-section">
+    <h3>📋 템플릿 관리</h3>
     
-    <div id="templateListContainer">
-      <div class="loading">
-        <div class="loading-spinner"></div>
-        <div>템플릿 목록을 불러오는 중...</div>
-      </div>
-    </div>
-
-    <div class="button-group">
-      <button class="btn btn-secondary" onclick="showInitialScreen()">취소</button>
-    </div>
-  </div>
-
-  <!-- 레이어 선택 화면 (신규) -->
-  <div id="newTemplateScreen" class="screen">
-    <div class="mode-indicator">
-      ✨ 신규 생성 모드
-    </div>
-
-    <div id="layerSelectionContainer">
-      <div class="loading">
-        <div class="loading-spinner"></div>
-        <div>레이어를 분석하는 중...</div>
-      </div>
-    </div>
-
-    <div class="button-group">
-      <button class="btn btn-secondary" onclick="showInitialScreen()">취소</button>
-      <button class="btn btn-success" onclick="saveNewTemplate()" id="saveNewBtn" disabled>저장 및 업로드</button>
-    </div>
-  </div>
-
-  <!-- 레이어 선택 화면 (수정) -->
-  <div id="editTemplateScreen" class="screen">
-    <div class="mode-indicator edit-mode">
-      📝 수정 모드: <span id="editingTemplateName">템플릿명</span>
-    </div>
-
-    <div id="editLayerSelectionContainer">
-      <div class="loading">
-        <div class="loading-spinner"></div>
-        <div>기존 설정을 불러오는 중...</div>
-      </div>
-    </div>
-
-    <div class="button-group">
-      <button class="btn btn-secondary" onclick="showTemplateListScreen()">취소</button>
-      <button class="btn btn-success" onclick="updateTemplate()" id="updateBtn" disabled>업데이트</button>
-    </div>
-  </div>
-
-  <!-- 완료 화면 -->
-  <div id="completeScreen" class="screen">
-    <div class="mode-indicator success">
-      ✅ <span id="completeMessage">템플릿이 생성되었습니다</span>
-    </div>
-
     <div class="form-group">
-      <label class="form-label">템플릿 ID</label>
-      <div class="preview-url" id="templateId">template-id</div>
+      <button class="btn btn-primary" onclick="loadTemplateList()">
+        📋 템플릿 목록 불러오기
+      </button>
     </div>
 
-    <div class="form-group">
-      <label class="form-label">웹 미리보기 URL</label>
-      <div class="preview-url" id="previewUrl">https://example.com/preview</div>
-      <button class="copy-btn" onclick="copyToClipboard('previewUrl')">URL 복사</button>
+    <div id="templateList" class="template-list" style="display: none;">
+      <!-- 템플릿 목록이 여기에 동적으로 생성됩니다 -->
     </div>
 
-    <div class="button-group">
-      <button class="btn btn-primary" onclick="showInitialScreen()">다른 템플릿 만들기/수정하기</button>
-      <button class="btn btn-secondary" onclick="closePlugin()">닫기</button>
+    <div id="templateForm" style="display: none;">
+      <div class="form-group">
+        <label for="templateName">템플릿 이름</label>
+        <input type="text" id="templateName" placeholder="템플릿 이름을 입력하세요">
+      </div>
+      
+      <div class="form-group">
+        <label for="templateDescription">설명</label>
+        <textarea id="templateDescription" placeholder="템플릿 설명을 입력하세요"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <button class="btn btn-success" onclick="saveTemplate()">
+          💾 템플릿 저장
+        </button>
+        <button class="btn btn-secondary" onclick="cancelTemplateForm()">
+          ❌ 취소
+        </button>
+      </div>
     </div>
   </div>
 
-  <div id="status" class="status"></div>
+  <!-- 상태 표시 -->
+  <div id="statusMessage" style="display: none;"></div>
 
   <script>
-    // 전역 변수
-    let currentScreen = 'initial';
-    let currentFileKey = '';
-    let currentFileName = '';
-    let layerData = [];
-    let editableLayers = [];
-    let selectedLayer = null;
-    let currentTemplate = null;
-    let templates = [];
+    let currentLayers = [];
+    let currentTemplates = [];
+    let selectedTemplate = null;
 
-    // 피그마 플러그인 환경 확인
-    if (typeof parent === 'undefined') {
-      window.parent = {
-        postMessage: function(data, origin) {
-          console.log('Mock postMessage:', data);
-        }
-      };
+    // 플러그인과 통신하는 함수
+    function post(type, payload = {}) {
+      parent.postMessage({ pluginMessage: { type, payload } }, '*');
     }
 
-    function post(type, payload) { 
-      try {
-        parent.postMessage({ pluginMessage: { type, payload } }, '*');
-      } catch (error) {
-        console.error('Post message error:', error);
-        setStatus('메시지 전송 오류: ' + error.message, 'error');
-      }
+    // 파일 정보 업데이트
+    function updateFileInfo(fileInfo) {
+      document.getElementById('fileName').textContent = fileInfo.fileName || 'Unknown';
+      document.getElementById('fileKey').textContent = fileInfo.fileKey || 'Unknown';
     }
 
-    function onmessage(event) {
-      try {
-        const msg = event.data && event.data.pluginMessage;
-        if (!msg) return;
-
-        switch (msg.type) {
-          case 'file-info':
-            currentFileKey = msg.payload.fileKey;
-            currentFileName = msg.payload.fileName;
-            document.getElementById('currentFileName').textContent = currentFileName;
-            break;
-
-          case 'layer-analysis':
-            layerData = msg.payload.layers || [];
-            generateLayerSelectionUI();
-            break;
-
-          case 'template-list':
-            templates = msg.payload.templates || [];
-            generateTemplateListUI();
-            break;
-
-          case 'template-loaded':
-            currentTemplate = msg.payload.template;
-            // 템플릿 로드 완료 - 이미 generateLayerSelectionUI에서 처리됨
-            break;
-
-          case 'template-saved':
-            showCompleteScreen(msg.payload);
-            break;
-
-          case 'template-updated':
-            showCompleteScreen(msg.payload, 'updated');
-            break;
-
-          case 'template-deleted':
-            setStatus('템플릿이 삭제되었습니다', 'success');
-            // 템플릿 목록 새로고침
-            setTimeout(() => {
-              loadTemplateList();
-            }, 1000);
-            break;
-
-          case 'error':
-            const errorMsg = msg.payload && msg.payload.message;
-            setStatus('오류: ' + (errorMsg || '알 수 없는 오류'), 'error');
-            break;
-
-          default:
-            console.warn('Unknown message type:', msg.type);
-        }
-      } catch (error) {
-        console.error('Message handling error:', error);
-        setStatus('메시지 처리 중 오류가 발생했습니다.', 'error');
-      }
-    }
-
-    // 화면 전환 함수들
-    function showScreen(screenId) {
-      document.querySelectorAll('.screen').forEach(screen => {
-        screen.classList.remove('active');
-      });
-      document.getElementById(screenId).classList.add('active');
-      currentScreen = screenId.replace('Screen', '');
-    }
-
-    function showInitialScreen() {
-      showScreen('initialScreen');
-    }
-
-    function showNewTemplateScreen() {
-      showScreen('newTemplateScreen');
-      analyzeLayers();
-    }
-
-    function showTemplateListScreen() {
-      showScreen('templateListScreen');
-      loadTemplateList();
-    }
-
-    function showEditTemplateScreen(template) {
-      showScreen('editTemplateScreen');
-      document.getElementById('editingTemplateName').textContent = template.name;
+    // 레이어 분석 결과 표시
+    function displayLayerAnalysis(data) {
+      currentLayers = data.layers || [];
       
-      // 먼저 레이어를 분석한 다음 템플릿을 로드
-      setStatus('레이어를 분석하는 중...', 'info');
-      post('analyze-layers');
+      // 요약 정보 업데이트
+      document.getElementById('totalLayers').textContent = `${currentLayers.length}개`;
+      document.getElementById('editableLayers').textContent = `${currentLayers.filter(layer => layer.editable).length}개`;
       
-      // 레이어 분석 완료 후 템플릿 로드하도록 설정
-      currentTemplate = template;
+      // 레이어 목록 생성
+      const layerListHtml = currentLayers.map(layer => `
+        <div class="layer-item-compact">
+          <div class="layer-icon">${getLayerIcon(layer.type)}</div>
+          <div class="layer-info">
+            <div class="layer-name">${layer.name}</div>
+            <div class="layer-type">${layer.type} - ${layer.editType}</div>
+          </div>
+          <div class="layer-status">✅ 편집 가능</div>
+        </div>
+      `).join('');
+      
+      document.getElementById('layerListCompact').innerHTML = layerListHtml;
+      
+      // 섹션 표시
+      document.getElementById('layerSummary').style.display = 'block';
+      document.getElementById('layerPreview').style.display = 'block';
+      
+      showStatus('레이어 분석이 완료되었습니다!', 'success');
     }
 
-    function showCompleteScreen(data, type = 'created') {
-      showScreen('completeScreen');
-      
-      const message = type === 'updated' ? '템플릿이 업데이트되었습니다' : '새 템플릿이 생성되었습니다';
-      document.getElementById('completeMessage').textContent = message;
-      document.getElementById('templateId').textContent = data.templateId || 'unknown';
-      document.getElementById('previewUrl').textContent = data.previewUrl || 'https://example.com/preview';
-    }
-
-    // 레이어 아이콘 반환 함수
+    // 레이어 타입에 따른 아이콘 반환
     function getLayerIcon(type) {
-      switch (type) {
-        case 'TEXT':
-          return '📝';
-        case 'RECTANGLE':
-          return '⬜';
-        case 'ELLIPSE':
-          return '⭕';
-        case 'POLYGON':
-          return '🔷';
-        case 'STAR':
-          return '⭐';
-        case 'VECTOR':
-          return '🎨';
-        default:
-          return '📄';
-      }
+      const icons = {
+        'TEXT': '📝',
+        'RECTANGLE': '⬜',
+        'ELLIPSE': '⭕',
+        'POLYGON': '🔷',
+        'STAR': '⭐',
+        'VECTOR': '🎨'
+      };
+      return icons[type] || '📄';
     }
 
-    // 레이어 분석 및 UI 생성
-    function analyzeLayers() {
-      setStatus('레이어를 분석하는 중...', 'info');
-      post('analyze-layers');
-    }
-
-    function generateLayerSelectionUI() {
-      const container = document.getElementById('layerSelectionContainer');
-      const editContainer = document.getElementById('editLayerSelectionContainer');
-      const targetContainer = editContainer || container;
-      
-      if (layerData.length === 0) {
-        targetContainer.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon">📄</div>
-            <div class="empty-state-text">편집 가능한 레이어가 없습니다</div>
-            <div class="empty-state-subtext">텍스트, 이미지, 도형 레이어를 추가해주세요</div>
-          </div>
-        `;
-        return;
-      }
-
-      // 자동 편집 모드 - 모든 레이어가 편집 가능하도록 표시
-      targetContainer.innerHTML = `
-        <div class="auto-edit-notice">
-          <div class="notice-icon">🤖</div>
-          <div class="notice-text">자동 편집 모드</div>
-          <div class="notice-subtext">모든 편집 가능한 레이어가 자동으로 활성화되었습니다</div>
-        </div>
-        <div class="layer-summary">
-          <div class="summary-item">
-            <span class="summary-label">총 레이어:</span>
-            <span class="summary-value">${layerData.length}개</span>
-          </div>
-          <div class="summary-item">
-            <span class="summary-label">편집 가능:</span>
-            <span class="summary-value">${layerData.length}개</span>
-          </div>
-        </div>
-        <div class="layer-preview">
-          <h4>편집 가능한 레이어 목록</h4>
-          <div class="layer-list-compact">
-            ${layerData.map(layer => `
-              <div class="layer-item-compact">
-                <div class="layer-icon">${getLayerIcon(layer.type)}</div>
-                <div class="layer-info">
-                  <div class="layer-name">${layer.name}</div>
-                  <div class="layer-type">${layer.type} - ${layer.editType}</div>
-                </div>
-                <div class="layer-status">✅ 편집 가능</div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-      `;
-
-      // 기존 템플릿이 있으면 설정 적용
-      if (currentTemplate && currentTemplate.nodes) {
-        layerData.forEach(layer => {
-          const nodeConfig = currentTemplate.nodes[layer.id];
-          if (nodeConfig) {
-            layer.editable = nodeConfig.editable || false;
-            layer.label = nodeConfig.label || layer.name;
-            layer.editType = nodeConfig.editType || 'text';
-          }
-        });
-      }
-
-      targetContainer.innerHTML = `
-        <div class="layer-tree">
-          <div class="layer-list">
-            ${layerData.map(layer => `
-              <div class="layer-item ${layer.editable ? 'editable' : ''}" onclick="selectLayer('${layer.id}')">
-                <div class="layer-name">${layer.name}</div>
-                <div class="layer-type">${layer.type}</div>
-              </div>
-            `).join('')}
-          </div>
-          <div class="layer-settings">
-            <div class="settings-title">레이어 설정</div>
-            <div id="layerSettingsContent">
-              <div class="empty-state">
-                <div class="empty-state-icon">👆</div>
-                <div class="empty-state-text">레이어를 선택하세요</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      // 업데이트 버튼 활성화 상태 확인
-      updateSaveButton();
-
-      if (currentTemplate) {
-        setStatus('기존 템플릿 설정이 적용되었습니다', 'success');
-      } else {
-        setStatus('레이어 분석 완료', 'success');
-      }
-    }
-
-    function selectLayer(layerId) {
-      selectedLayer = layerData.find(layer => layer.id === layerId);
-      
-      // 선택 상태 업데이트
-      document.querySelectorAll('.layer-item').forEach(item => {
-        item.classList.remove('selected');
-      });
-      event.currentTarget.classList.add('selected');
-
-      // 설정 패널 업데이트
-      generateLayerSettings();
-    }
-
-    function generateLayerSettings() {
-      if (!selectedLayer) return;
-
-      const container = document.getElementById('layerSettingsContent');
-      
-      container.innerHTML = `
-        <div class="form-group">
-          <div class="checkbox-group">
-            <input type="checkbox" id="editable-${selectedLayer.id}" class="checkbox" 
-                   ${selectedLayer.editable ? 'checked' : ''} 
-                   onchange="toggleLayerEditable('${selectedLayer.id}', this.checked)">
-            <label for="editable-${selectedLayer.id}" class="checkbox-label">웹 편집 가능</label>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">라벨 이름</label>
-          <input type="text" class="form-input" id="label-${selectedLayer.id}" 
-                 value="${selectedLayer.label || selectedLayer.name}" 
-                 onchange="updateLayerLabel('${selectedLayer.id}', this.value)">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">편집 타입</label>
-          <select class="form-select" id="editType-${selectedLayer.id}" 
-                  onchange="updateLayerEditType('${selectedLayer.id}', this.value)">
-            <option value="text" ${selectedLayer.editType === 'text' ? 'selected' : ''}>텍스트 수정</option>
-            <option value="image" ${selectedLayer.editType === 'image' ? 'selected' : ''}>이미지 교체</option>
-            <option value="shape" ${selectedLayer.editType === 'shape' ? 'selected' : ''}>도형 변경</option>
-            <option value="color" ${selectedLayer.editType === 'color' ? 'selected' : ''}>색상 변경</option>
-            <option value="size" ${selectedLayer.editType === 'size' ? 'selected' : ''}>크기 변경</option>
-            <option value="position" ${selectedLayer.editType === 'position' ? 'selected' : ''}>위치 변경</option>
-          </select>
-        </div>
-
-        <div class="current-value">
-          <strong>현재 값:</strong> ${selectedLayer.currentValue || '없음'}
-        </div>
-      `;
-    }
-
-    function toggleLayerEditable(layerId, editable) {
-      const layer = layerData.find(l => l.id === layerId);
-      if (layer) {
-        layer.editable = editable;
-        updateLayerItemStyle(layerId);
-        updateSaveButton();
-      }
-    }
-
-    function updateLayerLabel(layerId, label) {
-      const layer = layerData.find(l => l.id === layerId);
-      if (layer) {
-        layer.label = label;
-      }
-    }
-
-    function updateLayerEditType(layerId, editType) {
-      const layer = layerData.find(l => l.id === layerId);
-      if (layer) {
-        layer.editType = editType;
-      }
-    }
-
-    function updateLayerItemStyle(layerId) {
-      const layerItem = document.querySelector(`[onclick="selectLayer('${layerId}')"]`);
-      if (layerItem) {
-        const layer = layerData.find(l => l.id === layerId);
-        if (layer && layer.editable) {
-          layerItem.classList.add('editable');
-        } else {
-          layerItem.classList.remove('editable');
-        }
-      }
-    }
-
-    function updateSaveButton() {
-      const editableCount = layerData.filter(layer => layer.editable).length;
-      const saveBtn = document.getElementById('saveNewBtn');
-      const updateBtn = document.getElementById('updateBtn');
-      
-      if (saveBtn) saveBtn.disabled = editableCount === 0;
-      if (updateBtn) updateBtn.disabled = editableCount === 0;
-    }
-
-    // 템플릿 관리 함수들
+    // 템플릿 목록 로드
     function loadTemplateList() {
-      setStatus('템플릿 목록을 불러오는 중...', 'info');
+      showStatus('템플릿 목록을 불러오는 중...', 'info');
       post('load-template-list');
     }
 
-    function generateTemplateListUI() {
-      const container = document.getElementById('templateListContainer');
+    // 템플릿 목록 표시
+    function displayTemplateList(templates) {
+      currentTemplates = templates || [];
       
-      if (templates.length === 0) {
-        container.innerHTML = `
+      if (currentTemplates.length === 0) {
+        document.getElementById('templateList').innerHTML = `
           <div class="empty-state">
-            <div class="empty-state-icon">📝</div>
-            <div class="empty-state-text">저장된 템플릿이 없습니다</div>
-            <div class="empty-state-subtext">새 템플릿을 만들어보세요</div>
+            <div class="empty-state-icon">📄</div>
+            <div class="empty-state-text">등록된 템플릿이 없습니다</div>
+            <div class="empty-state-subtext">새 템플릿을 생성해보세요</div>
           </div>
         `;
+      } else {
+        const templateListHtml = currentTemplates.map(template => `
+          <div class="template-item" onclick="selectTemplate('${template.template_id}')">
+            <div class="template-preview">
+              ${template.preview_image ? '🖼️' : '📄'}
+            </div>
+            <div class="template-info">
+              <div class="template-name">${template.name}</div>
+              <div class="template-description">${template.description || '설명 없음'}</div>
+            </div>
+            <div class="template-actions">
+              <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); updateTemplate('${template.template_id}')">
+                🔄 업데이트
+              </button>
+              <button class="btn btn-danger btn-small" onclick="event.stopPropagation(); deleteTemplate('${template.template_id}')">
+                🗑️ 삭제
+              </button>
+            </div>
+          </div>
+        `).join('');
+        
+        document.getElementById('templateList').innerHTML = templateListHtml;
+      }
+      
+      document.getElementById('templateList').style.display = 'block';
+      showStatus('템플릿 목록을 불러왔습니다', 'success');
+    }
+
+    // 템플릿 선택
+    function selectTemplate(templateId) {
+      selectedTemplate = currentTemplates.find(t => t.template_id === templateId);
+      
+      // 선택 상태 업데이트
+      document.querySelectorAll('.template-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+      
+      event.currentTarget.classList.add('selected');
+    }
+
+    // 템플릿 업데이트
+    function updateTemplate(templateId) {
+      const template = currentTemplates.find(t => t.template_id === templateId);
+      if (!template) return;
+      
+      selectedTemplate = template;
+      
+      // 폼에 기존 데이터 채우기
+      document.getElementById('templateName').value = template.name;
+      document.getElementById('templateDescription').value = template.description || '';
+      
+      // 폼 표시
+      document.getElementById('templateForm').style.display = 'block';
+      
+      showStatus('템플릿 수정 모드', 'info');
+    }
+
+    // 템플릿 저장
+    function saveTemplate() {
+      const name = document.getElementById('templateName').value.trim();
+      const description = document.getElementById('templateDescription').value.trim();
+      
+      if (!name) {
+        showStatus('템플릿 이름을 입력해주세요', 'error');
         return;
       }
+      
+      if (currentLayers.length === 0) {
+        showStatus('편집 가능한 레이어가 없습니다', 'error');
+        return;
+      }
+      
+      const templateData = {
+        name,
+        description,
+        layers: currentLayers,
+        templateId: selectedTemplate ? selectedTemplate.template_id : null
+      };
+      
+      if (selectedTemplate) {
+        post('update-template', templateData);
+      } else {
+        post('save-template', templateData);
+      }
+      
+      showStatus('템플릿을 저장하는 중...', 'info');
+    }
 
-      container.innerHTML = `
-        <div class="template-list">
-          ${templates.map(template => `
-            <div class="template-item" onclick="showEditTemplateScreen(${JSON.stringify(template).replace(/"/g, '&quot;')})">
-              <div class="template-thumbnail">
-                ${template.preview_image ? '🖼️' : '📄'}
-              </div>
-              <div class="template-info">
-                <div class="template-name">${template.name}</div>
-                <div class="template-date">${new Date(template.updated_at).toLocaleDateString('ko-KR')}</div>
-              </div>
-              <div class="template-actions">
-                <button class="template-select-btn" onclick="event.stopPropagation(); showEditTemplateScreen(${JSON.stringify(template).replace(/"/g, '&quot;')})">
-                  선택
-                </button>
-                <button class="template-delete-btn" onclick="event.stopPropagation(); deleteTemplate('${template.template_id}')">
-                  삭제
-                </button>
-              </div>
-            </div>
-          `).join('')}
+    // 템플릿 삭제
+    function deleteTemplate(templateId) {
+      if (confirm('정말로 이 템플릿을 삭제하시겠습니까?')) {
+        post('delete-template', { templateId });
+        showStatus('템플릿을 삭제하는 중...', 'info');
+      }
+    }
+
+    // 템플릿 폼 취소
+    function cancelTemplateForm() {
+      document.getElementById('templateForm').style.display = 'none';
+      document.getElementById('templateName').value = '';
+      document.getElementById('templateDescription').value = '';
+      selectedTemplate = null;
+    }
+
+    // 상태 메시지 표시
+    function showStatus(message, type = 'info') {
+      const statusDiv = document.getElementById('statusMessage');
+      const statusClass = `status-indicator ${type}`;
+      
+      statusDiv.innerHTML = `
+        <div class="fade-in" style="padding: 12px; background: white; border-radius: 8px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <span class="${statusClass}"></span>
+          ${message}
         </div>
       `;
-
-      setStatus('템플릿 목록 로드 완료', 'success');
-    }
-
-    function deleteTemplate(templateId) {
-      if (!confirm('이 템플릿을 삭제하시겠습니까?\n\n삭제된 템플릿은 복구할 수 없습니다.')) {
-        return;
-      }
-
-      setStatus('템플릿을 삭제하는 중...', 'info');
-      post('delete-template', { templateId });
-    }
-
-
-    function saveNewTemplate() {
-      const editableLayers = layerData.filter(layer => layer.editable);
       
-      if (editableLayers.length === 0) {
-        setStatus('최소 1개 이상의 레이어를 편집 가능하게 설정해주세요', 'error');
-        return;
-      }
-
-      setStatus('템플릿을 저장하는 중...', 'info');
-      
-      const templateData = {
-        name: prompt('템플릿 이름을 입력하세요:', currentFileName) || currentFileName,
-        description: prompt('템플릿 설명을 입력하세요 (선택사항):', '') || '',
-        fileKey: currentFileKey,
-        layers: layerData,
-        editableLayers: editableLayers
-      };
-
-      post('save-template', templateData);
-    }
-
-    function updateTemplate() {
-      const editableLayers = layerData.filter(layer => layer.editable);
-      
-      if (editableLayers.length === 0) {
-        setStatus('최소 1개 이상의 레이어를 편집 가능하게 설정해주세요', 'error');
-        return;
-      }
-
-      setStatus('템플릿을 업데이트하는 중...', 'info');
-      
-      const templateData = {
-        templateId: currentTemplate.template_id,
-        layers: layerData,
-        editableLayers: editableLayers
-      };
-
-      post('update-template', templateData);
-    }
-
-    function copyToClipboard(elementId) {
-      const element = document.getElementById(elementId);
-      const text = element.textContent;
-      
-      navigator.clipboard.writeText(text).then(() => {
-        setStatus('URL이 클립보드에 복사되었습니다', 'success');
-      }).catch(() => {
-        setStatus('URL 복사에 실패했습니다', 'error');
-      });
-    }
-
-    function closePlugin() {
-      post('close');
-    }
-
-    function setStatus(text, type) {
-      const statusDiv = document.getElementById('status');
-      if (!statusDiv) return;
-      
-      statusDiv.textContent = text || '';
-      statusDiv.className = `status ${type || 'info'}`;
       statusDiv.style.display = 'block';
       
       // 3초 후 자동 숨김
@@ -1142,19 +698,51 @@
       }, 3000);
     }
 
-    // DOM 로드 완료 후 초기화
-    document.addEventListener('DOMContentLoaded', function() {
-      try {
-        // 파일 정보 요청
-        post('get-file-info');
-      } catch (error) {
-        console.error('Initialization error:', error);
-        setStatus('초기화 중 오류가 발생했습니다.', 'error');
+    // 메시지 수신 처리
+    window.addEventListener('message', (event) => {
+      const message = event.data.pluginMessage;
+      if (!message) return;
+      
+      switch (message.type) {
+        case 'file-info':
+          updateFileInfo(message.payload);
+          break;
+          
+        case 'layer-analysis':
+          displayLayerAnalysis(message.payload);
+          break;
+          
+        case 'template-list':
+          displayTemplateList(message.payload.templates);
+          break;
+          
+        case 'template-saved':
+          showStatus('템플릿이 성공적으로 저장되었습니다!', 'success');
+          cancelTemplateForm();
+          loadTemplateList(); // 목록 새로고침
+          break;
+          
+        case 'template-updated':
+          showStatus('템플릿이 성공적으로 업데이트되었습니다!', 'success');
+          cancelTemplateForm();
+          loadTemplateList(); // 목록 새로고침
+          break;
+          
+        case 'template-deleted':
+          showStatus('템플릿이 성공적으로 삭제되었습니다!', 'success');
+          loadTemplateList(); // 목록 새로고침
+          break;
+          
+        case 'error':
+          showStatus(`오류: ${message.payload.message}`, 'error');
+          break;
       }
     });
 
-    // 전역 이벤트 리스너 등록
-    window.addEventListener('message', onmessage);
+    // 페이지 로드 시 파일 정보 요청
+    document.addEventListener('DOMContentLoaded', () => {
+      post('get-file-info');
+    });
   </script>
 </body>
 </html>
