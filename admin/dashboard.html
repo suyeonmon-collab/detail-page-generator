@@ -636,9 +636,14 @@
                 <div class="table-container">
                     <div class="table-header">
                         <h3 class="table-title">전체 템플릿</h3>
-                        <button class="btn-primary" onclick="openTemplateModal()">
-                            ➕ 템플릿 추가
-                        </button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-secondary" onclick="fixSupabasePermissions()" style="font-size: 12px; padding: 6px 12px;">
+                                🔧 권한 수정
+                            </button>
+                            <button class="btn-primary" onclick="openTemplateModal()">
+                                ➕ 템플릿 추가
+                            </button>
+                        </div>
                     </div>
                     <table id="templatesTable">
                         <thead>
@@ -741,15 +746,26 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Figma 디자인 URL</label>
-                        <input type="url" id="templateFigmaUrl" class="form-input" placeholder="https://www.figma.com/design/abc123/Design-Name?node-id=2-2" onchange="extractFigmaInfo()">
-                        <p class="form-help">Figma 파일 URL을 입력하세요. 파일 ID와 Node ID가 자동으로 추출됩니다.</p>
+                        <label class="form-label">Figma 디자인 URL *</label>
+                        <input type="url" id="templateFigmaUrl" class="form-input" placeholder="https://www.figma.com/design/abc123/Design-Name?node-id=2-2" onchange="extractFigmaInfo()" required>
+                        <p class="form-help">Figma 파일 URL을 입력하세요. 웹 편집 가능한 템플릿으로 변환됩니다.</p>
                         <div id="figmaInfo" class="figma-info" style="display: none;">
                             <div class="info-item">
                                 <strong>파일 ID:</strong> <span id="extractedFileId">-</span>
                             </div>
                             <div class="info-item">
                                 <strong>Node ID:</strong> <span id="extractedNodeId">-</span>
+                            </div>
+                        </div>
+                        <div id="figmaPluginInfo" class="figma-info" style="display: none; margin-top: 12px;">
+                            <div class="info-item">
+                                <strong>플러그인 실행:</strong> 
+                                <button type="button" class="btn-primary" onclick="openFigmaPlugin()" style="padding: 4px 8px; font-size: 12px;">
+                                    🎨 피그마 플러그인 실행
+                                </button>
+                            </div>
+                            <div class="info-item">
+                                <strong>상태:</strong> <span id="pluginStatus" style="color: #f59e0b;">설정 대기 중</span>
                             </div>
                         </div>
                     </div>

@@ -8,6 +8,8 @@ let categories = [];
 let templates = [];
 let currentEditingCategoryIndex = null;
 let currentEditingTemplateIndex = null;
+let currentFigmaFileKey = null;
+let currentTemplateId = null;
 
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
@@ -242,6 +244,107 @@ async function saveCategory() {
 
 // ==================== 템플릿 관리 ====================
 
+// Figma URL에서 정보 추출
+function extractFigmaInfo() {
+    const figmaUrl = document.getElementById('templateFigmaUrl').value;
+    const figmaInfo = document.getElementById('figmaInfo');
+    const figmaPluginInfo = document.getElementById('figmaPluginInfo');
+    
+    if (!figmaUrl) {
+        figmaInfo.style.display = 'none';
+        figmaPluginInfo.style.display = 'none';
+        return;
+    }
+    
+    try {
+        // Figma URL 파싱
+        const url = new URL(figmaUrl);
+        const pathParts = url.pathname.split('/');
+        const fileId = pathParts[pathParts.length - 1];
+        const nodeId = url.searchParams.get('node-id') || '0-1';
+        
+        // 추출된 정보 표시
+        document.getElementById('extractedFileId').textContent = fileId;
+        document.getElementById('extractedNodeId').textContent = nodeId;
+        
+        figmaInfo.style.display = 'block';
+        figmaPluginInfo.style.display = 'block';
+        
+        // 전역 변수에 저장
+        currentFigmaFileKey = fileId;
+        
+        console.log('🔍 [Admin] Figma 정보 추출:', { fileId, nodeId });
+        
+    } catch (error) {
+        console.error('❌ [Admin] Figma URL 파싱 오류:', error);
+        figmaInfo.style.display = 'none';
+        figmaPluginInfo.style.display = 'none';
+    }
+}
+
+// Figma 플러그인 실행
+function openFigmaPlugin() {
+    const figmaUrl = document.getElementById('templateFigmaUrl').value;
+    
+    if (!figmaUrl) {
+        alert('먼저 Figma URL을 입력해주세요.');
+        return;
+    }
+    
+    try {
+        // Figma URL을 플러그인 실행 URL로 변환
+        const url = new URL(figmaUrl);
+        const pathParts = url.pathname.split('/');
+        const fileId = pathParts[pathParts.length - 1];
+        
+        // 플러그인 실행 URL 생성
+        const pluginUrl = `https://www.figma.com/file/${fileId}?plugin=auto-sync-plugin`;
+        
+        console.log('🚀 [Admin] Figma 플러그인 실행:', pluginUrl);
+        
+        // 새 창에서 플러그인 실행
+        const pluginWindow = window.open(pluginUrl, '_blank', 'width=1200,height=800');
+        
+        if (pluginWindow) {
+            showToast('Figma 플러그인이 실행되었습니다. 템플릿을 설정한 후 저장해주세요.', 'info');
+            
+            // 플러그인에서 템플릿 저장 완료를 감지하는 이벤트 리스너
+            window.addEventListener('message', handlePluginMessage);
+        } else {
+            alert('팝업이 차단되었습니다. 팝업을 허용하고 다시 시도해주세요.');
+        }
+        
+    } catch (error) {
+        console.error('❌ [Admin] Figma 플러그인 실행 오류:', error);
+        alert('Figma 플러그인 실행 중 오류가 발생했습니다.');
+    }
+}
+
+// 플러그인 메시지 처리
+function handlePluginMessage(event) {
+    if (event.origin !== 'https://www.figma.com') {
+        return;
+    }
+    
+    const message = event.data;
+    
+    if (message.type === 'template-saved') {
+        console.log('✅ [Admin] 플러그인에서 템플릿 저장 완료:', message.payload);
+        
+        // 템플릿 정보를 폼에 자동으로 채우기
+        const templateId = message.payload.templateId;
+        const previewUrl = message.payload.previewUrl;
+        
+        document.getElementById('templateId').value = templateId;
+        document.getElementById('templatePreviewImage').value = previewUrl;
+        
+        showToast('템플릿이 성공적으로 생성되었습니다!', 'success');
+        
+        // 이벤트 리스너 제거
+        window.removeEventListener('message', handlePluginMessage);
+    }
+}
+
 function renderTemplates() {
     const tbody = document.getElementById('templatesTableBody');
     
@@ -338,85 +441,153 @@ async function deleteTemplate(index) {
         return;
     }
     
-    templates.splice(index, 1);
-    
-    await saveData();
-    renderTemplates();
-    showToast('템플릿이 삭제되었습니다.', 'success');
+    try {
+        const response = await fetch(`/api/templates/${template.templateId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '템플릿 삭제에 실패했습니다');
+        }
+
+        showToast('템플릿이 성공적으로 삭제되었습니다', 'success');
+        await loadData(); // 데이터 새로고침
+        
+    } catch (error) {
+        console.error('❌ [Admin] 템플릿 삭제 오류:', error);
+        showToast('템플릿 삭제에 실패했습니다: ' + error.message, 'error');
+    }
 }
 
 async function saveTemplate() {
-    const templateId = document.getElementById('templateId').value.trim();
-    const categoryId = document.getElementById('templateCategoryId').value;
-    const name = document.getElementById('templateName').value.trim();
-    const description = document.getElementById('templateDescription').value.trim();
-    const figmaUrl = document.getElementById('templateFigmaUrl').value.trim();
-    const price = parseInt(document.getElementById('templatePrice').value) || 0;
-    const enabled = document.getElementById('templateEnabled').checked;
-    
-    if (!templateId || !categoryId || !name) {
-        alert('필수 항목을 모두 입력하세요.');
+    try {
+        const templateId = document.getElementById('templateId').value.trim();
+        const categoryId = document.getElementById('templateCategoryId').value;
+        const name = document.getElementById('templateName').value.trim();
+        const description = document.getElementById('templateDescription').value.trim();
+        const figmaUrl = document.getElementById('templateFigmaUrl').value.trim();
+        const price = parseInt(document.getElementById('templatePrice').value) || 0;
+        const enabled = document.getElementById('templateEnabled').checked;
+
+        // 필수 필드 검증
+        if (!templateId || !categoryId || !name) {
+            showToast('필수 필드를 모두 입력해주세요', 'error');
+            return;
+        }
+
+        // 피그마 URL이 있으면 플러그인 연동 방식 사용
+        if (figmaUrl && currentFigmaFileKey) {
+            showToast('피그마 플러그인을 통해 템플릿을 등록해주세요', 'info');
+            return;
+        }
+
+        // 수정 모드인지 확인
+        if (currentEditingTemplateIndex !== null) {
+            // 기존 템플릿 업데이트
+            const existingTemplate = templates[currentEditingTemplateIndex];
+            
+            const updateData = {
+                category_id: categoryId,
+                name: name,
+                description: description,
+                figma_url: figmaUrl,
+                price: price,
+                enabled: enabled
+            };
+
+            const response = await fetch(`/api/update-template/${existingTemplate.templateId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || '템플릿 업데이트에 실패했습니다');
+            }
+
+            showToast('템플릿이 성공적으로 업데이트되었습니다', 'success');
+        } else {
+            // 새 템플릿 저장
+            const templateData = {
+                template_id: templateId,
+                category_id: categoryId,
+                name: name,
+                description: description,
+                figma_url: figmaUrl,
+                price: price,
+                enabled: enabled
+            };
+
+            const response = await fetch('/api/save-template', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(templateData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || '템플릿 저장에 실패했습니다');
+            }
+
+            showToast('템플릿이 성공적으로 저장되었습니다', 'success');
+        }
+
+        closeTemplateModal();
+        await loadData(); // 데이터 새로고침
+
+    } catch (error) {
+        console.error('❌ [Admin] 템플릿 저장 오류:', error);
+        showToast('템플릿 저장에 실패했습니다: ' + error.message, 'error');
+    }
+}
+
+// Supabase 권한 정책 수정 함수
+async function fixSupabasePermissions() {
+    if (!confirm('Supabase 권한 정책을 수정하시겠습니까?\n\n이 작업은 템플릿 수정/삭제 기능을 활성화합니다.')) {
         return;
     }
-    
-    // Figma URL에서 파일 ID와 Node ID 추출
-    let figmaFileKey = null;
-    let figmaNodeId = null;
-    
-    if (figmaUrl) {
-        try {
-            const fileIdMatch = figmaUrl.match(/design\/([a-zA-Z0-9]+)/);
-            const nodeIdMatch = figmaUrl.match(/node-id=([^&]+)/);
-            
-            if (fileIdMatch && nodeIdMatch) {
-                figmaFileKey = fileIdMatch[1];
-                figmaNodeId = nodeIdMatch[1];
-            } else {
-                alert('Figma URL 형식이 올바르지 않습니다. (design/파일ID?node-id=노드ID)');
-                return;
+
+    try {
+        showToast('Supabase 권한 정책을 수정하는 중...', 'info');
+
+        const response = await fetch('/api/fix-supabase-permissions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             }
-        } catch (error) {
-            alert('Figma URL을 확인해주세요.');
-            return;
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '권한 정책 수정에 실패했습니다');
         }
-    }
-    
-    const templateData = {
-        templateId,
-        categoryId,
-        name,
-        description,
-        previewImage: `https://placehold.co/1280x720/cccccc/ffffff?text=${encodeURIComponent(name)}`,
-        figmaUrl,
-        figmaNodeId,
-        figmaFileKey,
-        price,
-        enabled,
-        nodes: [
-            { id: 'title', type: 'text', placeholder: '제목', maxLength: 50 },
-            { id: 'image', type: 'image', placeholder: '이미지' }
-        ]
-    };
-    
-    if (currentEditingTemplateIndex !== null) {
-        // 수정 - 기존 nodes 유지
-        const existingTemplate = templates[currentEditingTemplateIndex];
-        templateData.nodes = existingTemplate.nodes || templateData.nodes;
-        templates[currentEditingTemplateIndex] = templateData;
-    } else {
-        // 추가
-        // ID 중복 체크
-        if (templates.some(t => t.templateId === templateId)) {
-            alert('이미 존재하는 템플릿 ID입니다.');
-            return;
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('✅ Supabase 권한 정책이 성공적으로 수정되었습니다!', 'success');
+            
+            // 3초 후 데이터 새로고침
+            setTimeout(async () => {
+                await loadData();
+            }, 3000);
+        } else {
+            throw new Error(result.error || '권한 정책 수정에 실패했습니다');
         }
-        templates.push(templateData);
+
+    } catch (error) {
+        console.error('❌ [Admin] 권한 정책 수정 오류:', error);
+        showToast('권한 정책 수정에 실패했습니다: ' + error.message, 'error');
     }
-    
-    await saveData();
-    closeTemplateModal();
-    renderTemplates();
-    showToast(currentEditingTemplateIndex !== null ? '템플릿이 수정되었습니다.' : '템플릿이 추가되었습니다.', 'success');
 }
 
 function populateCategorySelect() {
@@ -710,5 +881,257 @@ function showToast(message, type = 'info') {
             toast.remove();
         }
     }, 3000);
+}
+
+// ============================================
+// 피그마 플러그인 연동 기능
+// ============================================
+
+// 피그마 정보 추출 (기존 함수 수정)
+function extractFigmaInfo() {
+    const figmaUrl = document.getElementById('templateFigmaUrl').value;
+    
+    if (!figmaUrl) {
+        document.getElementById('figmaInfo').style.display = 'none';
+        document.getElementById('figmaPluginInfo').style.display = 'none';
+        return;
+    }
+
+    // 피그마 URL에서 파일 키와 노드 ID 추출
+    const fileKeyMatch = figmaUrl.match(/figma\.com\/file\/([a-zA-Z0-9]+)/);
+    const nodeIdMatch = figmaUrl.match(/node-id=([^&]+)/);
+    
+    if (fileKeyMatch) {
+        currentFigmaFileKey = fileKeyMatch[1];
+        document.getElementById('extractedFileId').textContent = currentFigmaFileKey;
+        
+        if (nodeIdMatch) {
+            document.getElementById('extractedNodeId').textContent = nodeIdMatch[1];
+        } else {
+            document.getElementById('extractedNodeId').textContent = '전체 페이지';
+        }
+        
+        document.getElementById('figmaInfo').style.display = 'block';
+        document.getElementById('figmaPluginInfo').style.display = 'block';
+        
+        // 플러그인 상태 초기화
+        updatePluginStatus('설정 대기 중', '#f59e0b');
+    } else {
+        document.getElementById('figmaInfo').style.display = 'none';
+        document.getElementById('figmaPluginInfo').style.display = 'none';
+        showToast('유효하지 않은 피그마 URL입니다', 'error');
+    }
+}
+
+// 피그마 플러그인 실행
+async function openFigmaPlugin() {
+    try {
+        const figmaUrl = document.getElementById('templateFigmaUrl').value;
+        const templateName = document.getElementById('templateName').value;
+        const categoryId = document.getElementById('templateCategoryId').value;
+        
+        if (!figmaUrl || !templateName || !categoryId) {
+            showToast('템플릿 정보를 모두 입력해주세요', 'error');
+            return;
+        }
+
+        if (!currentFigmaFileKey) {
+            showToast('유효한 피그마 URL을 입력해주세요', 'error');
+            return;
+        }
+
+        updatePluginStatus('템플릿 등록 중...', '#3b82f6');
+
+        // 먼저 템플릿을 데이터베이스에 등록
+        const templateData = {
+            figma_url: figmaUrl,
+            template_name: templateName,
+            category_id: categoryId,
+            description: document.getElementById('templateDescription').value || '',
+            price: parseInt(document.getElementById('templatePrice').value) || 0
+        };
+
+        const response = await fetch('/api/register-figma-template', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(templateData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '템플릿 등록에 실패했습니다');
+        }
+
+        const result = await response.json();
+        currentTemplateId = result.template.template_id;
+
+        updatePluginStatus('플러그인 실행 중...', '#3b82f6');
+
+        // 피그마 플러그인 실행 URL 생성
+        const pluginUrl = `https://figma.com/file/${currentFigmaFileKey}?plugin=template-web-editor-admin&template=${currentTemplateId}`;
+        
+        // 새 창에서 피그마 플러그인 실행
+        const figmaWindow = window.open(pluginUrl, '_blank', 'width=1200,height=800');
+        
+        if (!figmaWindow) {
+            throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.');
+        }
+
+        updatePluginStatus('플러그인 실행됨', '#10b981');
+        
+        // 플러그인 완료 상태 확인을 위한 폴링 시작
+        startPluginStatusPolling();
+
+        showToast('피그마 플러그인이 실행되었습니다. 플러그인에서 템플릿 설정을 완료해주세요.', 'success');
+
+    } catch (error) {
+        console.error('❌ [Admin] 피그마 플러그인 실행 오류:', error);
+        updatePluginStatus('실행 실패', '#ef4444');
+        showToast('피그마 플러그인 실행에 실패했습니다: ' + error.message, 'error');
+    }
+}
+
+// 플러그인 상태 업데이트
+function updatePluginStatus(status, color) {
+    const statusElement = document.getElementById('pluginStatus');
+    if (statusElement) {
+        statusElement.textContent = status;
+        statusElement.style.color = color;
+    }
+}
+
+// 플러그인 상태 폴링
+function startPluginStatusPolling() {
+    if (!currentTemplateId) return;
+
+    const pollInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/api/templates/${currentTemplateId}`);
+            
+            if (response.ok) {
+                const result = await response.json();
+                const template = result.template;
+                
+                // 노드 데이터가 있으면 플러그인 설정이 완료된 것으로 간주
+                if (template.nodes && Object.keys(template.nodes).length > 0) {
+                    updatePluginStatus('설정 완료', '#10b981');
+                    showToast('템플릿 설정이 완료되었습니다!', 'success');
+                    clearInterval(pollInterval);
+                    
+                    // 템플릿 목록 새로고침
+                    await loadData();
+                }
+            }
+        } catch (error) {
+            console.warn('플러그인 상태 확인 오류:', error);
+        }
+    }, 5000); // 5초마다 확인
+
+    // 5분 후 폴링 중지
+    setTimeout(() => {
+        clearInterval(pollInterval);
+        if (document.getElementById('pluginStatus').textContent === '플러그인 실행됨') {
+            updatePluginStatus('시간 초과', '#f59e0b');
+        }
+    }, 300000);
+}
+
+// 템플릿 저장 함수 수정 (피그마 연동 고려)
+async function saveTemplate() {
+    try {
+        const templateId = document.getElementById('templateId').value;
+        const categoryId = document.getElementById('templateCategoryId').value;
+        const name = document.getElementById('templateName').value;
+        const description = document.getElementById('templateDescription').value;
+        const figmaUrl = document.getElementById('templateFigmaUrl').value;
+        const price = parseInt(document.getElementById('templatePrice').value) || 0;
+        const enabled = document.getElementById('templateEnabled').checked;
+
+        // 필수 필드 검증
+        if (!templateId || !categoryId || !name) {
+            showToast('필수 필드를 모두 입력해주세요', 'error');
+            return;
+        }
+
+        // 피그마 URL이 있으면 플러그인 연동 방식 사용
+        if (figmaUrl && currentFigmaFileKey) {
+            showToast('피그마 플러그인을 통해 템플릿을 등록해주세요', 'info');
+            return;
+        }
+
+        // 기존 방식으로 템플릿 저장
+        const templateData = {
+            template_id: templateId,
+            category_id: categoryId,
+            name: name,
+            description: description,
+            figma_url: figmaUrl,
+            price: price,
+            enabled: enabled
+        };
+
+        const response = await fetch('/api/save-template', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(templateData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '템플릿 저장에 실패했습니다');
+        }
+
+        showToast('템플릿이 성공적으로 저장되었습니다', 'success');
+        closeTemplateModal();
+        await loadData();
+
+    } catch (error) {
+        console.error('❌ [Admin] 템플릿 저장 오류:', error);
+        showToast('템플릿 저장에 실패했습니다: ' + error.message, 'error');
+    }
+}
+
+// Supabase 권한 정책 수정 함수
+async function fixSupabasePermissions() {
+    if (!confirm('Supabase 권한 정책을 수정하시겠습니까?\n\n이 작업은 템플릿 수정/삭제 기능을 활성화합니다.')) {
+        return;
+    }
+
+    try {
+        showToast('Supabase 권한 정책을 수정하는 중...', 'info');
+
+        const response = await fetch('/api/fix-supabase-permissions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '권한 정책 수정에 실패했습니다');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('✅ Supabase 권한 정책이 성공적으로 수정되었습니다!', 'success');
+            
+            // 3초 후 데이터 새로고침
+            setTimeout(async () => {
+                await loadData();
+            }, 3000);
+        } else {
+            throw new Error(result.error || '권한 정책 수정에 실패했습니다');
+        }
+
+    } catch (error) {
+        console.error('❌ [Admin] 권한 정책 수정 오류:', error);
+        showToast('권한 정책 수정에 실패했습니다: ' + error.message, 'error');
+    }
 }
 

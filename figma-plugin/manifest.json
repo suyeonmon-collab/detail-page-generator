@@ -1,13 +1,22 @@
 {
-  "name": "Detail Page Automator",
-  "id": "detail-page-automator",
+  "name": "Template Web Editor Admin",
+  "id": "template-web-editor-admin",
   "api": "1.0.0",
   "main": "code.js",
   "ui": "ui.html",
   "editorType": ["figma"],
   "relaunchButtons": [
-    { "command": "open", "name": "Open Panel" }
-  ]
+    { "command": "open", "name": "Template Settings" }
+  ],
+  "permissions": [
+    "currentuser"
+  ],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://geuboakvnddaaheahild.supabase.co",
+      "https://detail-page-generator.vercel.app"
+    ]
+  }
 }
 
 

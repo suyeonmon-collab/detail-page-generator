@@ -256,29 +256,59 @@
             const error = document.getElementById('error');
 
             try {
-                const response = await fetch('../data/templates.json');
-                const data = await response.json();
+                // Supabase에서 템플릿 로드
+                const response = await fetch(`/api/templates?category_id=${categoryId}&enabled=true`);
                 
-                // 선택한 카테고리의 템플릿만 필터링
-                const filteredTemplates = data.templates.filter(
-                    template => template.categoryId === categoryId
-                );
+                if (!response.ok) {
+                    throw new Error(`API 오류: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || '템플릿 로드 실패');
+                }
+
+                const templates = result.templates || [];
 
                 loading.style.display = 'none';
 
-                if (filteredTemplates.length === 0) {
+                if (templates.length === 0) {
                     showError('아직 준비된 템플릿이 없습니다.');
                     return;
                 }
 
                 // 템플릿 카드 생성
-                filteredTemplates.forEach(template => {
+                templates.forEach(template => {
                     const card = createTemplateCard(template);
                     grid.appendChild(card);
                 });
+
             } catch (err) {
+                console.error('템플릿 로드 오류:', err);
                 loading.style.display = 'none';
-                showError('템플릿을 불러오는데 실패했습니다: ' + err.message);
+                
+                // Fallback: 기존 JSON 파일 로드
+                try {
+                    const response = await fetch('../data/templates.json');
+                    const data = await response.json();
+                    
+                    const filteredTemplates = data.templates.filter(
+                        template => template.categoryId === categoryId
+                    );
+
+                    if (filteredTemplates.length === 0) {
+                        showError('아직 준비된 템플릿이 없습니다.');
+                        return;
+                    }
+
+                    filteredTemplates.forEach(template => {
+                        const card = createTemplateCard(template);
+                        grid.appendChild(card);
+                    });
+                } catch (fallbackErr) {
+                    showError('템플릿을 불러오는데 실패했습니다: ' + err.message);
+                }
             }
         }
 
@@ -287,14 +317,25 @@
             const card = document.createElement('div');
             card.className = 'template-card';
             
+            // Supabase 데이터 구조에 맞게 필드 매핑
+            const templateId = template.template_id || template.templateId;
+            const templateName = template.name;
+            const templateDescription = template.description || '';
+            const templatePrice = template.price || 0;
+            const previewImage = template.preview_image || template.previewImage || '/images/templates/default.png';
+            const figmaUrl = template.figma_url || template.figmaUrl;
+            const nodes = template.nodes;
+            
             card.innerHTML = `
-                <img src="${template.previewImage}" alt="${template.name}" class="template-preview">
+                <img src="${previewImage}" alt="${templateName}" class="template-preview" onerror="this.src='/images/templates/default.png'">
                 <div class="template-info">
-                    <h3 class="template-name">${template.name}</h3>
-                    <p class="template-description">${template.description}</p>
+                    <h3 class="template-name">${templateName}</h3>
+                    <p class="template-description">${templateDescription}</p>
                     <div class="template-footer">
-                        <span class="template-price">${template.price.toLocaleString()}원</span>
-                        <button class="select-button">선택하기</button>
+                        <span class="template-price">${templatePrice.toLocaleString()}원</span>
+                        <button class="select-button">
+                            ${figmaUrl && nodes ? '웹에서 편집' : '선택하기'}
+                        </button>
                     </div>
                 </div>
             `;
@@ -302,12 +343,28 @@
             // 선택 버튼 클릭 이벤트
             card.querySelector('.select-button').addEventListener('click', (e) => {
                 e.stopPropagation();
-                selectTemplate(template);
+                selectTemplate({
+                    templateId: templateId,
+                    name: templateName,
+                    description: templateDescription,
+                    price: templatePrice,
+                    previewImage: previewImage,
+                    figmaUrl: figmaUrl,
+                    nodes: nodes
+                });
             });
 
             // 카드 전체 클릭 이벤트
             card.addEventListener('click', () => {
-                selectTemplate(template);
+                selectTemplate({
+                    templateId: templateId,
+                    name: templateName,
+                    description: templateDescription,
+                    price: templatePrice,
+                    previewImage: previewImage,
+                    figmaUrl: figmaUrl,
+                    nodes: nodes
+                });
             });
 
             return card;
@@ -320,8 +377,14 @@
             // 세션에 템플릿 정보 저장
             sessionStorage.setItem('selectedTemplate', JSON.stringify(template));
             
-            // 입력 폼 페이지로 이동
-            window.location.href = `./form.html?template=${template.templateId}`;
+            // 웹 편집 페이지로 이동 (새로운 기능)
+            if (template.figmaUrl && template.nodes) {
+                // 피그마 플러그인으로 설정된 템플릿인 경우 웹 편집 페이지로 이동
+                window.location.href = `./template-editor.html?template=${template.templateId}`;
+            } else {
+                // 기존 방식: 입력 폼 페이지로 이동
+                window.location.href = `./form.html?template=${template.templateId}`;
+            }
         }
 
         // 에러 표시

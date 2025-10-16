@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>템플릿 편집 - 웹 에디터</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: white;
+            padding: 16px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0f0f0;
+            color: #2d3748;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background: #e0e0e0;
+        }
+
+        .template-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .template-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .template-details h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .template-details p {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+
+        .main-content {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+
+        .editor-panel {
+            flex: 1;
+            background: white;
+            margin: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .editor-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .editor-subtitle {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: #ffffff;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        .canvas {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            min-height: 600px;
+        }
+
+        .editable-element {
+            position: absolute;
+            border: 2px dashed transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .editable-element:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .editable-element.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .editable-text {
+            padding: 8px;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+
+        .editable-image {
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .editable-shape {
+            background: #e2e8f0;
+        }
+
+        .properties-panel {
+            width: 320px;
+            background: white;
+            margin: 20px 20px 20px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .properties-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .properties-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .properties-content {
+            padding: 20px;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .color-input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .image-upload {
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .image-upload:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .image-upload.has-image {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 120px;
+            border-radius: 6px;
+            margin-top: 12px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #718096;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-subtext {
+            font-size: 14px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #718096;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 2000;
+        }
+
+        .toast.show {
+            display: flex;
+        }
+
+        .toast-success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast-info {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .element-info {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .element-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .element-info p {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .element-info p:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="/pages/templates.html" class="back-button">
+                ← 템플릿 선택으로 돌아가기
+            </a>
+            <div class="template-info">
+                <div class="template-preview" id="templatePreview">
+                    📄
+                </div>
+                <div class="template-details">
+                    <h2 id="templateName">템플릿 로딩 중...</h2>
+                    <p id="templateDescription">설명을 불러오는 중입니다</p>
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-secondary" onclick="resetChanges()">
+                🔄 초기화
+            </button>
+            <button class="btn btn-primary" onclick="saveChanges()">
+                💾 저장하기
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="editor-panel">
+            <div class="editor-header">
+                <h3 class="editor-title">템플릿 편집</h3>
+                <p class="editor-subtitle">편집 가능한 요소를 클릭하여 수정하세요</p>
+            </div>
+            <div class="canvas-container">
+                <div class="canvas" id="canvas">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        템플릿을 불러오는 중...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="properties-panel">
+            <div class="properties-header">
+                <h3 class="properties-title">속성 편집</h3>
+            </div>
+            <div class="properties-content" id="propertiesContent">
+                <div class="empty-state">
+                    <div class="empty-state-icon">👆</div>
+                    <div class="empty-state-text">편집할 요소를 선택하세요</div>
+                    <div class="empty-state-subtext">캔버스에서 편집 가능한 요소를 클릭하면 여기에 속성이 표시됩니다</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        // 전역 변수
+        let templateData = null;
+        let editableElements = [];
+        let selectedElement = null;
+        let originalValues = {};
+
+        // URL에서 템플릿 ID 추출
+        const urlParams = new URLSearchParams(window.location.search);
+        const templateId = urlParams.get('template');
+
+        if (!templateId) {
+            showToast('템플릿 ID가 필요합니다', 'error');
+            setTimeout(() => {
+                window.location.href = '/pages/templates.html';
+            }, 2000);
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTemplate();
+        });
+
+        // 템플릿 로드
+        async function loadTemplate() {
+            try {
+                showToast('템플릿을 불러오는 중...', 'info');
+
+                const response = await fetch(`/api/template-web-data/${templateId}`);
+                
+                if (!response.ok) {
+                    throw new Error('템플릿을 찾을 수 없습니다');
+                }
+
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || '템플릿 로드 실패');
+                }
+
+                templateData = result;
+                editableElements = result.editable_elements || [];
+
+                // 템플릿 정보 업데이트
+                updateTemplateInfo(result.template);
+                
+                // 캔버스 생성
+                generateCanvas();
+                
+                showToast('템플릿이 로드되었습니다', 'success');
+
+            } catch (error) {
+                console.error('템플릿 로드 오류:', error);
+                showToast('템플릿 로드에 실패했습니다: ' + error.message, 'error');
+                
+                setTimeout(() => {
+                    window.location.href = '/pages/templates.html';
+                }, 3000);
+            }
+        }
+
+        // 템플릿 정보 업데이트
+        function updateTemplateInfo(template) {
+            document.getElementById('templateName').textContent = template.name;
+            document.getElementById('templateDescription').textContent = template.description || '설명이 없습니다';
+            
+            if (template.preview_image) {
+                const preview = document.getElementById('templatePreview');
+                preview.innerHTML = `<img src="${template.preview_image}" alt="미리보기" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">`;
+            }
+        }
+
+        // 캔버스 생성
+        function generateCanvas() {
+            const canvas = document.getElementById('canvas');
+            canvas.innerHTML = '';
+
+            if (editableElements.length === 0) {
+                canvas.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📄</div>
+                        <div class="empty-state-text">편집 가능한 요소가 없습니다</div>
+                        <div class="empty-state-subtext">관리자가 설정한 편집 가능한 요소가 없습니다</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 편집 가능한 요소들을 캔버스에 배치
+            editableElements.forEach((element, index) => {
+                const elementDiv = document.createElement('div');
+                elementDiv.className = 'editable-element';
+                elementDiv.id = `element-${element.id}`;
+                
+                // 위치 및 크기 설정
+                const pos = element.position || { x: 0, y: 0, width: 100, height: 50 };
+                elementDiv.style.left = `${pos.x}px`;
+                elementDiv.style.top = `${pos.y}px`;
+                elementDiv.style.width = `${pos.width}px`;
+                elementDiv.style.height = `${pos.height}px`;
+
+                // 요소 타입에 따른 내용 설정
+                switch (element.editType) {
+                    case 'text':
+                        elementDiv.className += ' editable-text';
+                        elementDiv.textContent = element.currentValue || '텍스트를 입력하세요';
+                        elementDiv.contentEditable = true;
+                        break;
+                    case 'image':
+                        elementDiv.className += ' editable-image';
+                        if (element.currentValue && element.currentValue !== '') {
+                            elementDiv.innerHTML = `<img src="${element.currentValue}" alt="이미지" style="width: 100%; height: 100%; object-fit: cover;">`;
+                        } else {
+                            elementDiv.textContent = '이미지를 업로드하세요';
+                        }
+                        break;
+                    case 'color':
+                        elementDiv.className += ' editable-shape';
+                        elementDiv.style.backgroundColor = element.currentValue || '#e2e8f0';
+                        break;
+                    case 'size':
+                        elementDiv.className += ' editable-shape';
+                        elementDiv.style.backgroundColor = '#e2e8f0';
+                        elementDiv.textContent = '크기 조절';
+                        break;
+                }
+
+                // 클릭 이벤트 추가
+                elementDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    selectElement(element, elementDiv);
+                });
+
+                canvas.appendChild(elementDiv);
+            });
+
+            // 캔버스 클릭 시 선택 해제
+            canvas.addEventListener('click', () => {
+                deselectElement();
+            });
+        }
+
+        // 요소 선택
+        function selectElement(element, elementDiv) {
+            // 이전 선택 해제
+            deselectElement();
+            
+            selectedElement = element;
+            elementDiv.classList.add('selected');
+            
+            // 속성 패널 업데이트
+            updatePropertiesPanel(element);
+        }
+
+        // 선택 해제
+        function deselectElement() {
+            if (selectedElement) {
+                document.querySelectorAll('.editable-element').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                selectedElement = null;
+                
+                // 속성 패널 초기화
+                document.getElementById('propertiesContent').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👆</div>
+                        <div class="empty-state-text">편집할 요소를 선택하세요</div>
+                        <div class="empty-state-subtext">캔버스에서 편집 가능한 요소를 클릭하면 여기에 속성이 표시됩니다</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 속성 패널 업데이트
+        function updatePropertiesPanel(element) {
+            const content = document.getElementById('propertiesContent');
+            
+            let propertiesHTML = `
+                <div class="element-info">
+                    <h4>${element.label}</h4>
+                    <p><strong>타입:</strong> ${getEditTypeLabel(element.editType)}</p>
+                    <p><strong>위치:</strong> ${element.position.x}px, ${element.position.y}px</p>
+                    <p><strong>크기:</strong> ${element.position.width}px × ${element.position.height}px</p>
+                </div>
+            `;
+
+            switch (element.editType) {
+                case 'text':
+                    propertiesHTML += `
+                        <div class="form-group">
+                            <label class="form-label">텍스트 내용</label>
+                            <textarea class="form-textarea" id="textContent" placeholder="텍스트를 입력하세요">${element.currentValue || ''}</textarea>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'image':
+                    propertiesHTML += `
+                        <div class="form-group">
+                            <label class="form-label">이미지 업로드</label>
+                            <div class="image-upload ${element.currentValue ? 'has-image' : ''}" onclick="document.getElementById('imageUpload').click()">
+                                <div>${element.currentValue ? '이미지 변경' : '이미지 업로드'}</div>
+                                <input type="file" id="imageUpload" accept="image/*" style="display: none;" onchange="handleImageUpload(this)">
+                                ${element.currentValue ? `<img src="${element.currentValue}" class="image-preview">` : ''}
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'color':
+                    propertiesHTML += `
+                        <div class="form-group">
+                            <label class="form-label">색상</label>
+                            <input type="color" class="color-input" id="colorValue" value="${element.currentValue || '#e2e8f0'}" onchange="updateElementColor(this.value)">
+                        </div>
+                    `;
+                    break;
+                    
+                case 'size':
+                    propertiesHTML += `
+                        <div class="form-group">
+                            <label class="form-label">너비 (px)</label>
+                            <input type="number" class="form-input" id="widthValue" value="${element.position.width}" onchange="updateElementSize()">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">높이 (px)</label>
+                            <input type="number" class="form-input" id="heightValue" value="${element.position.height}" onchange="updateElementSize()">
+                        </div>
+                    `;
+                    break;
+            }
+
+            content.innerHTML = propertiesHTML;
+            
+            // 이벤트 리스너 추가
+            if (element.editType === 'text') {
+                document.getElementById('textContent').addEventListener('input', (e) => {
+                    updateElementText(e.target.value);
+                });
+            }
+        }
+
+        // 편집 타입 라벨
+        function getEditTypeLabel(editType) {
+            const labels = {
+                'text': '텍스트',
+                'image': '이미지',
+                'color': '색상',
+                'size': '크기'
+            };
+            return labels[editType] || editType;
+        }
+
+        // 요소 업데이트 함수들
+        function updateElementText(text) {
+            if (selectedElement) {
+                const elementDiv = document.getElementById(`element-${selectedElement.id}`);
+                elementDiv.textContent = text;
+                selectedElement.currentValue = text;
+            }
+        }
+
+        function updateElementColor(color) {
+            if (selectedElement) {
+                const elementDiv = document.getElementById(`element-${selectedElement.id}`);
+                elementDiv.style.backgroundColor = color;
+                selectedElement.currentValue = color;
+            }
+        }
+
+        function updateElementSize() {
+            if (selectedElement) {
+                const width = parseInt(document.getElementById('widthValue').value) || 100;
+                const height = parseInt(document.getElementById('heightValue').value) || 50;
+                
+                const elementDiv = document.getElementById(`element-${selectedElement.id}`);
+                elementDiv.style.width = `${width}px`;
+                elementDiv.style.height = `${height}px`;
+                
+                selectedElement.position.width = width;
+                selectedElement.position.height = height;
+            }
+        }
+
+        function handleImageUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('이미지 파일만 업로드 가능합니다', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (selectedElement) {
+                    const elementDiv = document.getElementById(`element-${selectedElement.id}`);
+                    elementDiv.innerHTML = `<img src="${e.target.result}" alt="이미지" style="width: 100%; height: 100%; object-fit: cover;">`;
+                    selectedElement.currentValue = e.target.result;
+                    
+                    // 업로드 영역 스타일 업데이트
+                    const uploadArea = input.parentElement;
+                    uploadArea.classList.add('has-image');
+                    
+                    showToast('이미지가 업로드되었습니다', 'success');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 변경사항 저장
+        async function saveChanges() {
+            try {
+                showToast('변경사항을 저장하는 중...', 'info');
+
+                // 변경된 요소들만 수집
+                const changedElements = editableElements.filter(element => {
+                    return element.currentValue !== (originalValues[element.id] || '');
+                });
+
+                if (changedElements.length === 0) {
+                    showToast('변경된 내용이 없습니다', 'info');
+                    return;
+                }
+
+                // 저장 로직 (실제 구현에서는 API 호출)
+                console.log('저장할 변경사항:', changedElements);
+                
+                // 임시로 로컬 스토리지에 저장
+                localStorage.setItem(`template_${templateId}_changes`, JSON.stringify(changedElements));
+                
+                showToast('변경사항이 저장되었습니다', 'success');
+
+            } catch (error) {
+                console.error('저장 오류:', error);
+                showToast('저장에 실패했습니다: ' + error.message, 'error');
+            }
+        }
+
+        // 변경사항 초기화
+        function resetChanges() {
+            if (confirm('모든 변경사항을 초기화하시겠습니까?')) {
+                // 원본 값으로 복원
+                editableElements.forEach(element => {
+                    element.currentValue = originalValues[element.id] || '';
+                });
+                
+                // 캔버스 다시 생성
+                generateCanvas();
+                
+                // 선택 해제
+                deselectElement();
+                
+                showToast('변경사항이 초기화되었습니다', 'success');
+            }
+        }
+
+        // 토스트 메시지
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const messageEl = document.getElementById('toastMessage');
+            
+            messageEl.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

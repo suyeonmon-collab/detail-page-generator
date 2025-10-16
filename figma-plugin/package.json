@@ -1,7 +1,7 @@
 {
-  "name": "figma-plugin-detail-page-automator",
+  "name": "template-web-editor-admin",
   "version": "1.0.0",
-  "description": "Enhanced Detail Page Automator for Figma",
+  "description": "관리자용 피그마 템플릿 웹 편집 설정 플러그인",
   "main": "code.js",
   "scripts": {
     "build": "echo 'No build step required for Figma plugins'",
@@ -10,14 +10,15 @@
   "keywords": [
     "figma",
     "plugin",
-    "automation",
-    "design"
+    "admin",
+    "template",
+    "web-editor"
   ],
-  "author": "Your Name",
+  "author": "Admin",
   "license": "MIT",
   "figma": {
-    "id": "detail-page-automator",
-    "name": "Detail Page Automator"
+    "id": "template-web-editor-admin",
+    "name": "Template Web Editor Admin"
   }
 }
 
