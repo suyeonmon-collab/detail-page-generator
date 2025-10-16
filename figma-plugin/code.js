@@ -373,6 +373,10 @@ async function saveTemplate(templateData) {
       }
     });
     
+    // 파일 키 가져오기
+    const fileKey = figma.fileKey || 'unknown-file-key';
+    console.log('🔑 [Admin Plugin] 파일 키:', fileKey);
+    
     // 템플릿 데이터 구성
     const templateRecord = {
       template_id: generateTemplateId(templateData.name),
@@ -380,8 +384,9 @@ async function saveTemplate(templateData) {
       name: templateData.name,
       description: templateData.description || '',
       preview_image: thumbnail,
-      figma_url: `https://figma.com/file/${figma.fileKey}`,
-      figma_file_key: figma.fileKey,
+      figma_url: `https://www.figma.com/file/${fileKey}`,
+      figma_file_key: fileKey,
+      figma_node_id: '0-1', // 기본 노드 ID
       price: 0,
       enabled: true,
       nodes: nodes
@@ -451,10 +456,16 @@ async function updateTemplate(templateData) {
       }
     });
     
+    // 파일 키 가져오기
+    const fileKey = figma.fileKey || 'unknown-file-key';
+    console.log('🔑 [Admin Plugin] 업데이트 파일 키:', fileKey);
+    
     // 업데이트 데이터 구성
     const updateData = {
       preview_image: thumbnail,
-      figma_file_key: figma.fileKey,
+      figma_url: `https://www.figma.com/file/${fileKey}`,
+      figma_file_key: fileKey,
+      figma_node_id: '0-1',
       nodes: nodes,
       updated_at: new Date().toISOString()
     };

@@ -304,15 +304,19 @@ function extractFigmaInfo() {
         
         // 파일 ID 추출 - 가장 간단한 방식
         const fileIdMatch = figmaUrl.match(/\/design\/([a-zA-Z0-9]{20,25})/);
+        console.log('🔍 [extractFigmaInfo] /design/ 패턴 매치 결과:', fileIdMatch);
         if (fileIdMatch) {
             fileId = fileIdMatch[1];
             console.log('✅ [extractFigmaInfo] 파일 ID 추출 성공:', fileId);
         } else {
             // /file/ 형식도 시도
             const fileIdMatch2 = figmaUrl.match(/\/file\/([a-zA-Z0-9]{20,25})/);
+            console.log('🔍 [extractFigmaInfo] /file/ 패턴 매치 결과:', fileIdMatch2);
             if (fileIdMatch2) {
                 fileId = fileIdMatch2[1];
                 console.log('✅ [extractFigmaInfo] 파일 ID 추출 성공 (file 형식):', fileId);
+            } else {
+                console.log('❌ [extractFigmaInfo] 모든 패턴 매치 실패');
             }
         }
         
