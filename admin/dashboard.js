@@ -308,11 +308,18 @@ function extractFigmaInfo() {
         if (url.hostname.includes('figma.com')) {
             const pathParts = url.pathname.split('/').filter(part => part);
             
+            console.log('🔍 [extractFigmaInfo] URL 파싱:', {
+                hostname: url.hostname,
+                pathname: url.pathname,
+                pathParts: pathParts,
+                searchParams: Object.fromEntries(url.searchParams)
+            });
+            
             // /file/ID 형식
             if (pathParts[0] === 'file' && pathParts[1]) {
                 fileId = pathParts[1];
             }
-            // /design/ID 형식
+            // /design/ID 형식 (한글 파일명 포함)
             else if (pathParts[0] === 'design' && pathParts[1]) {
                 fileId = pathParts[1];
             }
@@ -321,14 +328,29 @@ function extractFigmaInfo() {
                 fileId = pathParts[0];
             }
             
-            // Node ID 추출
+            // Node ID 추출 (다양한 파라미터명 지원)
             nodeId = url.searchParams.get('node-id') || 
                     url.searchParams.get('nodeId') || 
+                    url.searchParams.get('node_id') ||
                     '0-1';
         }
         
+        // 파일 ID가 없으면 정규식으로 재시도
         if (!fileId) {
-            throw new Error('Figma 파일 ID를 찾을 수 없습니다');
+            console.log('🔍 [extractFigmaInfo] 정규식으로 재시도');
+            
+            // Figma 파일 ID 패턴: 20자리 영숫자 문자열
+            const fileIdPattern = /\/[a-zA-Z0-9]{20,}/;
+            const match = figmaUrl.match(fileIdPattern);
+            
+            if (match) {
+                fileId = match[0].substring(1); // '/' 제거
+                console.log('✅ [extractFigmaInfo] 정규식으로 파일 ID 추출:', fileId);
+            }
+        }
+        
+        if (!fileId) {
+            throw new Error('Figma 파일 ID를 찾을 수 없습니다. URL 형식을 확인해주세요.');
         }
         
         // 추출된 정보 표시
@@ -356,7 +378,10 @@ function extractFigmaInfo() {
                     <strong>오류:</strong> 유효한 Figma URL을 입력해주세요
                 </div>
                 <div class="info-item" style="font-size: 11px; color: #6b7280;">
-                    예: https://www.figma.com/file/abc123/Design-Name?node-id=2-2
+                    예: https://www.figma.com/design/5Ud17MlLvLtV8kT8zFdXiN/파일명?node-id=0-1
+                </div>
+                <div class="info-item" style="font-size: 11px; color: #6b7280;">
+                    또는: https://www.figma.com/file/abc123/Design-Name?node-id=2-2
                 </div>
             `;
             figmaPluginInfo.style.display = 'block';
