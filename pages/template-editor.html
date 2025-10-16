@@ -553,7 +553,17 @@
             const canvas = document.getElementById('canvas');
             canvas.innerHTML = '';
 
-            if (editableElements.length === 0) {
+            // editableElements가 객체인 경우 배열로 변환
+            let elementsArray = [];
+            if (Array.isArray(editableElements)) {
+                elementsArray = editableElements;
+            } else if (typeof editableElements === 'object' && editableElements !== null) {
+                elementsArray = Object.values(editableElements);
+            }
+
+            console.log('🎨 [generateCanvas] 편집 가능한 요소:', elementsArray);
+
+            if (elementsArray.length === 0) {
                 canvas.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📄</div>
@@ -565,7 +575,7 @@
             }
 
             // 편집 가능한 요소들을 캔버스에 배치
-            editableElements.forEach((element, index) => {
+            elementsArray.forEach((element, index) => {
                 const elementDiv = document.createElement('div');
                 elementDiv.className = 'editable-element';
                 elementDiv.id = `element-${element.id}`;

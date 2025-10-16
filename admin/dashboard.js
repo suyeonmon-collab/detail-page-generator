@@ -1204,14 +1204,19 @@ async function openFigmaPlugin() {
 
         // 먼저 템플릿을 데이터베이스에 등록
         const templateData = {
-            figma_url: figmaUrl,
-            template_name: templateName,
+            template_id: generateTemplateId(templateName),
             category_id: categoryId,
+            name: templateName,
             description: document.getElementById('templateDescription').value || '',
-            price: parseInt(document.getElementById('templatePrice').value) || 0
+            figma_url: figmaUrl,
+            figma_file_key: currentFigmaFileKey,
+            figma_node_id: '0-1',
+            price: parseInt(document.getElementById('templatePrice').value) || 0,
+            enabled: true,
+            nodes: {} // 플러그인에서 채워질 예정
         };
 
-        const response = await fetch('/api/register-figma-template', {
+        const response = await fetch('/api/templates', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1225,7 +1230,7 @@ async function openFigmaPlugin() {
         }
 
         const result = await response.json();
-        currentTemplateId = result.template.template_id;
+        currentTemplateId = templateData.template_id;
 
         updatePluginStatus('플러그인 실행 중...', '#3b82f6');
 
