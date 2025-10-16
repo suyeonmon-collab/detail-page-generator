@@ -327,8 +327,8 @@ function extractFigmaInfo() {
                 fileId = pathParts[1];
                 console.log('✅ [extractFigmaInfo] /design/ 형식으로 파일 ID 추출:', fileId);
             }
-            // 직접 ID 형식
-            else if (pathParts[0] && pathParts[0].length > 10) {
+            // 직접 ID 형식 (20자리 이상)
+            else if (pathParts[0] && pathParts[0].length >= 20) {
                 fileId = pathParts[0];
                 console.log('✅ [extractFigmaInfo] 직접 ID 형식으로 파일 ID 추출:', fileId);
             }
@@ -344,8 +344,8 @@ function extractFigmaInfo() {
         if (!fileId) {
             console.log('🔍 [extractFigmaInfo] 정규식으로 재시도');
             
-            // Figma 파일 ID 패턴: 정확히 20자리 영숫자 문자열
-            const fileIdPattern = /\/[a-zA-Z0-9]{20}/;
+            // Figma 파일 ID 패턴: 20-25자리 영숫자 문자열 (Figma 파일 ID는 가변 길이)
+            const fileIdPattern = /\/[a-zA-Z0-9]{20,25}/;
             const match = figmaUrl.match(fileIdPattern);
             
             if (match) {
