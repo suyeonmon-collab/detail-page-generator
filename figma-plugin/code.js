@@ -118,15 +118,30 @@ async function analyzeLayers() {
     console.log('📊 [Admin Plugin] 총 노드 수:', allNodes.length);
     
     let processedCount = 0;
-    const maxNodes = Math.min(allNodes.length, 100); // 최대 100개 노드만 처리
+    const maxNodes = Math.min(allNodes.length, 50); // 최대 50개 노드만 처리 (더 안전하게)
     
     for (let i = 0; i < maxNodes; i++) {
       const node = allNodes[i];
       try {
-        const layerInfo = await analyzeNode(node);
-        if (layerInfo) {
-          // 모든 편집 가능한 레이어를 자동으로 활성화
-          layerInfo.editable = true;
+        // 편집 가능한 노드 타입만 분석
+        if (isEditableNodeType(node)) {
+          const layerInfo = {
+            id: node.id,
+            name: node.name || 'unnamed',
+            type: node.type,
+            editable: true, // 모든 레이어를 자동으로 편집 가능하게 설정
+            label: node.name || 'unnamed',
+            editType: getDefaultEditType(node),
+            currentValue: getCurrentValue(node),
+            position: {
+              x: node.x || 0,
+              y: node.y || 0,
+              width: node.width || 0,
+              height: node.height || 0
+            },
+            styles: {} // 스타일 추출은 생략하여 안정성 확보
+          };
+          
           layers.push(layerInfo);
           console.log(`✅ [Admin Plugin] 레이어 분석 완료: ${layerInfo.name} (${layerInfo.type})`);
         }
@@ -139,7 +154,7 @@ async function analyzeLayers() {
         }
         
         // 타임아웃 방지를 위한 짧은 대기
-        if (processedCount % 20 === 0) {
+        if (processedCount % 10 === 0) {
           await new Promise(resolve => setTimeout(resolve, 10));
         }
       } catch (nodeError) {

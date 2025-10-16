@@ -298,35 +298,26 @@ function extractFigmaInfo() {
     try {
         console.log('🔍 [extractFigmaInfo] URL 파싱 시작:', figmaUrl);
         
-        // 간단하고 확실한 정규식 방식으로 파싱
+        // 매우 간단하고 확실한 정규식 방식으로 파싱
         let fileId = '';
         let nodeId = '0-1';
         
-        // Figma 파일 ID 추출 - 더 유연한 패턴
-        const fileIdPatterns = [
-            /\/file\/([a-zA-Z0-9]{20,25})/,  // /file/ID 형식
-            /\/design\/([a-zA-Z0-9]{20,25})/, // /design/ID 형식
-            /\/[a-zA-Z0-9]{20,25}/           // 직접 ID 형식
-        ];
-        
-        console.log('🔍 [extractFigmaInfo] 파일 ID 패턴 테스트 시작');
-        for (let i = 0; i < fileIdPatterns.length; i++) {
-            const pattern = fileIdPatterns[i];
-            console.log(`🔍 [extractFigmaInfo] 패턴 ${i + 1} 테스트:`, pattern);
-            const match = figmaUrl.match(pattern);
-            console.log(`🔍 [extractFigmaInfo] 패턴 ${i + 1} 매치 결과:`, match);
-            
-            if (match) {
-                fileId = match[1] || match[0].substring(1); // 그룹이 있으면 그룹 사용, 없으면 전체에서 '/' 제거
-                console.log('✅ [extractFigmaInfo] 파일 ID 추출 성공:', fileId);
-                break;
+        // 파일 ID 추출 - 가장 간단한 방식
+        const fileIdMatch = figmaUrl.match(/\/design\/([a-zA-Z0-9]{20,25})/);
+        if (fileIdMatch) {
+            fileId = fileIdMatch[1];
+            console.log('✅ [extractFigmaInfo] 파일 ID 추출 성공:', fileId);
+        } else {
+            // /file/ 형식도 시도
+            const fileIdMatch2 = figmaUrl.match(/\/file\/([a-zA-Z0-9]{20,25})/);
+            if (fileIdMatch2) {
+                fileId = fileIdMatch2[1];
+                console.log('✅ [extractFigmaInfo] 파일 ID 추출 성공 (file 형식):', fileId);
             }
         }
         
         // Node ID 추출
-        console.log('🔍 [extractFigmaInfo] Node ID 추출 시작');
         const nodeIdMatch = figmaUrl.match(/[?&]node-id=([0-9]+-[0-9]+)/);
-        console.log('🔍 [extractFigmaInfo] Node ID 매치 결과:', nodeIdMatch);
         if (nodeIdMatch) {
             nodeId = nodeIdMatch[1];
             console.log('✅ [extractFigmaInfo] Node ID 추출 성공:', nodeId);
