@@ -292,66 +292,33 @@ function extractFigmaInfo() {
     }
     
     try {
-        // Figma URL 파싱 - 다양한 형식 지원
+        console.log('🔍 [extractFigmaInfo] URL 파싱 시작:', figmaUrl);
+        
+        // 간단하고 확실한 정규식 방식으로 파싱
         let fileId = '';
         let nodeId = '0-1';
         
-        // URL 정규화
-        let normalizedUrl = figmaUrl.trim();
-        if (!normalizedUrl.startsWith('http')) {
-            normalizedUrl = 'https://' + normalizedUrl;
-        }
+        // Figma 파일 ID 추출 - 더 유연한 패턴
+        const fileIdPatterns = [
+            /\/file\/([a-zA-Z0-9]{20,25})/,  // /file/ID 형식
+            /\/design\/([a-zA-Z0-9]{20,25})/, // /design/ID 형식
+            /\/[a-zA-Z0-9]{20,25}/           // 직접 ID 형식
+        ];
         
-        const url = new URL(normalizedUrl);
-        
-        // 다양한 Figma URL 형식 지원
-        if (url.hostname.includes('figma.com')) {
-            const pathParts = url.pathname.split('/').filter(part => part);
-            
-        console.log('🔍 [extractFigmaInfo] URL 파싱 시작:', {
-            originalUrl: figmaUrl,
-            normalizedUrl: normalizedUrl,
-            hostname: url.hostname,
-            pathname: url.pathname,
-            pathParts: pathParts,
-            searchParams: Object.fromEntries(url.searchParams)
-        });
-            
-            // /file/ID 형식
-            if (pathParts[0] === 'file' && pathParts[1]) {
-                fileId = pathParts[1];
-                console.log('✅ [extractFigmaInfo] /file/ 형식으로 파일 ID 추출:', fileId);
-            }
-            // /design/ID 형식 (한글 파일명 포함)
-            else if (pathParts[0] === 'design' && pathParts[1]) {
-                fileId = pathParts[1];
-                console.log('✅ [extractFigmaInfo] /design/ 형식으로 파일 ID 추출:', fileId);
-            }
-            // 직접 ID 형식 (20자리 이상)
-            else if (pathParts[0] && pathParts[0].length >= 20) {
-                fileId = pathParts[0];
-                console.log('✅ [extractFigmaInfo] 직접 ID 형식으로 파일 ID 추출:', fileId);
-            }
-            
-            // Node ID 추출 (다양한 파라미터명 지원)
-            nodeId = url.searchParams.get('node-id') || 
-                    url.searchParams.get('nodeId') || 
-                    url.searchParams.get('node_id') ||
-                    '0-1';
-        }
-        
-        // 파일 ID가 없으면 정규식으로 재시도
-        if (!fileId) {
-            console.log('🔍 [extractFigmaInfo] 정규식으로 재시도');
-            
-            // Figma 파일 ID 패턴: 20-25자리 영숫자 문자열 (Figma 파일 ID는 가변 길이)
-            const fileIdPattern = /\/[a-zA-Z0-9]{20,25}/;
-            const match = figmaUrl.match(fileIdPattern);
-            
+        for (const pattern of fileIdPatterns) {
+            const match = figmaUrl.match(pattern);
             if (match) {
-                fileId = match[0].substring(1); // '/' 제거
-                console.log('✅ [extractFigmaInfo] 정규식으로 파일 ID 추출:', fileId);
+                fileId = match[1] || match[0].substring(1); // 그룹이 있으면 그룹 사용, 없으면 전체에서 '/' 제거
+                console.log('✅ [extractFigmaInfo] 파일 ID 추출 성공:', fileId);
+                break;
             }
+        }
+        
+        // Node ID 추출
+        const nodeIdMatch = figmaUrl.match(/[?&]node-id=([0-9]+-[0-9]+)/);
+        if (nodeIdMatch) {
+            nodeId = nodeIdMatch[1];
+            console.log('✅ [extractFigmaInfo] Node ID 추출 성공:', nodeId);
         }
         
         if (!fileId) {
@@ -376,7 +343,10 @@ function extractFigmaInfo() {
         });
         
     } catch (error) {
-        console.error('❌ [Admin] Figma URL 파싱 오류:', error);
+        console.error('❌ [extractFigmaInfo] Figma URL 파싱 오류:', error);
+        console.error('❌ [extractFigmaInfo] 오류 스택:', error.stack);
+        console.error('❌ [extractFigmaInfo] 입력된 URL:', figmaUrl);
+        
         figmaInfo.style.display = 'none';
         figmaPluginInfo.style.display = 'none';
         
@@ -385,7 +355,10 @@ function extractFigmaInfo() {
         if (figmaPluginInfo) {
             figmaPluginInfo.innerHTML = `
                 <div class="info-item" style="color: #ef4444;">
-                    <strong>오류:</strong> 유효한 Figma URL을 입력해주세요
+                    <strong>오류:</strong> ${error.message}
+                </div>
+                <div class="info-item" style="font-size: 11px; color: #6b7280;">
+                    입력된 URL: ${figmaUrl}
                 </div>
                 <div class="info-item" style="font-size: 11px; color: #6b7280;">
                     예: https://www.figma.com/design/5Ud17MlLvLtV8kT8zFdXiN/파일명?node-id=0-1
