@@ -285,7 +285,11 @@ function extractFigmaInfo() {
     const figmaInfo = document.getElementById('figmaInfo');
     const figmaPluginInfo = document.getElementById('figmaPluginInfo');
     
+    console.log('🔍 [extractFigmaInfo] 함수 호출됨');
+    console.log('🔍 [extractFigmaInfo] 입력된 URL:', figmaUrl);
+    
     if (!figmaUrl) {
+        console.log('⚠️ [extractFigmaInfo] URL이 비어있음');
         figmaInfo.style.display = 'none';
         figmaPluginInfo.style.display = 'none';
         return;
@@ -305,8 +309,13 @@ function extractFigmaInfo() {
             /\/[a-zA-Z0-9]{20,25}/           // 직접 ID 형식
         ];
         
-        for (const pattern of fileIdPatterns) {
+        console.log('🔍 [extractFigmaInfo] 파일 ID 패턴 테스트 시작');
+        for (let i = 0; i < fileIdPatterns.length; i++) {
+            const pattern = fileIdPatterns[i];
+            console.log(`🔍 [extractFigmaInfo] 패턴 ${i + 1} 테스트:`, pattern);
             const match = figmaUrl.match(pattern);
+            console.log(`🔍 [extractFigmaInfo] 패턴 ${i + 1} 매치 결과:`, match);
+            
             if (match) {
                 fileId = match[1] || match[0].substring(1); // 그룹이 있으면 그룹 사용, 없으면 전체에서 '/' 제거
                 console.log('✅ [extractFigmaInfo] 파일 ID 추출 성공:', fileId);
@@ -315,11 +324,15 @@ function extractFigmaInfo() {
         }
         
         // Node ID 추출
+        console.log('🔍 [extractFigmaInfo] Node ID 추출 시작');
         const nodeIdMatch = figmaUrl.match(/[?&]node-id=([0-9]+-[0-9]+)/);
+        console.log('🔍 [extractFigmaInfo] Node ID 매치 결과:', nodeIdMatch);
         if (nodeIdMatch) {
             nodeId = nodeIdMatch[1];
             console.log('✅ [extractFigmaInfo] Node ID 추출 성공:', nodeId);
         }
+        
+        console.log('🔍 [extractFigmaInfo] 최종 추출 결과:', { fileId, nodeId });
         
         if (!fileId) {
             throw new Error('Figma 파일 ID를 찾을 수 없습니다. URL 형식을 확인해주세요.');

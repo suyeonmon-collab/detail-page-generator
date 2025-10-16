@@ -530,31 +530,51 @@ async function deleteTemplate(templateId) {
 
 async function generateThumbnail() {
   try {
+    console.log('🖼️ [Admin Plugin] 썸네일 생성 시작');
+    
     const page = figma.currentPage;
     const frames = page.findAll(node => node.type === 'FRAME');
     
-    let target = frames.find(frame => 
-      frame.name.toLowerCase().includes('main') || 
-      frame.name.toLowerCase().includes('template')
-    ) || frames[0];
+    console.log('📊 [Admin Plugin] 찾은 프레임 수:', frames.length);
+    
+    let target = null;
+    
+    // 프레임 찾기
+    if (frames.length > 0) {
+      target = frames.find(frame => 
+        frame.name.toLowerCase().includes('main') || 
+        frame.name.toLowerCase().includes('template') ||
+        frame.name.toLowerCase().includes('artboard')
+      ) || frames[0];
+      
+      console.log('🎯 [Admin Plugin] 선택된 프레임:', target ? target.name : '없음');
+    }
     
     if (!target) {
+      console.log('⚠️ [Admin Plugin] 프레임이 없어서 페이지 전체 사용');
       // 프레임이 없으면 페이지 전체를 대상으로
       target = page;
     }
     
-    // PNG로 내보내기
+    // PNG로 내보내기 - 더 안전한 설정
+    console.log('📸 [Admin Plugin] 이미지 내보내기 시작');
     const bytes = await target.exportAsync({ 
       format: "PNG", 
-      constraint: { type: "SCALE", value: 2 }
+      constraint: { type: "SCALE", value: 1 } // 해상도를 낮춰서 안정성 확보
     });
     
+    console.log('✅ [Admin Plugin] 이미지 내보내기 완료, 크기:', bytes.length);
+    
     const base64 = figma.base64Encode(bytes);
-    return `data:image/png;base64,${base64}`;
+    const thumbnail = `data:image/png;base64,${base64}`;
+    
+    console.log('🎉 [Admin Plugin] 썸네일 생성 완료');
+    return thumbnail;
     
   } catch (error) {
-    console.warn('썸네일 생성 오류:', error);
-    return null;
+    console.warn('❌ [Admin Plugin] 썸네일 생성 오류:', error);
+    // 썸네일 생성 실패 시 기본 이미지 반환
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIFByZXZpZXc8L3RleHQ+PC9zdmc+';
   }
 }
 
