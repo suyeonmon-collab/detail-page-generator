@@ -13,7 +13,15 @@ let currentTemplateId = null;
 
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
+    // 기존 메시지 리스너 정리 (Chrome Extension 오류 방지)
+    window.removeEventListener('message', handlePluginMessage);
+    
     loadData();
+});
+
+// 페이지 언로드 시 메시지 리스너 정리
+window.addEventListener('beforeunload', () => {
+    window.removeEventListener('message', handlePluginMessage);
 });
 
 // 데이터 로드
@@ -308,8 +316,14 @@ function openFigmaPlugin() {
         if (pluginWindow) {
             showToast('Figma 플러그인이 실행되었습니다. 템플릿을 설정한 후 저장해주세요.', 'info');
             
-            // 플러그인에서 템플릿 저장 완료를 감지하는 이벤트 리스너
+            // 기존 메시지 리스너 제거 후 새로 추가
+            window.removeEventListener('message', handlePluginMessage);
             window.addEventListener('message', handlePluginMessage);
+            
+            // 5분 후 자동으로 리스너 제거 (메모리 누수 방지)
+            setTimeout(() => {
+                window.removeEventListener('message', handlePluginMessage);
+            }, 300000);
         } else {
             alert('팝업이 차단되었습니다. 팝업을 허용하고 다시 시도해주세요.');
         }
@@ -322,25 +336,45 @@ function openFigmaPlugin() {
 
 // 플러그인 메시지 처리
 function handlePluginMessage(event) {
-    if (event.origin !== 'https://www.figma.com') {
-        return;
-    }
-    
-    const message = event.data;
-    
-    if (message.type === 'template-saved') {
-        console.log('✅ [Admin] 플러그인에서 템플릿 저장 완료:', message.payload);
+    try {
+        // 안전한 origin 체크
+        if (!event.origin || event.origin !== 'https://www.figma.com') {
+            return;
+        }
         
-        // 템플릿 정보를 폼에 자동으로 채우기
-        const templateId = message.payload.templateId;
-        const previewUrl = message.payload.previewUrl;
+        // 안전한 데이터 체크
+        if (!event.data || typeof event.data !== 'object') {
+            return;
+        }
         
-        document.getElementById('templateId').value = templateId;
-        document.getElementById('templatePreviewImage').value = previewUrl;
+        const message = event.data;
         
-        showToast('템플릿이 성공적으로 생성되었습니다!', 'success');
-        
-        // 이벤트 리스너 제거
+        if (message.type === 'template-saved' && message.payload) {
+            console.log('✅ [Admin] 플러그인에서 템플릿 저장 완료:', message.payload);
+            
+            // 템플릿 정보를 폼에 자동으로 채우기
+            const templateId = message.payload.templateId;
+            const previewUrl = message.payload.previewUrl;
+            
+            if (templateId) {
+                document.getElementById('templateId').value = templateId;
+            }
+            
+            if (previewUrl) {
+                const previewImageElement = document.getElementById('templatePreviewImage');
+                if (previewImageElement) {
+                    previewImageElement.value = previewUrl;
+                }
+            }
+            
+            showToast('템플릿이 성공적으로 생성되었습니다!', 'success');
+            
+            // 이벤트 리스너 제거
+            window.removeEventListener('message', handlePluginMessage);
+        }
+    } catch (error) {
+        console.error('❌ [Admin] 메시지 처리 오류:', error);
+        // 오류 발생 시에도 리스너 제거
         window.removeEventListener('message', handlePluginMessage);
     }
 }
@@ -463,9 +497,27 @@ async function deleteTemplate(index) {
     }
 }
 
+// 템플릿 ID 자동 생성
+function generateTemplateId(name) {
+    const timestamp = Date.now();
+    const sanitizedName = name.toLowerCase()
+        .replace(/[^a-z0-9가-힣]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    return `${sanitizedName}-${timestamp}`;
+}
+
 async function saveTemplate() {
     try {
-        const templateId = document.getElementById('templateId').value.trim();
+        // 템플릿 ID 자동 생성 (새 템플릿인 경우)
+        let templateId = document.getElementById('templateId').value.trim();
+        if (!templateId || currentEditingTemplateIndex === null) {
+            const name = document.getElementById('templateName').value.trim();
+            if (name) {
+                templateId = generateTemplateId(name);
+                document.getElementById('templateId').value = templateId;
+            }
+        }
         const categoryId = document.getElementById('templateCategoryId').value;
         const name = document.getElementById('templateName').value.trim();
         const description = document.getElementById('templateDescription').value.trim();

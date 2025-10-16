@@ -722,12 +722,8 @@
             <div class="modal-body">
                 <form id="templateForm">
                     <input type="hidden" id="templateIndex">
+                    <input type="hidden" id="templateId"> <!-- 자동 생성됨 -->
                     
-                    <div class="form-group">
-                        <label class="form-label">템플릿 ID *</label>
-                        <input type="text" id="templateId" class="form-input" required>
-                    </div>
-
                     <div class="form-group">
                         <label class="form-label">카테고리 *</label>
                         <select id="templateCategoryId" class="form-select" required>
@@ -736,19 +732,20 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">이름 *</label>
-                        <input type="text" id="templateName" class="form-input" required>
+                        <label class="form-label">템플릿 이름 *</label>
+                        <input type="text" id="templateName" class="form-input" placeholder="예: 유튜브 썸네일 템플릿" required>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">설명</label>
-                        <textarea id="templateDescription" class="form-textarea"></textarea>
+                        <textarea id="templateDescription" class="form-textarea" placeholder="템플릿에 대한 간단한 설명을 입력하세요"></textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Figma 디자인 URL *</label>
                         <input type="url" id="templateFigmaUrl" class="form-input" placeholder="https://www.figma.com/design/abc123/Design-Name?node-id=2-2" onchange="extractFigmaInfo()" required>
-                        <p class="form-help">Figma 파일 URL을 입력하세요. 웹 편집 가능한 템플릿으로 변환됩니다.</p>
+                        <p class="form-help">Figma 파일 URL을 입력하면 자동으로 웹 편집 가능한 템플릿으로 변환됩니다.</p>
+                        
                         <div id="figmaInfo" class="figma-info" style="display: none;">
                             <div class="info-item">
                                 <strong>파일 ID:</strong> <span id="extractedFileId">-</span>
@@ -757,6 +754,7 @@
                                 <strong>Node ID:</strong> <span id="extractedNodeId">-</span>
                             </div>
                         </div>
+                        
                         <div id="figmaPluginInfo" class="figma-info" style="display: none; margin-top: 12px;">
                             <div class="info-item">
                                 <strong>플러그인 실행:</strong> 
@@ -772,7 +770,8 @@
 
                     <div class="form-group">
                         <label class="form-label">가격 (원)</label>
-                        <input type="number" id="templatePrice" class="form-input" value="0">
+                        <input type="number" id="templatePrice" class="form-input" value="0" placeholder="0">
+                        <p class="form-help">0원 입력 시 무료 템플릿으로 설정됩니다.</p>
                     </div>
 
                     <div class="form-group">
@@ -780,6 +779,7 @@
                             <input type="checkbox" id="templateEnabled" checked>
                             <span>활성화</span>
                         </label>
+                        <p class="form-help">비활성화 시 고객에게 표시되지 않습니다.</p>
                     </div>
                 </form>
             </div>
