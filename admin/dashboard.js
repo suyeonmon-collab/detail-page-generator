@@ -199,15 +199,42 @@ async function deleteCategory(index) {
         return;
     }
     
-    categories.splice(index, 1);
-    
-    // 해당 카테고리의 템플릿도 삭제
-    templates = templates.filter(t => t.categoryId !== cat.id);
-    
-    await saveData();
-    renderCategories();
-    renderTemplates();
-    showToast('카테고리가 삭제되었습니다.', 'success');
+    try {
+        showLoading();
+        console.log('🗑️ [Admin] 카테고리 삭제 시작:', cat.id);
+        
+        // Supabase에서 직접 삭제 (CASCADE로 템플릿도 자동 삭제)
+        const response = await fetch('/api/templates', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'delete-category',
+                categoryId: cat.id
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API 오류: ${response.status}`);
+        }
+        
+        // 로컬 데이터에서도 제거
+        categories.splice(index, 1);
+        templates = templates.filter(t => t.categoryId !== cat.id);
+        
+        renderCategories();
+        renderTemplates();
+        showToast('카테고리가 삭제되었습니다.', 'success');
+        
+        console.log('✅ [Admin] 카테고리 삭제 완료');
+        
+    } catch (error) {
+        console.error('❌ [Admin] 카테고리 삭제 오류:', error);
+        showToast('카테고리 삭제에 실패했습니다: ' + error.message, 'error');
+    } finally {
+        hideLoading();
+    }
 }
 
 async function saveCategory() {
@@ -523,24 +550,36 @@ async function deleteTemplate(index) {
     }
     
     try {
-        const response = await fetch(`/api/templates/${template.templateId}/delete`, {
+        showLoading();
+        console.log('🗑️ [Admin] 템플릿 삭제 시작:', template.templateId);
+        
+        const response = await fetch('/api/templates', {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({
+                action: 'delete-template',
+                templateId: template.templateId
+            })
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || '템플릿 삭제에 실패했습니다');
+            throw new Error(`API 오류: ${response.status}`);
         }
 
+        // 로컬 데이터에서도 제거
+        templates.splice(index, 1);
+        renderTemplates();
         showToast('템플릿이 성공적으로 삭제되었습니다', 'success');
-        await loadData(); // 데이터 새로고침
+        
+        console.log('✅ [Admin] 템플릿 삭제 완료');
         
     } catch (error) {
         console.error('❌ [Admin] 템플릿 삭제 오류:', error);
         showToast('템플릿 삭제에 실패했습니다: ' + error.message, 'error');
+    } finally {
+        hideLoading();
     }
 }
 

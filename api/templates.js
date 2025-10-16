@@ -49,11 +49,17 @@ export default async function handler(req, res) {
         break;
 
       case 'DELETE':
-        // 템플릿 삭제
-        if (!templateId) {
-          return res.status(400).json({ error: 'Template ID is required for DELETE request' });
+        // 템플릿 또는 카테고리 삭제
+        const deleteData = req.body;
+        if (deleteData && deleteData.action === 'delete-category') {
+          await deleteCategory(req, res, deleteData.categoryId);
+        } else if (deleteData && deleteData.action === 'delete-template') {
+          await deleteTemplate(req, res, deleteData.templateId);
+        } else if (templateId) {
+          await deleteTemplate(req, res, templateId);
+        } else {
+          return res.status(400).json({ error: 'Invalid delete request' });
         }
-        await deleteTemplate(req, res, templateId);
         break;
 
       default:
@@ -217,6 +223,46 @@ async function updateTemplate(req, res, templateId) {
   } catch (error) {
     console.error('❌ [updateTemplate] 오류:', error);
     return res.status(500).json({ error: 'Failed to update template' });
+  }
+}
+
+// 카테고리 삭제
+async function deleteCategory(req, res, categoryId) {
+  try {
+    console.log(`🗑️ [deleteCategory] 카테고리 삭제 시작: ${categoryId}`);
+    
+    // 먼저 해당 카테고리의 템플릿들을 삭제
+    const { error: templatesError } = await supabase
+      .from('templates')
+      .delete()
+      .eq('category_id', categoryId);
+
+    if (templatesError) {
+      console.error('❌ [deleteCategory] 템플릿 삭제 오류:', templatesError);
+      return res.status(500).json({ error: 'Failed to delete templates' });
+    }
+
+    // 카테고리 삭제
+    const { error: categoryError } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', categoryId);
+
+    if (categoryError) {
+      console.error('❌ [deleteCategory] 카테고리 삭제 오류:', categoryError);
+      return res.status(500).json({ error: 'Failed to delete category' });
+    }
+    
+    console.log(`✅ [deleteCategory] 카테고리 삭제 완료: ${categoryId}`);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Category and related templates deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ [deleteCategory] 오류:', error);
+    return res.status(500).json({ error: 'Failed to delete category' });
   }
 }
 
