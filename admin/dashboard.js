@@ -380,49 +380,7 @@ function extractFigmaInfo() {
     }
 }
 
-// Figma 플러그인 실행
-function openFigmaPlugin() {
-    const figmaUrl = document.getElementById('templateFigmaUrl').value;
-    
-    if (!figmaUrl) {
-        alert('먼저 Figma URL을 입력해주세요.');
-        return;
-    }
-    
-    try {
-        // Figma URL을 플러그인 실행 URL로 변환
-        const url = new URL(figmaUrl);
-        const pathParts = url.pathname.split('/');
-        const fileId = pathParts[pathParts.length - 1];
-        
-        // 플러그인 실행 URL 생성
-        const pluginUrl = `https://www.figma.com/file/${fileId}?plugin=auto-sync-plugin`;
-        
-        console.log('🚀 [Admin] Figma 플러그인 실행:', pluginUrl);
-        
-        // 새 창에서 플러그인 실행
-        const pluginWindow = window.open(pluginUrl, '_blank', 'width=1200,height=800');
-        
-        if (pluginWindow) {
-            showToast('Figma 플러그인이 실행되었습니다. 템플릿을 설정한 후 저장해주세요.', 'info');
-            
-            // 기존 메시지 리스너 제거 후 새로 추가
-            window.removeEventListener('message', handlePluginMessage);
-            window.addEventListener('message', handlePluginMessage);
-            
-            // 5분 후 자동으로 리스너 제거 (메모리 누수 방지)
-            setTimeout(() => {
-                window.removeEventListener('message', handlePluginMessage);
-            }, 300000);
-        } else {
-            alert('팝업이 차단되었습니다. 팝업을 허용하고 다시 시도해주세요.');
-        }
-        
-    } catch (error) {
-        console.error('❌ [Admin] Figma 플러그인 실행 오류:', error);
-        alert('Figma 플러그인 실행 중 오류가 발생했습니다.');
-    }
-}
+// 기존 openFigmaPlugin 함수들은 제거됨 - 이제 자동으로 처리됩니다
 
 // 자동으로 Figma 플러그인 실행 (템플릿용)
 async function autoLaunchFigmaPluginForTemplate(templateId, figmaUrl, fileKey) {
@@ -1183,80 +1141,7 @@ function extractFigmaInfo() {
     }
 }
 
-// 피그마 플러그인 실행
-async function openFigmaPlugin() {
-    try {
-        const figmaUrl = document.getElementById('templateFigmaUrl').value;
-        const templateName = document.getElementById('templateName').value;
-        const categoryId = document.getElementById('templateCategoryId').value;
-        
-        if (!figmaUrl || !templateName || !categoryId) {
-            showToast('템플릿 정보를 모두 입력해주세요', 'error');
-            return;
-        }
-
-        if (!currentFigmaFileKey) {
-            showToast('유효한 피그마 URL을 입력해주세요', 'error');
-            return;
-        }
-
-        updatePluginStatus('템플릿 등록 중...', '#3b82f6');
-
-        // 먼저 템플릿을 데이터베이스에 등록
-        const templateData = {
-            template_id: generateTemplateId(templateName),
-            category_id: categoryId,
-            name: templateName,
-            description: document.getElementById('templateDescription').value || '',
-            figma_url: figmaUrl,
-            figma_file_key: currentFigmaFileKey,
-            figma_node_id: '0-1',
-            price: parseInt(document.getElementById('templatePrice').value) || 0,
-            enabled: true,
-            nodes: {} // 플러그인에서 채워질 예정
-        };
-
-        const response = await fetch('/api/templates', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(templateData)
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || '템플릿 등록에 실패했습니다');
-        }
-
-        const result = await response.json();
-        currentTemplateId = templateData.template_id;
-
-        updatePluginStatus('플러그인 실행 중...', '#3b82f6');
-
-        // 피그마 플러그인 실행 URL 생성
-        const pluginUrl = `https://figma.com/file/${currentFigmaFileKey}?plugin=template-web-editor-admin&template=${currentTemplateId}`;
-        
-        // 새 창에서 피그마 플러그인 실행
-        const figmaWindow = window.open(pluginUrl, '_blank', 'width=1200,height=800');
-        
-        if (!figmaWindow) {
-            throw new Error('팝업이 차단되었습니다. 팝업 차단을 해제하고 다시 시도해주세요.');
-        }
-
-        updatePluginStatus('플러그인 실행됨', '#10b981');
-        
-        // 플러그인 완료 상태 확인을 위한 폴링 시작
-        startPluginStatusPolling();
-
-        showToast('피그마 플러그인이 실행되었습니다. 플러그인에서 템플릿 설정을 완료해주세요.', 'success');
-
-    } catch (error) {
-        console.error('❌ [Admin] 피그마 플러그인 실행 오류:', error);
-        updatePluginStatus('실행 실패', '#ef4444');
-        showToast('피그마 플러그인 실행에 실패했습니다: ' + error.message, 'error');
-    }
-}
+// 기존 openFigmaPlugin 함수 제거됨 - 이제 saveTemplate에서 자동으로 처리됩니다
 
 // 플러그인 상태 업데이트
 function updatePluginStatus(status, color) {
@@ -1303,7 +1188,7 @@ function startPluginStatusPolling() {
     }, 300000);
 }
 
-// 템플릿 저장 함수 수정 (피그마 연동 고려)
+// 템플릿 저장 함수 (직접 데이터베이스 저장 + 자동 플러그인 트리거)
 async function saveTemplate() {
     try {
         const templateId = document.getElementById('templateId').value;
@@ -1320,24 +1205,37 @@ async function saveTemplate() {
             return;
         }
 
-        // 피그마 URL이 있으면 플러그인 연동 방식 사용
-        if (figmaUrl && currentFigmaFileKey) {
-            showToast('피그마 플러그인을 통해 템플릿을 등록해주세요', 'info');
-            return;
+        console.log('💾 [Admin] 템플릿 저장 시작:', { templateId, name, figmaUrl });
+
+        // Figma URL이 있는 경우 파일 정보 추출
+        let figmaInfo = null;
+        if (figmaUrl) {
+            figmaInfo = extractFigmaInfo(figmaUrl);
+            if (!figmaInfo.isValid) {
+                showToast('유효하지 않은 Figma URL입니다', 'error');
+                return;
+            }
+            console.log('🔗 [Admin] Figma 정보 추출 성공:', figmaInfo);
         }
 
-        // 기존 방식으로 템플릿 저장
+        // 템플릿 데이터 구성
         const templateData = {
             template_id: templateId,
             category_id: categoryId,
             name: name,
             description: description,
             figma_url: figmaUrl,
+            figma_file_key: figmaInfo ? figmaInfo.fileKey : null,
+            figma_node_id: figmaInfo ? figmaInfo.nodeId : '0-1',
             price: price,
-            enabled: enabled
+            enabled: enabled,
+            nodes: {}, // 플러그인에서 채워질 예정
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
         };
 
-        const response = await fetch('/api/save-template', {
+        // API를 통해 직접 데이터베이스에 저장
+        const response = await fetch('/api/templates', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1350,7 +1248,16 @@ async function saveTemplate() {
             throw new Error(errorData.error || '템플릿 저장에 실패했습니다');
         }
 
+        const result = await response.json();
+        console.log('✅ [Admin] 템플릿 저장 성공:', result);
+
         showToast('템플릿이 성공적으로 저장되었습니다', 'success');
+
+        // Figma URL이 있는 경우 플러그인 자동 실행 트리거
+        if (figmaUrl && figmaInfo) {
+            await triggerFigmaPluginForTemplate(templateId, figmaInfo);
+        }
+
         closeTemplateModal();
         await loadData();
 
@@ -1358,6 +1265,88 @@ async function saveTemplate() {
         console.error('❌ [Admin] 템플릿 저장 오류:', error);
         showToast('템플릿 저장에 실패했습니다: ' + error.message, 'error');
     }
+}
+
+// 관리자 페이지용 Figma 플러그인 자동 실행 트리거
+async function triggerFigmaPluginForTemplate(templateId, figmaInfo) {
+    try {
+        console.log('🚀 [Admin] 플러그인 자동 실행 트리거:', { templateId, figmaInfo });
+        
+        showToast('Figma 플러그인이 자동으로 실행됩니다...', 'info');
+
+        // 플러그인 실행을 위한 API 호출
+        const response = await fetch('/api/trigger-figma-plugin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                templateId,
+                figmaInfo,
+                action: 'create-template',
+                source: 'admin'
+            })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('✅ [Admin] 플러그인 실행 트리거 성공:', result);
+            
+            showToast('✅ Figma 플러그인이 백그라운드에서 실행됩니다', 'success');
+            
+            // 플러그인 완료 상태 확인을 위한 폴링 시작
+            startAdminPluginStatusPolling(templateId);
+            
+        } else {
+            console.log('⚠️ [Admin] 플러그인 실행 트리거 실패 (무시 가능)');
+            showToast('⚠️ 플러그인 자동 실행에 실패했지만 템플릿은 저장되었습니다', 'warning');
+        }
+
+    } catch (error) {
+        console.log('⚠️ [Admin] 플러그인 실행 트리거 오류 (무시 가능):', error);
+        showToast('⚠️ 플러그인 자동 실행에 실패했지만 템플릿은 저장되었습니다', 'warning');
+    }
+}
+
+// 관리자 페이지용 플러그인 상태 폴링
+function startAdminPluginStatusPolling(templateId) {
+    if (!templateId) return;
+
+    let pollCount = 0;
+    const maxPolls = 60; // 5분 (5초 * 60)
+
+    const pollInterval = setInterval(async () => {
+        try {
+            pollCount++;
+            
+            const response = await fetch(`/api/templates/${templateId}`);
+            
+            if (response.ok) {
+                const result = await response.json();
+                const template = result.template;
+                
+                // 노드 데이터가 있으면 플러그인 설정이 완료된 것으로 간주
+                if (template.nodes && Object.keys(template.nodes).length > 0) {
+                    console.log('✅ [Admin] 플러그인 설정 완료 감지');
+                    showToast('🎉 템플릿 설정이 완료되었습니다!', 'success');
+                    clearInterval(pollInterval);
+                    
+                    // 템플릿 목록 새로고침
+                    await loadData();
+                }
+            }
+            
+            // 최대 폴링 횟수에 도달하면 중지
+            if (pollCount >= maxPolls) {
+                console.log('⏰ [Admin] 플러그인 상태 폴링 시간 초과');
+                clearInterval(pollInterval);
+                showToast('⏰ 플러그인 실행 시간이 초과되었습니다. 수동으로 확인해주세요.', 'warning');
+            }
+            
+        } catch (error) {
+            console.warn('⚠️ [Admin] 플러그인 상태 확인 오류:', error);
+        }
+    }, 5000); // 5초마다 확인
 }
 
 // Supabase 권한 정책 수정 함수
