@@ -796,32 +796,171 @@
             reader.readAsDataURL(file);
         }
 
-        // 변경사항 저장
+        // Figma URL에서 파일 정보 추출
+        function extractFigmaInfo(figmaUrl) {
+            try {
+                console.log('🔍 [extractFigmaInfo] URL 분석:', figmaUrl);
+                
+                // URL 정규화
+                let url = figmaUrl.trim();
+                if (!url.startsWith('http')) {
+                    url = 'https://' + url;
+                }
+                
+                // Figma URL 패턴 매칭
+                const patterns = [
+                    // https://www.figma.com/design/FILE_KEY/FILE_NAME?node-id=NODE_ID
+                    /figma\.com\/design\/([a-zA-Z0-9]{20,25})\/[^?]*\?node-id=([0-9]+-[0-9]+)/,
+                    // https://www.figma.com/file/FILE_KEY/FILE_NAME?node-id=NODE_ID
+                    /figma\.com\/file\/([a-zA-Z0-9]{20,25})\/[^?]*\?node-id=([0-9]+-[0-9]+)/,
+                    // https://www.figma.com/design/FILE_KEY/FILE_NAME
+                    /figma\.com\/design\/([a-zA-Z0-9]{20,25})\/[^?]*/,
+                    // https://www.figma.com/file/FILE_KEY/FILE_NAME
+                    /figma\.com\/file\/([a-zA-Z0-9]{20,25})\/[^?]*/,
+                    // 직접 파일 키만 있는 경우
+                    /^([a-zA-Z0-9]{20,25})$/
+                ];
+                
+                for (const pattern of patterns) {
+                    const match = url.match(pattern);
+                    if (match) {
+                        const fileKey = match[1];
+                        const nodeId = match[2] || '0-1'; // 기본값
+                        
+                        console.log('✅ [extractFigmaInfo] 추출 성공:', { fileKey, nodeId });
+                        
+                        return {
+                            fileKey,
+                            nodeId,
+                            figmaUrl: url,
+                            isValid: true
+                        };
+                    }
+                }
+                
+                console.log('❌ [extractFigmaInfo] URL 패턴 매칭 실패');
+                return {
+                    fileKey: null,
+                    nodeId: null,
+                    figmaUrl: url,
+                    isValid: false
+                };
+                
+            } catch (error) {
+                console.error('❌ [extractFigmaInfo] 오류:', error);
+                return {
+                    fileKey: null,
+                    nodeId: null,
+                    figmaUrl: figmaUrl,
+                    isValid: false
+                };
+            }
+        }
+
+        // 변경사항 저장 (직접 데이터베이스에 저장)
         async function saveChanges() {
             try {
                 showToast('변경사항을 저장하는 중...', 'info');
 
                 // 변경된 요소들만 수집
-                const changedElements = editableElements.filter(element => {
-                    return element.currentValue !== (originalValues[element.id] || '');
-                });
+                const changedElements = [];
+                if (Array.isArray(editableElements)) {
+                    changedElements.push(...editableElements.filter(element => {
+                        return element.currentValue !== (originalValues[element.id] || '');
+                    }));
+                } else if (typeof editableElements === 'object' && editableElements !== null) {
+                    Object.values(editableElements).forEach(element => {
+                        if (element.currentValue !== (originalValues[element.id] || '')) {
+                            changedElements.push(element);
+                        }
+                    });
+                }
 
                 if (changedElements.length === 0) {
                     showToast('변경된 내용이 없습니다', 'info');
                     return;
                 }
 
-                // 저장 로직 (실제 구현에서는 API 호출)
-                console.log('저장할 변경사항:', changedElements);
-                
-                // 임시로 로컬 스토리지에 저장
-                localStorage.setItem(`template_${templateId}_changes`, JSON.stringify(changedElements));
-                
+                console.log('💾 [saveChanges] 저장할 변경사항:', changedElements);
+
+                // 템플릿 데이터 업데이트
+                const updatedTemplate = {
+                    ...templateData,
+                    nodes: editableElements,
+                    updated_at: new Date().toISOString()
+                };
+
+                // Figma URL이 있는 경우 파일 정보 추출
+                if (templateData.figma_url) {
+                    const figmaInfo = extractFigmaInfo(templateData.figma_url);
+                    if (figmaInfo.isValid) {
+                        updatedTemplate.figma_file_key = figmaInfo.fileKey;
+                        updatedTemplate.figma_node_id = figmaInfo.nodeId;
+                        console.log('🔗 [saveChanges] Figma 정보 추가:', figmaInfo);
+                    }
+                }
+
+                // API를 통해 데이터베이스에 저장
+                const response = await fetch(`/api/templates?templateId=${templateId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(updatedTemplate)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`저장 실패: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ [saveChanges] 저장 성공:', result);
+
+                // 원본 값 업데이트
+                changedElements.forEach(element => {
+                    originalValues[element.id] = element.currentValue;
+                });
+
                 showToast('변경사항이 저장되었습니다', 'success');
 
+                // Figma 플러그인 자동 실행 트리거
+                if (templateData.figma_url && figmaInfo.isValid) {
+                    await triggerFigmaPluginUpdate(templateId, figmaInfo);
+                }
+
             } catch (error) {
-                console.error('저장 오류:', error);
+                console.error('❌ [saveChanges] 저장 오류:', error);
                 showToast('저장에 실패했습니다: ' + error.message, 'error');
+            }
+        }
+
+        // Figma 플러그인 자동 실행 트리거
+        async function triggerFigmaPluginUpdate(templateId, figmaInfo) {
+            try {
+                console.log('🚀 [triggerFigmaPluginUpdate] 플러그인 실행 트리거:', { templateId, figmaInfo });
+                
+                // 백그라운드에서 플러그인 실행을 위한 API 호출
+                const response = await fetch('/api/trigger-figma-plugin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        templateId,
+                        figmaInfo,
+                        action: 'update-template'
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('✅ [triggerFigmaPluginUpdate] 플러그인 실행 트리거 성공');
+                    showToast('Figma 플러그인이 자동으로 실행됩니다', 'info');
+                } else {
+                    console.log('⚠️ [triggerFigmaPluginUpdate] 플러그인 실행 트리거 실패 (무시 가능)');
+                }
+
+            } catch (error) {
+                console.log('⚠️ [triggerFigmaPluginUpdate] 플러그인 실행 트리거 오류 (무시 가능):', error);
             }
         }
 
