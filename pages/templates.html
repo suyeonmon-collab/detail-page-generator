@@ -322,12 +322,15 @@
             const templateName = template.name;
             const templateDescription = template.description || '';
             const templatePrice = template.price || 0;
-            const previewImage = template.preview_image || template.previewImage || '/images/templates/default.png';
+            const previewImage = template.preview_image || template.previewImage || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxyZWN0IHg9IjEwIiB5PSIxMCIgd2lkdGg9IjM4MCIgaGVpZ2h0PSIyODAiIGZpbGw9IiNFNUU1RTUiIHN0cm9rZT0iI0NDQyIgc3Ryb2tlLXdpZHRoPSIyIi8+Cjx0ZXh0IHg9IjIwMCIgeT0iMTUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiPvCfkYggVGVtcGxhdGUgUHJldmlldzwvdGV4dD4KPC9zdmc+';
             const figmaUrl = template.figma_url || template.figmaUrl;
             const nodes = template.nodes;
             
             card.innerHTML = `
-                <img src="${previewImage}" alt="${templateName}" class="template-preview" onerror="this.src='/images/templates/default.png'">
+                <img src="${previewImage}" alt="${templateName}" class="template-preview" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="template-preview-placeholder" style="display: none; width: 100%; height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 600;">
+                    🎨 Template Preview
+                </div>
                 <div class="template-info">
                     <h3 class="template-name">${templateName}</h3>
                     <p class="template-description">${templateDescription}</p>

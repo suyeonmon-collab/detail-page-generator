@@ -552,7 +552,7 @@ function renderTemplates() {
         return `
             <tr>
                 <td>
-                    <img src="${template.previewImage || 'https://via.placeholder.com/60'}" 
+                    <img src="${template.previewImage || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjYwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjRjVGNUY1Ii8+CjxyZWN0IHg9IjUiIHk9IjUiIHdpZHRoPSI1MCIgaGVpZ2h0PSI1MCIgZmlsbD0iI0U1RTVFNSIgc3Ryb2tlPSIjQ0NDIiBzdHJva2Utd2lkdGg9IjEiLz4KPHRleHQgeD0iMzAiIHk9IjM1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiPvCfkYg8L3RleHQ+Cjwvc3ZnPg=='}" 
                          alt="${template.name}" 
                          style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
                 </td>
